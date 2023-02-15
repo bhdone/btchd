@@ -9,6 +9,7 @@
 #include <poc/poc.h>
 #include <script/standard.h>
 #include <validation.h>
+#include "arith_uint256.h"
 
 /**
  * CChain implementation
@@ -168,7 +169,7 @@ void CBlockIndex::Update(const Consensus::Params& params)
             .Write(hashMerkleRoot.begin(), hashMerkleRoot.size())
             .Write((const unsigned char*)&plotterId, 8)
             .Finalize(nextGenerationSignature.begin());
-    } else {
+    } else if (nHeight + 1 < params.BHDIP009Height) {
         //! generationSignature + nPlotterId
         assert(generationSignature != nullptr && !generationSignature->IsNull());
         uint64_t plotterId = htobe64(nPlotterId);
@@ -189,16 +190,30 @@ void CBlockIndex::BuildSkip()
         pskip = pprev->GetAncestor(GetSkipHeight(nHeight));
 }
 
-arith_uint256 GetBlockProof(const CBlockHeader& header, const Consensus::Params& params)
+arith_uint256 GetBlockWork(const CBlockHeader& header, const Consensus::Params& params)
 {
-    //! Same nBaseTarget select biggest hash
-    return (poc::TWO64 / header.nBaseTarget) * 100 + (header.vchSignature.empty() ? 0 : header.vchSignature.back()) % 100;
+    AssertLockHeld(cs_main);
+    const CBlockIndex *pindex = LookupBlockIndex(header.GetHash());
+    if (pindex && pindex->nHeight < params.BHDIP009Height) {
+        //! Same nDifficulty select biggest hash
+        if (header.nBaseTarget == 0) {
+            LogPrintf("%s(CBlockHeader): header.nBaseTarget is zero, nHeight=%d\n", __func__, pindex->nHeight);
+        }
+        return (poc::TWO64 / header.nBaseTarget) * 100 + (header.vchSignature.empty() ? 0 : header.vchSignature.back()) % 100;
+    }
+    return arith_uint256(header.chiaposFields.nDifficulty);
 }
 
-arith_uint256 GetBlockProof(const CBlockIndex& block, const Consensus::Params& params)
+arith_uint256 GetBlockWork(const CBlockIndex& block, const Consensus::Params& params)
 {
-    //! Same nBaseTarget select biggest hash
-    return (poc::TWO64 / block.nBaseTarget) * 100 + (block.vchSignature.empty() ? 0 : block.vchSignature.back()) % 100;
+    if (block.nHeight < params.BHDIP009Height) {
+        //! Same nDifficulty select biggest hash
+        if (block.nBaseTarget == 0) {
+            LogPrintf("%s(CBlockIndex): block.nBaseTarget is zero, nHeight=%d\n", __func__, block.nHeight);
+        }
+        return (poc::TWO64 / block.nBaseTarget) * 100 + (block.vchSignature.empty() ? 0 : block.vchSignature.back()) % 100;
+    }
+    return arith_uint256(block.chiaposFields.nDifficulty);
 }
 
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params& params)
@@ -211,7 +226,7 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
         r = from.nChainWork - to.nChainWork;
         sign = -1;
     }
-    r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockProof(tip, params);
+    r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockWork(tip, params);
     if (r.bits() > 63) {
         return sign * std::numeric_limits<int64_t>::max();
     }

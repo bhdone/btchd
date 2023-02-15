@@ -848,7 +848,7 @@ void BitcoinGUI::generatePassphraseClicked()
     QString information;
     information += "<span style='color:#aa0000;'>" + tr("This account is randomly generated, please save it. Loss will make plotting data invalid.") + "</span><br/><br/>";
     information += tr("Passphrase: %1").arg(QString::fromStdString(passphrase)) + "<br/>";
-    information += tr("Plotter ID: %1").arg(QString::number(plotterId));
+    information += tr("Farmer PubKey: %1").arg(QString::number(plotterId));
 
     QMessageBox messageBox(QMessageBox::Information, tr("Generate plotting account"), information, QMessageBox::Ok, this);
     messageBox.setTextInteractionFlags(Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse);

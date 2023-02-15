@@ -150,7 +150,7 @@ int IsMyAddressAllWallets(const std::string& address, const bool matchAny, const
     if (!HasWallets())
         return 0;
 
-    for(const std::shared_ptr<CWallet> wallet : GetWallets()) {
+    for(const std::shared_ptr<CWallet>& wallet : GetWallets()) {
         CTxDestination destination = DecodeDestination(address);
         isminetype ismine = IsMine(*wallet, destination);
         if (matchAny && ismine != ISMINE_NO)

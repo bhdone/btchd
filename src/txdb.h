@@ -59,16 +59,47 @@ public:
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
     CCoinsViewCursorRef Cursor() const override;
     CCoinsViewCursorRef Cursor(const CAccountID &accountID) const override;
-    CCoinsViewCursorRef PointSendCursor(const CAccountID &accountID) const override;
-    CCoinsViewCursorRef PointReceiveCursor(const CAccountID &accountID) const override;
+    CCoinsViewCursorRef PointSendCursor(const CAccountID &accountID, PointType pt) const override;
+    CCoinsViewCursorRef PointReceiveCursor(const CAccountID &accountID, PointType pt) const override;
 
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade(bool &fUpgraded);
     size_t EstimateSize() const override;
 
-    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive) const override;
-    CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const uint64_t &plotterId = 0) const override;
-    CBindPlotterCoinsMap GetBindPlotterEntries(const uint64_t &plotterId) const override;
+    /**
+    * @brief Calculate balance for an account
+    *
+    * @param accountID The account
+    * @param mapChildCoins The cached coins
+    * @param balanceBindPlotter Get balance for binding plotters
+    * @param balancePointSend Get balance for the amount which was sent from this account
+    * @param balancePointReceive Get balance for the amount which has received to this account
+    * @param terms The term from consensus, chia consensus calculation will be applied only when this parameter isn't null
+    * @param nHeight The height for calculating balance with chia consensus
+    *
+    * @return The coin balance of account, other balances will be returned by parameters `balance*'.
+    */
+    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const override;
+
+    CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const CPlotterBindData &bindData = {}) const override;
+    CBindPlotterCoinsMap GetBindPlotterEntries(const CPlotterBindData &bindData) const override;
+
+private:
+    CAmount GetBalanceBind(CPlotterBindData::Type type, CAccountID const& accountID, CCoinsMap const& mapChildCoins) const;
+
+    CAmount GetCoinBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins) const;
+
+    CAmount GetBalancePointSend(DatacarrierType type, CAccountID const& accountID, CCoinsMap const& mapChildCoins) const;
+
+    CAmount CalculateTermAmount(CAmount coinAmount, PledgeTerm const& term, PledgeTerm const& fallbackTerm, int nPointHeight, int nHeight) const;
+
+    CAmount GetBalancePointReceive(DatacarrierType type, CAccountID const& accountID, CCoinsMap const& mapChildCoins, PledgeTerms const* terms, int nHeight) const;
+
+    CAmount CalculatePledgeAmountFromRetargetCoin(CAmount pointAmount, DatacarrierType pointType, int nPointHeight, PledgeTerms const& terms, int nHeight) const;
+
+    CAmount GetBalancePointRetargetSend(CAccountID const& accountID, CCoinsMap const& mapChildCoins, PledgeTerms const* terms, int nHeight) const;
+
+    CAmount GetBalancePointRetargetReceive(CAccountID const& accountID, CCoinsMap const& mapChildCoins, PledgeTerms const* terms, int nHeight) const;
 };
 
 /** Access to the block database (blocks/index/) */
@@ -77,7 +108,7 @@ class CBlockTreeDB : public CDBWrapper
 public:
     explicit CBlockTreeDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
 
-    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo);
+    bool WriteBatchSync(const std::vector<std::pair<int, const CBlockFileInfo*> >& fileInfo, int nLastFile, const std::vector<const CBlockIndex*>& blockinfo, const Consensus::Params &consensusParams);
     bool ReadBlockFileInfo(int nFile, CBlockFileInfo &info);
     bool ReadLastBlockFile(int &nFile);
     bool WriteReindexing(bool fReindexing);

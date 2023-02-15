@@ -7,6 +7,11 @@
 #include <logging.h>
 #include <util/system.h>
 
+#include <coins.h>
+#include <chain.h>
+#include <primitives/transaction.h>
+#include <validation.h>
+
 fs::path GetWalletDir()
 {
     fs::path path;
@@ -102,3 +107,67 @@ bool WalletLocation::Exists() const
 {
     return fs::symlink_status(m_path).type() != fs::file_not_found;
 }
+
+
+/**
+ * @brief Get the Transaction By Coin object
+ *
+ * @param inputs Coins view
+ * @param outpoint The outpoint
+ * @param tx Transaction return
+ * @param params consensus parameters
+ *
+ * @return true The transaction is good
+ * @return false Cannot get the transaction
+ */
+// bool GetTransactionByOutPoint(CCoinsViewCache const& inputs, COutPoint const& outpoint, CTransactionRef& tx, CChain const& chain, Consensus::Params const& params)
+// {
+//     auto const& coin = inputs.AccessCoin(outpoint);
+//     auto pindex = chain[coin.nHeight];
+//     uint256 hashBlock;
+//     return GetTransaction(outpoint.hash, tx, params, hashBlock, pindex);
+// }
+
+/**
+ * @brief Get all retarget records according the outpoint that
+ *
+ * @param inputs Coins
+ * @param outpointToPoint The outpoint to the POINT
+ * @param params The consensus parameters
+ *
+ * @return std::vector<COutPoint> All RETARGET records those related to the POINT
+ */
+// std::vector<COutPoint> EnumeratePointRetargetRecords(CCoinsViewCache const& inputs, COutPoint const& outpointToPoint, Consensus::Params const& params)
+// {
+//     std::vector<COutPoint> res;
+//     CTransactionRef tx;
+//     uint256 hashBlock;
+//     auto const& coin = inputs.AccessCoin(outpointToPoint);
+//     CBlockIndex* pindex = ::ChainActive()[coin.nHeight];
+//     if (!GetTransaction(outpointToPoint.hash, tx, params, hashBlock, pindex)) {
+//         throw std::runtime_error("wrong transaction and it cannot be found from coins view");
+//     }
+//     auto cursor = inputs.Cursor(coin.refOutAccountID);
+//     while (cursor->Valid()) {
+//         Coin curCoin;
+//         if (!cursor->GetValue(curCoin)) {
+//             throw std::runtime_error("cannot read value from database");
+//         }
+//         if (curCoin.IsPointRetarget()) {
+//             COutPoint curOutpoint;
+//             if (!cursor->GetKey(curOutpoint)) {
+//                 throw std::runtime_error("cannot read key from database");
+//             }
+//             CTransactionRef curTx;
+//             if (!GetTransactionByOutPoint(inputs, curOutpoint, curTx, ::ChainActive(), params)) {
+//                 throw std::runtime_error("cannot retrieve the tx");
+//             }
+//             if (curTx->vin[0].prevout == outpointToPoint) {
+//                 res.push_back(curOutpoint);
+//             }
+//         }
+//         // next
+//         cursor->Next();
+//     }
+//     return res;
+// }

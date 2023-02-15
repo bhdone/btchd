@@ -623,15 +623,15 @@
     </message>
     <message>
         <source>This account is randomly generated, please save it. Loss will make plotting data invalid.</source>
-        <translation>此賬戶是隨機生成的，請妥善保管。丟失將導致算力作廢。</translation>
+        <translation>此賬戶是隨機生成的，請妥善保管。丟失將導致农民公钥作廢。</translation>
     </message>
     <message>
         <source>Passphrase: %1</source>
         <translation>腦密碼：%1</translation>
     </message>
     <message>
-        <source>Plotter ID: %1</source>
-        <translation>算力ID：%1</translation>
+        <source>Farmer PubKey: %1</source>
+        <translation>农民公钥ID：%1</translation>
     </message>
 </context>
 <context>
@@ -1407,11 +1407,11 @@
     </message>
     <message>
         <source>Total of balance that have to be frozen (by bind plotter locked and point sent), and do not yet count toward the spendable balance</source>
-        <translation>凍結的總金額（綁定算力鎖定的總金額和指向出去的總金額），未計入當前餘額</translation>
+        <translation>凍結的總金額（綁定农民公钥鎖定的總金額和指向出去的總金額），未計入當前餘額</translation>
     </message>
     <message>
         <source>Total of balance that have to be frozen (by bind plotter locked and point sent), and do not yet count toward the spendable balance in watch-only addresses</source>
-        <translation>只能看位址中凍結的總金額（綁定算力鎖定的總金額和指向出去的總金額），未計入當前餘額</translation>
+        <translation>只能看位址中凍結的總金額（綁定农民公钥鎖定的總金額和指向出去的總金額），未計入當前餘額</translation>
     </message>
     <message>
         <source>Point Received:</source>
@@ -2494,11 +2494,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Confirm bind plotter</source>
-        <translation>確認綁定算力</translation>
+        <translation>確認綁定农民公钥</translation>
     </message>
     <message>
         <source>Are you sure you want to bind plotter?</source>
-        <translation>您確定要綁定算力嗎？</translation>
+        <translation>您確定要綁定农民公钥嗎？</translation>
     </message>
     <message>
         <source>%1 bind to %2</source>
@@ -2510,7 +2510,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>You can unbind later, and the locked amount will be returned to this address.</source>
-        <translation>你可以在隨後解綁算力，鎖定的金額將歸還到這個位址。</translation>
+        <translation>你可以在隨後解綁农民公钥，鎖定的金額將歸還到這個位址。</translation>
     </message>
     <message>
         <source>This binding operation triggers anti-cheating mechanism and therefore requires a large transaction fee %1.</source>
@@ -2522,7 +2522,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>The bind plotter consensus active on %1 after.</source>
-        <translation>綁定算力共識將在 %1 高度之後啟用。</translation>
+        <translation>綁定农民公钥共識將在 %1 高度之後啟用。</translation>
     </message>
     <message>
         <source>Confirm point</source>
@@ -2636,8 +2636,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>綁定給(&amp;T)：</translation>
     </message>
     <message>
-        <source>&amp;Plotter:</source>
-        <translation>算力(&amp;P)：</translation>
+        <source>&amp;FarmerPk:</source>
+        <translation>农民公钥(&amp;P)：</translation>
     </message>
     <message>
         <source>&amp;Alive Time:</source>
@@ -2649,7 +2649,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Enter your plotter passphrase or bind hex data</source>
-        <translation>請輸入您算力的腦密碼或綁定的數據</translation>
+        <translation>請輸入您农民公钥的腦密碼或綁定的數據</translation>
     </message>
 </context>
 <context>
@@ -2999,8 +2999,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>解綁生效的區塊高度為 %1 （%2 個區塊之後，大約需要 %3 分鐘）。</translation>
     </message>
     <message>
-        <source>Plotter ID</source>
-        <translation>算力 ID</translation>
+        <source>Farmer PubKey</source>
+        <translation>农民公钥 ID</translation>
     </message>
     <message>
         <source>Unbinded plotter</source>
@@ -3126,11 +3126,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Binded plotter</source>
-        <translation>綁定算力</translation>
+        <translation>綁定农民公钥</translation>
     </message>
     <message>
         <source>Unbinded plotter</source>
-        <translation>解綁算力</translation>
+        <translation>解綁农民公钥</translation>
     </message>
     <message>
         <source>This bind plotter has unbinded</source>
@@ -3321,7 +3321,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Binded plotter</source>
-        <translation>綁定算力</translation>
+        <translation>綁定农民公钥</translation>
     </message>
     <message>
         <source>Point sent</source>
@@ -3417,19 +3417,19 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Unbind plotter</source>
-        <translation>解綁算力</translation>
+        <translation>解綁农民公钥</translation>
     </message>
     <message>
         <source>Are you sure you want to unbind plotter?</source>
-        <translation>你確定要解綁算力嗎？</translation>
+        <translation>你確定要解綁农民公钥嗎？</translation>
     </message>
     <message>
         <source>Address:</source>
         <translation>位址：</translation>
     </message>
     <message>
-        <source>Plotter ID:</source>
-        <translation>算力ID：</translation>
+        <source>Farmer PubKey:</source>
+        <translation>农民公钥ID：</translation>
     </message>
     <message>
         <source>Return amount:</source>

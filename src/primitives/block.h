@@ -11,6 +11,27 @@
 #include <serialize.h>
 #include <uint256.h>
 
+#include <chiapos/block_fields.h>
+
+#include <logging.h>
+
+static const int SERIALIZE_BLOCK_CHIAPOS = 0x04000000;
+
+#define SERIALIZE_BURST_FIELDS \
+    do { \
+        uint64_t nFlags = nBaseTarget | (vchPubKey.empty() ? 0 : 0x8000000000000000L); \
+        READWRITE(nFlags); \
+        READWRITE(nNonce); \
+        READWRITE(nPlotterId); \
+        nBaseTarget = nFlags & 0x7fffffffffffffffL; \
+        if (nFlags & 0x8000000000000000L) { \
+            READWRITE(LIMITED_VECTOR(vchPubKey, CPubKey::COMPRESSED_PUBLIC_KEY_SIZE)); \
+            if (!(GetSerializeType(s) & SER_UNSIGNATURED)) { \
+                READWRITE(LIMITED_VECTOR(vchSignature, CPubKey::SIGNATURE_SIZE)); \
+            } \
+        } \
+    } while (0)
+
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
  * requirements.  When they solve the proof-of-work, they broadcast the block
@@ -33,6 +54,8 @@ public:
     std::vector<unsigned char> vchPubKey;
     std::vector<unsigned char> vchSignature;
 
+    chiapos::CBlockFields chiaposFields;
+
     CBlockHeader()
     {
         SetNull();
@@ -44,20 +67,22 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         // Read: Signature flag and base target read from stream. Real base target require remove mask
         // Write: Signature flag and base target write to stream
-        uint64_t nFlags = nBaseTarget | (vchPubKey.empty() ? 0 : 0x8000000000000000L);
         READWRITE(this->nVersion);
         READWRITE(hashPrevBlock);
         READWRITE(hashMerkleRoot);
         READWRITE(nTime);
-        READWRITE(nFlags);
-        READWRITE(nNonce);
-        READWRITE(nPlotterId);
-        nBaseTarget = nFlags & 0x7fffffffffffffffL;
-        if (nFlags & 0x8000000000000000L) {
-            READWRITE(LIMITED_VECTOR(vchPubKey, CPubKey::COMPRESSED_PUBLIC_KEY_SIZE));
-            // Signature block data exclude vchSignature
-            if (!(GetSerializeType(s) & SER_UNSIGNATURED)) {
-                READWRITE(LIMITED_VECTOR(vchSignature, CPubKey::SIGNATURE_SIZE));
+
+        if (GetSerializeType(s) & SER_NETWORK) {
+            SERIALIZE_BURST_FIELDS;
+            if (nBaseTarget == 0) {
+                READWRITE(chiaposFields);
+            }
+        } else {
+            bool fChiapos = s.GetVersion() & SERIALIZE_BLOCK_CHIAPOS;
+            if (fChiapos) {
+                READWRITE(chiaposFields);
+            } else {
+                SERIALIZE_BURST_FIELDS;
             }
         }
     }
@@ -73,11 +98,18 @@ public:
         nPlotterId = 0;
         vchPubKey.clear();
         vchSignature.clear();
+        chiaposFields.SetNull();
     }
 
     bool IsNull() const
     {
-        return (nBaseTarget == 0);
+        return (nBaseTarget == 0) && chiaposFields.IsNull();
+    }
+
+    // Ensure the block is filled before invoking this method
+    bool IsChiaBlock() const
+    {
+        return !chiaposFields.IsNull();
     }
 
     uint256 GetHash() const;
@@ -136,6 +168,7 @@ public:
         block.nPlotterId     = nPlotterId;
         block.vchPubKey      = vchPubKey;
         block.vchSignature   = vchSignature;
+        block.chiaposFields  = chiaposFields;
         return block;
     }
 

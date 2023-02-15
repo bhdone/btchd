@@ -5,7 +5,7 @@ Setup
 ---------------------
 BitcoinHD Core is the original BitcoinHD client and it builds the backbone of the network. It downloads and, by default, stores the entire history of BitcoinHD transactions, which requires a few hundred gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
-To download BitcoinHD Core, visit [btchd.org](https://btchd.org/).
+To download BitcoinHD Core, visit [bhd.one](https://bhd.one/).
 
 Running
 ---------------------
@@ -28,7 +28,7 @@ Drag BitcoinHD Core to your applications folder, and then run BitcoinHD Core.
 
 ### Need Help?
 
-* See the documentation at the [BitcoinHD Wiki](https://btchd.org/wiki/Main_Page)
+* See the documentation at the [BitcoinHD Wiki](https://bhd.one/wiki/Main_Page)
 
 Building
 ---------------------

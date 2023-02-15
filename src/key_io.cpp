@@ -185,3 +185,12 @@ bool IsValidDestinationString(const std::string& str)
 {
     return IsValidDestinationString(str, Params());
 }
+
+CAccountID GetBurnToAccountID() {
+    std::vector<unsigned char> raw(CAccountID::WIDTH, 0x23);
+    return CAccountID(raw);
+}
+
+CTxDestination GetBurnToDestination() {
+    return CTxDestination(static_cast<ScriptHash>(GetBurnToAccountID()));
+}

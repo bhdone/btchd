@@ -32,6 +32,7 @@
 #include <util/system.h>
 #include <util/validation.h>
 #include <validation.h>
+#include <subsidy_utils.h>
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
 #include <warnings.h>
@@ -46,6 +47,9 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+
+#include <chiapos/kernel/utils.h>
+#include <chiapos/kernel/pos.h>
 
 struct CUpdatedBlock
 {
@@ -75,10 +79,34 @@ static int ComputeNextBlockAndDepth(const CBlockIndex* tip, const CBlockIndex* b
     return blockindex == tip ? 1 : -1;
 }
 
+UniValue GetPosFields(chiapos::CPosProof const& pos) {
+    UniValue outValue;
+    outValue.pushKV("pos_poolPkOrHash", chiapos::BytesToHex(pos.vchPoolPkOrHash));
+    outValue.pushKV("pos_localPk", chiapos::BytesToHex(pos.vchLocalPk));
+    outValue.pushKV("pos_farmerPk", chiapos::BytesToHex(pos.vchFarmerPk));
+    outValue.pushKV("pos_plotType", std::to_string(pos.nPlotType));
+    outValue.pushKV("pos_plotK", pos.nPlotK);
+    outValue.pushKV("pos_proof", chiapos::BytesToHex(pos.vchProof));
+    return outValue;
+}
+
+UniValue GetVdfFields(chiapos::CVdfProof const& vdfProof) {
+    UniValue outValue;
+    outValue.pushKV("vdf_Challenge", vdfProof.challenge.GetHex());
+    outValue.pushKV("vdf_Y", chiapos::BytesToHex(vdfProof.vchY));
+    outValue.pushKV("vdf_Proof", chiapos::BytesToHex(vdfProof.vchProof));
+    outValue.pushKV("vdf_WitnessType", static_cast<int>(vdfProof.nWitnessType));
+    outValue.pushKV("vdf_Iters", vdfProof.nVdfIters);
+    outValue.pushKV("vdf_Duration", vdfProof.nVdfDuration);
+    return outValue;
+}
+
 UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex)
 {
     // Serialize passed information without accessing chain state of the active chain!
     AssertLockNotHeld(cs_main); // For performance reasons
+
+    auto const& params = Params().GetConsensus();
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("hash", blockindex->GetBlockHash().GetHex());
@@ -94,22 +122,37 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
     result.pushKV("difficulty", GetDifficulty(blockindex));
     result.pushKV("chainwork", blockindex->nChainWork.GetHex());
     result.pushKV("nTx", (uint64_t)blockindex->nTx);
-    result.pushKV("baseTarget", (uint64_t)blockindex->nBaseTarget);
-    result.pushKV("plotterId", (uint64_t)blockindex->nPlotterId);
-    result.pushKV("nonce", (uint64_t)blockindex->nNonce);
-    result.pushKV("generationSignature", HexStr(blockindex->GetGenerationSignature()));
-    if (blockindex->pprev) {
-        LOCK(cs_main);
-        result.pushKV("deadline", (uint64_t)poc::CalculateDeadline(*(blockindex->pprev), blockindex->GetBlockHeader(), Params().GetConsensus()));
+    if (blockindex->nHeight < params.BHDIP009Height) {
+        result.pushKV("baseTarget", (uint64_t)blockindex->nBaseTarget);
+        result.pushKV("plotterId", (uint64_t)blockindex->nPlotterId);
+        result.pushKV("nonce", (uint64_t)blockindex->nNonce);
+        result.pushKV("generationSignature", HexStr(blockindex->GetGenerationSignature()));
+        if (blockindex->pprev) {
+            LOCK(cs_main);
+            result.pushKV("deadline", (uint64_t)poc::CalculateDeadline(*(blockindex->pprev), blockindex->GetBlockHeader(), Params().GetConsensus()));
+        } else {
+            result.pushKV("deadline", (uint64_t)0);
+        }
+        result.pushKV("generator", HexStr(blockindex->generatorAccountID));
+        if (blockindex->nHeight >= params.BHDIP007Height) {
+            result.pushKV("pubkey", HexStr(blockindex->vchPubKey));
+            result.pushKV("signature", HexStr(blockindex->vchSignature));
+        }
     } else {
-        result.pushKV("deadline", (uint64_t)0);
+        // BHDIP009 fields
+        result.pushKV("quality", blockindex->chiaposFields.nQuality);
+        result.pushKV("farmerSignature", chiapos::BytesToHex(blockindex->chiaposFields.vchFarmerSignature));
+        result.pushKV("challenge", blockindex->chiaposFields.posProof.challenge.GetHex());
+        // Proof of Space fields
+        result.pushKV("pos", GetPosFields(blockindex->chiaposFields.posProof));
+        result.pushKV("vdf", GetVdfFields(blockindex->chiaposFields.vdfProof));
+        // Void blocks
+        UniValue voidBlocks(UniValue::VARR);
+        for (auto const& vdf : blockindex->chiaposFields.vVoidBlockVdf) {
+            voidBlocks.push_back(GetVdfFields(vdf));
+        }
+        result.pushKV("voidBlocks", voidBlocks);
     }
-    result.pushKV("generator", HexStr(blockindex->generatorAccountID));
-    if (blockindex->nHeight >= Params().GetConsensus().BHDIP007Height) {
-        result.pushKV("pubkey", HexStr(blockindex->vchPubKey));
-        result.pushKV("signature", HexStr(blockindex->vchSignature));
-    }
-
     if (blockindex->pprev)
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
     if (pnext)
@@ -127,8 +170,8 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     const CBlockIndex* pnext;
     int confirmations = ComputeNextBlockAndDepth(tip, blockindex, pnext);
     result.pushKV("confirmations", confirmations);
-    result.pushKV("strippedsize", (int)::GetSerializeSize(block, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS));
-    result.pushKV("size", (int)::GetSerializeSize(block, PROTOCOL_VERSION));
+    result.pushKV("strippedsize", (int)::GetSerializeSize(block, 0, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS));
+    result.pushKV("size", (int)::GetSerializeSize(block, 0, PROTOCOL_VERSION));
     result.pushKV("weight", (int)::GetBlockWeight(block));
     result.pushKV("height", blockindex->nHeight);
     result.pushKV("version", block.nVersion);
@@ -149,23 +192,37 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     result.pushKV("tx", txs);
     result.pushKV("time", block.GetBlockTime());
     result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
-    result.pushKV("difficulty", GetDifficulty(blockindex));
     result.pushKV("chainwork", blockindex->nChainWork.GetHex());
     result.pushKV("nTx", (uint64_t)blockindex->nTx);
     result.pushKV("baseTarget", (uint64_t)blockindex->nBaseTarget);
     result.pushKV("plotterId", (uint64_t)blockindex->nPlotterId);
     result.pushKV("nonce", (uint64_t)blockindex->nNonce);
     result.pushKV("generationSignature", HexStr(blockindex->GetGenerationSignature()));
-    if (blockindex->pprev) {
-        LOCK(cs_main);
-        result.pushKV("deadline", (uint64_t)poc::CalculateDeadline(*(blockindex->pprev), blockindex->GetBlockHeader(), Params().GetConsensus()));
-    } else {
-        result.pushKV("deadline", (uint64_t)0);
-    }
     result.pushKV("generator", HexStr(blockindex->generatorAccountID));
     if (blockindex->nHeight >= Params().GetConsensus().BHDIP007Height) {
         result.pushKV("pubkey", HexStr(blockindex->vchPubKey));
         result.pushKV("signature", HexStr(blockindex->vchSignature));
+    } else {
+        LOCK(cs_main);
+        if (blockindex->pprev) {
+            result.pushKV("deadline", (uint64_t)poc::CalculateDeadline(*(blockindex->pprev), blockindex->GetBlockHeader(), Params().GetConsensus()));
+        }
+        result.pushKV("difficulty", GetDifficulty(blockindex));
+    }
+
+    auto const& params = Params().GetConsensus();
+    if (blockindex->nHeight >= params.BHDIP009Height) {
+        // PoS fields
+        result.pushKV("pos", GetPosFields(blockindex->chiaposFields.posProof));
+        result.pushKV("vdf", GetVdfFields(blockindex->chiaposFields.vdfProof));
+        UniValue voidBlocks(UniValue::VARR);
+        for (auto const& vdf : blockindex->chiaposFields.vVoidBlockVdf) {
+            voidBlocks.push_back(GetVdfFields(vdf));
+        }
+        // Misc for chia fields
+        result.pushKV("difficulty", blockindex->chiaposFields.nDifficulty);
+        result.pushKV("quality", blockindex->chiaposFields.nQuality);
+        result.pushKV("farmerSignature", chiapos::BytesToHex(blockindex->chiaposFields.vchFarmerSignature));
     }
 
     if (blockindex->pprev)
@@ -1858,7 +1915,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         if (loop_outputs) {
             for (const CTxOut& out : tx->vout) {
                 tx_total_out += out.nValue;
-                utxo_size_inc += GetSerializeSize(out, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
+                utxo_size_inc += GetSerializeSize(out, 0, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
         }
 
@@ -1900,7 +1957,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
                 const CTxOut& prevoutput = coin.out;
 
                 tx_total_in += prevoutput.nValue;
-                utxo_size_inc -= GetSerializeSize(prevoutput, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
+                utxo_size_inc -= GetSerializeSize(prevoutput, 0, PROTOCOL_VERSION) + PER_UTXO_OVERHEAD;
             }
 
             CAmount txfee = tx_total_in - tx_total_out;

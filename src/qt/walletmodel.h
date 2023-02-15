@@ -53,9 +53,15 @@ QT_END_NAMESPACE
 
 /** Pay operate method */
 enum class PayOperateMethod {
-    Pay,         //! Normal pay
-    Point,       //! Point
-    BindPlotter, //! Bind plotter
+    Pay,                //! Normal pay
+    Point,              //! Point
+    BindPlotter,        //! Bind plotter
+    ChiaPoint,          //! Point `chia consensus`
+    ChiaPointT1,        //! Point `chia consensus` with term 1
+    ChiaPointT2,        //! Point `chia consensus` with term 2
+    ChiaPointT3,        //! Point `chia consensus` with term 3
+    ChiaBindFarmerPk,   //! Bind chia farmer-pk
+    ChiaPointRetarget,  //! Retargeting the address
 };
 
 class SendCoinsRecipient

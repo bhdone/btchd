@@ -29,8 +29,12 @@
 #include <util/strencodings.h>
 #include <util/validation.h>
 
+#include <chiapos/post.h>
+
 #include <memory>
 #include <typeinfo>
+#include <array>
+#include <utility>
 
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
@@ -360,6 +364,40 @@ struct CNodeState {
 
     //! Whether this peer is a manual connection
     bool m_is_manual_connection;
+
+    //! VDF challenge with iters should be recorded to avoid duplicated vdf request message
+    struct VdfRequest {
+        uint256 challenge;
+        uint64_t iters;
+    };
+    VdfRequest m_vdf_request;
+
+    //! VDF proof from the connection
+    struct VdfProofTip {
+        uint256 challenge;
+        uint64_t iters;
+    };
+    std::map<uint256, std::vector<uint64_t>> m_vdf_proof_tips;
+    bool FindProofTip(uint256 const& challenge, uint64_t iters) {
+        auto i = m_vdf_proof_tips.find(challenge);
+        if (i == std::end(m_vdf_proof_tips)) {
+            return false;
+        }
+        auto j = std::find(std::begin(i->second), std::end(i->second), iters);
+        return j != std::end(i->second);
+    }
+    void SaveProofTip(uint256 const& challenge, uint64_t iters) {
+        auto i = m_vdf_proof_tips.find(challenge);
+        if (i == std::end(m_vdf_proof_tips)) {
+            m_vdf_proof_tips[challenge] = {iters};
+            return;
+        }
+        auto j = std::find(std::begin(i->second), std::end(i->second), iters);
+        if (j != std::end(i->second)) {
+            return;
+        }
+        i->second.push_back(iters);
+    }
 
     CNodeState(CAddress addrIn, std::string addrNameIn, bool is_inbound, bool is_manual) :
         address(addrIn), name(std::move(addrNameIn)), m_is_inbound(is_inbound),
@@ -1071,6 +1109,7 @@ static bool MaybePunishNode(NodeId nodeid, const CValidationState& state, bool v
     case ValidationInvalidReason::TX_CONFLICT:
     case ValidationInvalidReason::TX_MEMPOOL_POLICY:
     case ValidationInvalidReason::TX_INVALID_BIND:
+    case ValidationInvalidReason::TX_INVALID_UNLOCK_PERIOD:
         break;
     }
     if (message != "") {
@@ -1444,11 +1483,13 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
             // Fast-path: in this case it is possible to serve the block directly from disk,
             // as the network format matches the format on disk
             std::vector<uint8_t> block_data;
-            if (!ReadRawBlockFromDisk(block_data, pindex, chainparams.MessageStart())) {
+            LogPrintf("%s: reading MSG_WITNESS_BLOCK from disk, height=%d\n", __func__, pindex->nHeight);
+            // Don't set pblock as we've sent the block
+            std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
+            if (!ReadBlockFromDisk(*pblockRead, pindex, consensusParams)) {
                 assert(!"cannot load block from disk");
             }
-            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::BLOCK, MakeSpan(block_data)));
-            // Don't set pblock as we've sent the block
+            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblockRead));
         } else {
             // Send block from disk
             std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
@@ -1874,7 +1915,7 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
 
 bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61)
 {
-    LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
+    LogPrint(BCLog::NET, "<<<< received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
     {
         LogPrintf("dropmessagestest DROPPING RECV MESSAGE\n");
@@ -2972,6 +3013,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
+        LogPrintf("%s: receiving headers count=%d from peer %d\n", __func__, nCount, pfrom->GetId());
         if (nCount > MAX_HEADERS_RESULTS) {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20, strprintf("headers message size = %u", nCount));
@@ -3254,8 +3296,101 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
+    if (strCommand == NetMsgType::VDF) {
+        LOCK(cs_main);
+
+        chiapos::CVdfProof vdf;
+        vRecv >> vdf;
+
+        LogPrintf("Received a new VDF proof by challenge: `%s` from peer=%d\n", vdf.challenge.GetHex(), pfrom->GetId());
+
+        chiapos::SubmitVdfProofPacket(vdf);
+
+        CNodeState* pstateFrom = State(pfrom->GetId());
+
+        // Update vdf proof tip
+        if (!pstateFrom->FindProofTip(vdf.challenge, vdf.nVdfIters)) {
+            pstateFrom->SaveProofTip(vdf.challenge, vdf.nVdfIters);
+        }
+
+        // Dispatch Vdf proof to P2P network
+        chiapos::SendVdfProofOverP2PNetwork(connman, vdf, pfrom, [&vdf](CNode* pnode) {
+            AssertLockHeld(cs_main);
+            CNodeState* pstate = State(pnode->GetId());
+            if (pstate != nullptr && (pstate->FindProofTip(vdf.challenge, vdf.nVdfIters))) {
+                // Invalid state or the node is updated
+                return false;
+            }
+            pstate->SaveProofTip(vdf.challenge, vdf.nVdfIters);
+            return true;
+        });
+
+        return true;
+    }
+
+    if (strCommand == NetMsgType::REQVDF) {
+        LOCK(cs_main);
+
+        CBlockIndex* pindex = ::ChainActive().Tip();
+        if (pindex == nullptr) {
+            return true;
+        }
+
+        Consensus::Params const& params = Params().GetConsensus();
+        uint256 currChallenge = chiapos::MakeChallenge(pindex, params);
+
+        // Receive the request
+        uint256 challenge;
+        uint64_t nIters;
+        vRecv >> challenge;
+        vRecv >> nIters;
+
+        LogPrintf("Received a new VDF request by challenge: `%s`, iters: %s from peer=%d\n",
+            challenge.GetHex(), chiapos::FormatNumberStr(std::to_string(nIters)), pfrom->GetId());
+
+        while (currChallenge != challenge) {
+            // Find the VDF proof for currChallenge
+            auto proof = chiapos::QueryReceivedVdfProofPacket(currChallenge);
+            if (!proof.has_value()) {
+                LogPrintf("The challenge required is invalid, the message will be ignored, req=%s, curr=%s\n", challenge.GetHex(), currChallenge.GetHex());
+                return true;
+            }
+            currChallenge = chiapos::MakeChallenge(currChallenge, proof->vchProof);
+        }
+
+        // Dispatch challenge/iters to timelord
+        if (chiapos::IsTimelordRunning()) {
+            chiapos::UpdateChallengeToTimelord(challenge, nIters);
+        }
+
+        // Dispatch vdf request to P2P network
+        chiapos::SendRequireVdfOverP2PNetwork(connman, challenge, nIters, pfrom,
+            [&challenge, nIters](CNode* pnode) {
+                AssertLockHeld(cs_main);
+                CNodeState* pstate = State(pnode->GetId());
+                // Must update vdf challenge somewhere to ensure the node will not receive the vdf request again
+                if (pstate != nullptr && (pstate->m_vdf_request.challenge == challenge && pstate->m_vdf_request.iters >= nIters)) {
+                    // Invalid state or the node is updated
+                    return false;
+                }
+                return true;
+            },
+            [&challenge, nIters](CNode* pnode) {
+                AssertLockHeld(cs_main);
+                CNodeState* pstate = State(pnode->GetId());
+                if (pstate != nullptr) {
+                    // Vdf request is delivered to the connection, so we update the request to the connection's state
+                    pstate->m_vdf_request.challenge = challenge;
+                    pstate->m_vdf_request.iters = nIters;
+                }
+            }
+            );
+
+        return true;
+    }
+
     // Ignore unknown commands for extensibility
-    LogPrint(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->GetId());
+    LogPrintf("Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->GetId());
     return true;
 }
 

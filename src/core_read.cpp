@@ -158,13 +158,14 @@ bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)
     return true;
 }
 
-bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk)
+bool DecodeHexBlk(CBlock& block, const std::string& strHexBlk, bool fChiapos)
 {
     if (!IsHex(strHexBlk))
         return false;
 
     std::vector<unsigned char> blockData(ParseHex(strHexBlk));
-    CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION);
+    int ser_flags = fChiapos ? SERIALIZE_BLOCK_CHIAPOS : 0;
+    CDataStream ssBlock(blockData, SER_NETWORK, PROTOCOL_VERSION | ser_flags);
     try {
         ssBlock >> block;
     }

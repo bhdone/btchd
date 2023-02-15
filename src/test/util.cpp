@@ -9,7 +9,6 @@
 #include <key_io.h>
 #include <miner.h>
 #include <outputtype.h>
-#include <pow.h>
 #include <script/standard.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -50,21 +49,6 @@ CTxIn generatetoaddress(const std::string& address)
     const auto coinbase_script = GetScriptForDestination(dest);
 
     return MineBlock(coinbase_script);
-}
-
-CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
-{
-    auto block = PrepareBlock(coinbase_scriptPubKey);
-
-    while (!CheckProofOfWork(block->GetHash(), block->nBits, Params().GetConsensus())) {
-        ++block->nNonce;
-        assert(block->nNonce);
-    }
-
-    bool processed{ProcessNewBlock(Params(), block, true, nullptr)};
-    assert(processed);
-
-    return CTxIn{block->vtx[0]->GetHash(), 0};
 }
 
 std::shared_ptr<CBlock> PrepareBlock(const CScript& coinbase_scriptPubKey)

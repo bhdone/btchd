@@ -673,9 +673,14 @@ public:
         TX_UNBINDPLOTTER,
         TX_POINT,
         TX_WITHDRAWPOINT,
+        TX_POINT_RETARGET,
     };
     // Return transaction action
     TxAction GetTxAction() const;
+
+    // Return transaction type in string
+    std::string GetTxActionStr() const;
+
     // Return true if bindplotter or unbindplotter tx
     bool IsBindPlotterTx() const
     {

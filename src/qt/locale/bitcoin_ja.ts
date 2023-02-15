@@ -663,7 +663,7 @@
         <translation>脳のパスワード: %1</translation>
     </message>
     <message>
-        <source>Plotter ID: %1</source>
+        <source>Farmer PubKey: %1</source>
         <translation>マイニングID: %1</translation>
     </message>
 </context>
@@ -3088,7 +3088,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>ブロック解除の有効なブロックの高さは、％1です（2％ブロック後、約％3分かかります）。</translation>
     </message>
     <message>
-        <source>Plotter ID</source>
+        <source>Farmer PubKey</source>
         <translation>マイニングID</translation>
     </message>
     <message>
@@ -3521,7 +3521,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>アドレス:</translation>
     </message>
     <message>
-        <source>Plotter ID:</source>
+        <source>Farmer PubKey:</source>
         <translation>マイニングID:</translation>
     </message>
     <message>

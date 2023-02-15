@@ -666,6 +666,7 @@ bool VerifyTransactionExistence(int block)
             continue;
         }
 
+        AssertLockHeld(cs_tally);
         if (!mastercore::pDbTransactionList->exists(checkpoint.txHash)) {
             PrintToLog("%s: ERROR: failed to find historical transaction %s in block %d\n",
                     __func__, checkpoint.txHash.GetHex(), checkpoint.blockHeight);

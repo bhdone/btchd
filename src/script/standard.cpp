@@ -10,6 +10,7 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <util/strencodings.h>
+#include <chiapos/kernel/utils.h>
 
 typedef std::vector<unsigned char> valtype;
 
@@ -430,6 +431,43 @@ CScript GetBindPlotterScriptForDestination(const CTxDestination& dest, const std
     return script;
 }
 
+CScript GetBindChiaPlotterScriptForDestination(const CTxDestination &dest,
+    const chiapos::CKey &farmerSk,
+    int lastActiveHeight)
+{
+    CScript script;
+
+    if (lastActiveHeight <= 0) {
+        return script;
+    }
+
+    // Check destination type is P2SH
+    const ScriptHash *scriptID = boost::get<ScriptHash>(&dest);
+    if (scriptID == nullptr) return script;
+
+    chiapos::Bytes vchMessage(32, '\0');
+    CSHA256()
+        .Write(scriptID->begin(), CScriptID::WIDTH)
+        .Write(ToByteVector((uint32_t)lastActiveHeight).data(), 4)
+        .Finalize(vchMessage.data());
+
+    chiapos::Signature signature = farmerSk.Sign(vchMessage);
+    chiapos::PubKey farmerPk = farmerSk.GetPubkey();
+
+    assert(chiapos::VerifySignature(farmerPk, signature, vchMessage));
+
+    script << OP_RETURN;
+    script << ToByteVector(DATACARRIER_TYPE_BINDCHIAFARMER);
+    script << ToByteVector((uint32_t)lastActiveHeight);
+    script << chiapos::MakeBytes(farmerPk);
+    script << chiapos::MakeBytes(signature);
+
+    LogPrintf("%s: constructed farmer public-key: %s\n", __func__, chiapos::BytesToHex(chiapos::MakeBytes(farmerPk)));
+
+    assert(script.size() == PROTOCOL_BINDCHIAFARMER_SCRIPTSIZE);
+    return script;
+}
+
 bool DecodeBindPlotterScript(const CScript &script, uint64_t& plotterIdOut, std::string& pubkeyHexOut, std::string& signatureHexOut, int& lastActiveHeightOut)
 {
     if (script.size() != PROTOCOL_BINDPLOTTER_SCRIPTSIZE || script[0] != OP_RETURN)
@@ -467,25 +505,82 @@ bool DecodeBindPlotterScript(const CScript &script, uint64_t& plotterIdOut, std:
     return true;
 }
 
-uint64_t GetBindPlotterIdFromScript(const CScript &script)
+bool DecodeBindChiaFarmerScript(const CScript &script,
+    std::string &pubkeyHex,
+    std::string signatureHex,
+    int &lastActiveHeightOut)
 {
-    if (script.size() != PROTOCOL_BINDPLOTTER_SCRIPTSIZE)
-        return 0;
+    if (script.size() != PROTOCOL_BINDCHIAFARMER_SCRIPTSIZE || script[0] != OP_RETURN) return false;
 
-    return PocLegacy::ToPlotterId(&script[12]);
+    opcodetype opcode;
+    std::vector<unsigned char> vData;
+
+    CScript::const_iterator pc = script.begin() + 1;
+
+    // Get data type
+    if (!script.GetOp(pc, opcode, vData) || opcode != 0x04) return false;
+    unsigned int type = (vData[0] << 0) | (vData[1] << 8) | (vData[2] << 16) | (vData[3] << 24);
+    if (type != DATACARRIER_TYPE_BINDCHIAFARMER) return false;
+
+    // Check last active height
+    if (!script.GetOp(pc, opcode, vData) || opcode != sizeof(uint32_t)) return false;
+    int lastActiveHeight = (((uint32_t)vData[0]) >> 0) | (((uint32_t)vData[1]) << 8) | (((uint32_t)vData[2]) << 16) |
+                           (((uint32_t)vData[3]) << 24);
+
+    // Signature
+    std::vector<unsigned char> vPublicKey, vSignature;
+    if (!script.GetOp(pc, opcode, vPublicKey) || opcode != chiapos::PK_LEN) return false;
+    if (!script.GetOp(pc, opcode, vSignature) || opcode != OP_PUSHDATA1) return false;
+
+    // success
+    pubkeyHex = HexStr(vPublicKey);
+    signatureHex = HexStr(vSignature);
+    lastActiveHeightOut = lastActiveHeight;
+    return true;
 }
 
-CScript GetPointScriptForDestination(const CTxDestination& dest) {
-    CScript script;
+CPlotterBindData GetPlotterBindDataFromScript(const CScript &script)
+{
+    CPlotterBindData bindData;
+    if (script.size() == PROTOCOL_BINDPLOTTER_SCRIPTSIZE) {
+        uint64_t nPlotterId = PocLegacy::ToPlotterId(&script[12]);
+        bindData = nPlotterId;
+    } else if (script.size() == PROTOCOL_BINDCHIAFARMER_SCRIPTSIZE) {
+        chiapos::Bytes vchFarmerPk(script.data() + 12, script.data() + 12 + chiapos::PK_LEN);
+        LogPrintf("%s: retrieved farmer-publickey from script: %s\n", __func__, chiapos::BytesToHex(vchFarmerPk));
+        bindData = CChiaFarmerPk(std::move(vchFarmerPk));
+    }
 
+    return bindData;
+}
+
+CScript GetPointScriptForDestination(const CTxDestination& dest, DatacarrierType type) {
+    assert(type == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint(type));
+
+    CScript script;
     const ScriptHash *scriptID = boost::get<ScriptHash>(&dest);
     if (scriptID != nullptr) {
         script << OP_RETURN;
-        script << ToByteVector(DATACARRIER_TYPE_POINT);
+        script << ToByteVector(type);
         script << ToByteVector(*scriptID);
     }
 
     assert(script.empty() || script.size() == PROTOCOL_POINT_SCRIPTSIZE);
+    return script;
+}
+
+CScript GetPointRetargetScriptForDestination(const CTxDestination& dest, DatacarrierType pointType, int nPointHeight) {
+    CScript script;
+    const ScriptHash *scriptID = boost::get<ScriptHash>(&dest);
+    if (scriptID != nullptr) {
+        script << OP_RETURN;
+        script << ToByteVector(DATACARRIER_TYPE_CHIA_POINT_RETARGET); // 4 + 1
+        script << ToByteVector(*scriptID); // 20 + 1
+        script << ToByteVector(pointType); // 4 + 1
+        script << ToByteVector((uint32_t)nPointHeight); // 4 + 1
+    }
+
+    assert(script.empty() || script.size() == PROTOCOL_POINT_RETARGET_SCRIPTSIZE);
     return script;
 }
 
@@ -497,6 +592,12 @@ CScript GetTextScript(const std::string& text) {
         script << ToByteVector(text);
     }
     return script;
+}
+
+uint32_t UIntFromVectorByte(std::vector<unsigned char> const& vchData)
+{
+    assert(vchData.size() == sizeof(uint32_t));
+    return ((uint32_t)vchData[0] << 0) | ((uint32_t)vchData[1] << 8) | ((uint32_t)vchData[2] << 16) | ((uint32_t)vchData[3] << 24);
 }
 
 static CDatacarrierPayloadRef ExtractDatacarrier(const CTransaction& tx, int nHeight, const DatacarrierTypes &filters, bool *pReject, int *pLastActiveHeight) {
@@ -532,7 +633,7 @@ static CDatacarrierPayloadRef ExtractDatacarrier(const CTransaction& tx, int nHe
         // Check last active height
         if (!scriptPubKey.GetOp(pc, opcode, vData) || opcode != sizeof(uint32_t))
             return nullptr;
-        uint32_t lastActiveHeight = (((uint32_t)vData[0]) >> 0) | (((uint32_t)vData[1]) << 8) | (((uint32_t)vData[2]) << 16) | (((uint32_t)vData[3]) << 24);
+        uint32_t lastActiveHeight = UIntFromVectorByte(vData);
         if (nHeight != 0 && (nHeight > (int)lastActiveHeight || nHeight + PROTOCOL_BINDPLOTTER_MAXALIVE < (int)lastActiveHeight))
             return nullptr;
         if (pLastActiveHeight) *pLastActiveHeight = (int) lastActiveHeight;
@@ -553,14 +654,58 @@ static CDatacarrierPayloadRef ExtractDatacarrier(const CTransaction& tx, int nHe
             return nullptr;
         }
 
-        uint64_t plotterId = PocLegacy::ToPlotterId(&vPublicKey[0]);
-        if (plotterId == 0)
+        uint64_t nPlotterId = PocLegacy::ToPlotterId(&vPublicKey[0]);
+        if (nPlotterId == 0)
             return nullptr;
 
-        std::shared_ptr<BindPlotterPayload> payload = std::make_shared<BindPlotterPayload>();
-        payload->id = plotterId;
+        std::shared_ptr<BindPlotterPayload> payload = std::make_shared<BindPlotterPayload>(DATACARRIER_TYPE_BINDPLOTTER);
+        payload->SetId(CPlotterBindData(nPlotterId));
         return payload;
-    } else if (type == DATACARRIER_TYPE_POINT) {
+    } else if (type == DATACARRIER_TYPE_BINDCHIAFARMER) {
+        // Bind chia farmer transaction
+        if (tx.nVersion != CTransaction::UNIFORM_VERSION || tx.vout.size() < 2 || tx.vout.size() > 3 || tx.vout[0].scriptPubKey.IsUnspendable())
+            return nullptr;
+        if (scriptPubKey.size() != PROTOCOL_BINDCHIAFARMER_SCRIPTSIZE || tx.vout[0].nValue != PROTOCOL_BINDPLOTTER_LOCKAMOUNT)
+            return nullptr;
+        // Check destination
+        CTxDestination dest;
+        if (!ExtractDestination(tx.vout[0].scriptPubKey, dest))
+            return nullptr;
+        const ScriptHash *scriptID = boost::get<ScriptHash>(&dest);
+        if (scriptID == nullptr)
+            return nullptr;
+
+        // Check last active height
+        if (!scriptPubKey.GetOp(pc, opcode, vData) || opcode != sizeof(uint32_t))
+            return nullptr;
+        uint32_t lastActiveHeight = UIntFromVectorByte(vData);
+        if (pLastActiveHeight) *pLastActiveHeight = (int) lastActiveHeight;
+        if (nHeight != 0 && (nHeight > (int)lastActiveHeight || nHeight + PROTOCOL_BINDPLOTTER_MAXALIVE < (int)lastActiveHeight))
+            return nullptr;
+
+        // Verify signature
+        std::vector<unsigned char> vchFarmerPk, vchSignature;
+        if (!scriptPubKey.GetOp(pc, opcode, vchFarmerPk) || opcode != chiapos::PK_LEN)
+            return nullptr;
+        if (!scriptPubKey.GetOp(pc, opcode, vchSignature) || opcode != OP_PUSHDATA1)
+            return nullptr;
+        chiapos::Bytes vchData(32);
+        CSHA256().
+            Write(scriptID->begin(), CScriptID::WIDTH).
+            Write(ToByteVector((uint32_t) lastActiveHeight).data(), 4).
+            Finalize(vchData.data());
+
+        if (!chiapos::VerifySignature(chiapos::MakeArray<chiapos::PK_LEN>(vchFarmerPk),
+                                      chiapos::MakeArray<chiapos::SIG_LEN>(vchSignature), vchData)) {
+            if (pReject) *pReject = true;
+            return nullptr;
+        }
+
+        std::shared_ptr<BindPlotterPayload> payload = std::make_shared<BindPlotterPayload>(DATACARRIER_TYPE_BINDCHIAFARMER);
+        payload->SetId(CPlotterBindData(CChiaFarmerPk(vchFarmerPk)));
+        return payload;
+
+    } else if (type == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint((DatacarrierType)type)) {
         // Plege transaction
         if (tx.nVersion != CTransaction::UNIFORM_VERSION || tx.vout.size() < 2 || tx.vout.size() > 3 || tx.vout[0].scriptPubKey.IsUnspendable())
             return nullptr;
@@ -571,10 +716,38 @@ static CDatacarrierPayloadRef ExtractDatacarrier(const CTransaction& tx, int nHe
         if (!scriptPubKey.GetOp(pc, opcode, vData) || opcode != CScriptID::WIDTH)
             return nullptr;
 
-        std::shared_ptr<PointPayload> payload = std::make_shared<PointPayload>();
+        auto payload = std::make_shared<PointPayload>(static_cast<DatacarrierType>(type));
         payload->receiverID = uint160(vData);
         if (payload->GetReceiverID().IsNull())
             return nullptr;
+        return payload;
+    } else if (type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+        // Plege-retarget transaction
+        if (tx.nVersion != CTransaction::UNIFORM_VERSION || tx.vout.size() < 2 || tx.vout.size() > 3 || tx.vout[0].scriptPubKey.IsUnspendable())
+            return nullptr;
+        if (tx.vout[0].nValue < PROTOCOL_POINT_AMOUNT_MIN || scriptPubKey.size() != PROTOCOL_POINT_RETARGET_SCRIPTSIZE)
+            return nullptr;
+
+        auto payload = std::make_shared<PointRetargetPayload>();
+        // receiver ID
+        if (!scriptPubKey.GetOp(pc, opcode, vData) || opcode != CScriptID::WIDTH)
+            return nullptr;
+        payload->receiverID = uint160(vData);
+        if (payload->GetReceiverID().IsNull()) {
+            return nullptr;
+        }
+        // Point type
+        std::vector<unsigned char> vchPointType;
+        if (!scriptPubKey.GetOp(pc, opcode, vchPointType) || opcode != sizeof(uint32_t)) {
+            return nullptr;
+        }
+        payload->pointType = static_cast<DatacarrierType>(UIntFromVectorByte(vchPointType));
+        // Point height
+        std::vector<unsigned char> vchPointHeight;
+        if (!scriptPubKey.GetOp(pc, opcode, vchPointHeight) || opcode != sizeof(uint32_t)) {
+            return nullptr;
+        }
+        payload->nPointHeight = UIntFromVectorByte(vchPointHeight);
         return payload;
     } else if (type == DATACARRIER_TYPE_TEXT) {
         if (scriptPubKey.size() > MAX_OP_RETURN_RELAY)

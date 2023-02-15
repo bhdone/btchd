@@ -52,7 +52,7 @@ int GetUnbindPlotterLimitHeight(const CBindPlotterInfo& bindInfo, const CCoinsVi
 
 /**
  * Return bind plotter punishment amount
- * 
+ *
  * Change bind require high transaction fee. Diff reward between full-balance and low-balance.
  * Example:
  *   23.75BHD - 7.5BHD = 16.25BHD

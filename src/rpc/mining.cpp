@@ -29,6 +29,7 @@
 #include <util/system.h>
 #include <util/validation.h>
 #include <validation.h>
+#include <subsidy_utils.h>
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
 #include <warnings.h>
@@ -168,6 +169,7 @@ static UniValue getmininginfo(const JSONRPCRequest& request)
     }
     // reward
     obj.pushKV("reward", [&params]() -> UniValue {
+        AssertLockHeld(cs_main);
         const BlockReward fullReward = GetFullMortgageBlockReward(::ChainActive().Height() + 1, params);
         const BlockReward lowReward = GetLowMortgageBlockReward(::ChainActive().Height() + 1, params);
         const int fullFundRatio = GetFullMortgageFundRoyaltyRatio(::ChainActive().Height() + 1, params);
@@ -366,9 +368,8 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             const UniValue& dataval = find_value(oparam, "data");
             if (!dataval.isStr())
                 throw JSONRPCError(RPC_TYPE_ERROR, "Missing data String key for proposal");
-
             CBlock block;
-            if (!DecodeHexBlk(block, dataval.get_str()))
+            if (!DecodeHexBlk(block, dataval.get_str(), false))
                 throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
 
             uint256 hash = block.GetHash();
@@ -679,7 +680,7 @@ static UniValue submitblock(const JSONRPCRequest& request)
 
     std::shared_ptr<CBlock> blockptr = std::make_shared<CBlock>();
     CBlock& block = *blockptr;
-    if (!DecodeHexBlk(block, request.params[0].get_str())) {
+    if (!DecodeHexBlk(block, request.params[0].get_str(), false)) {
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
     }
 
@@ -1026,12 +1027,12 @@ static UniValue getactivebindplotteraddress(const JSONRPCRequest& request)
             + HelpExampleRpc("getactivebindplotteraddress", "\"12345678900000000000\"")
         );
 
-    uint64_t plotterId = 0;
-    if (!request.params[0].isStr() || !IsValidPlotterID(request.params[0].get_str(), &plotterId))
+    uint64_t nPlotterId = 0;
+    if (!request.params[0].isStr() || !IsValidPlotterID(request.params[0].get_str(), &nPlotterId))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID");
 
     LOCK(cs_main);
-    const Coin &coin = ::ChainstateActive().CoinsTip().GetLastBindPlotterCoin(plotterId);
+    const Coin &coin = ::ChainstateActive().CoinsTip().GetLastBindPlotterCoin(CPlotterBindData(nPlotterId));
     if (!coin.IsSpent()) {
         return EncodeDestination(ExtractDestination(coin.out.scriptPubKey));
     }
@@ -1070,13 +1071,13 @@ static UniValue getactivebindplotter(const JSONRPCRequest& request)
             + HelpExampleRpc("getactivebindplotter", "\"12345678900000000000\"")
         );
 
-    uint64_t plotterId = 0;
-    if (!request.params[0].isStr() || !IsValidPlotterID(request.params[0].get_str(), &plotterId))
+    uint64_t nPlotterId = 0;
+    if (!request.params[0].isStr() || !IsValidPlotterID(request.params[0].get_str(), &nPlotterId))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID");
 
     LOCK(cs_main);
 
-    const CBindPlotterInfo lastBindInfo = ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(plotterId);
+    const CBindPlotterInfo lastBindInfo = ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(CPlotterBindData(nPlotterId));
     if (!lastBindInfo.outpoint.IsNull() && lastBindInfo.valid) {
         const Coin &coin = ::ChainstateActive().CoinsTip().AccessCoin(lastBindInfo.outpoint);
         UniValue item(UniValue::VOBJ);
@@ -1090,7 +1091,7 @@ static UniValue getactivebindplotter(const JSONRPCRequest& request)
 
         // Last generate block
         for (const CBlockIndex& block : poc::GetEvalBlocks(::ChainActive().Height(), false, Params().GetConsensus())) {
-            if (block.nPlotterId == plotterId) {
+            if (block.nPlotterId == nPlotterId) {
                 UniValue lastBlock(UniValue::VOBJ);
                 lastBlock.pushKV("blockhash", block.GetBlockHash().GetHex());
                 lastBlock.pushKV("blocktime", block.GetBlockTime());
@@ -1143,9 +1144,9 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
     const CAccountID accountID = ExtractAccountID(DecodeDestination(request.params[0].get_str()));
     if (accountID.IsNull())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid address");
-    uint64_t plotterId = 0;
+    uint64_t nPlotterId = 0;
     if (request.params.size() >= 2) {
-        if (!request.params[1].isStr() || (!request.params[1].get_str().empty() && !IsValidPlotterID(request.params[1].get_str(), &plotterId)))
+        if (!request.params[1].isStr() || (!request.params[1].get_str().empty() && !IsValidPlotterID(request.params[1].get_str(), &nPlotterId)))
             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID");
     }
     int count = std::numeric_limits<int>::max();
@@ -1169,7 +1170,7 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
     typedef std::map<uint32_t, CBindPlotterCoinsMap, std::greater<uint32_t> > CCoinsOrderByHeightMap;
     CCoinsOrderByHeightMap mapOrderedCoins;
     {
-        for (auto pair : ::ChainstateActive().CoinsTip().GetAccountBindPlotterEntries(accountID, plotterId)) {
+        for (auto pair : ::ChainstateActive().CoinsTip().GetAccountBindPlotterEntries(accountID, CPlotterBindData(nPlotterId))) {
             if (!pair.second.valid)
                 continue;
 
@@ -1197,20 +1198,20 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
         for (CBindPlotterCoinsMap::const_reverse_iterator it = mapCoins.rbegin(); fContinue && it != mapCoins.rend(); ++it) {
             UniValue item(UniValue::VOBJ);
             item.pushKV("address", EncodeDestination(ExtractDestination(::ChainstateActive().CoinsTip().AccessCoin(it->first).out.scriptPubKey)));
-            item.pushKV("plotterId", std::to_string(it->second.plotterId));
+            item.pushKV("plotterId", it->second.bindData.ToString());
             item.pushKV("txid", it->first.hash.GetHex());
             item.pushKV("blockhash", ::ChainActive()[static_cast<int>(it->second.nHeight)]->GetBlockHash().GetHex());
             item.pushKV("blocktime", ::ChainActive()[static_cast<int>(it->second.nHeight)]->GetBlockTime());
             item.pushKV("blockheight", it->second.nHeight);
             if (nBlockCount > 0) {
-                item.pushKV("capacity", ValueFromCapacity((nNetCapacityTB * mapPlotterMiningCount[it->second.plotterId]) / nBlockCount));
+                item.pushKV("capacity", ValueFromCapacity((nNetCapacityTB * mapPlotterMiningCount[it->second.bindData.GetBurstPlotterId()]) / nBlockCount));
             } else {
                 item.pushKV("capacity", ValueFromCapacity(0));
             }
             if (fVerbose) {
                 item.pushKV("bindheightlimit", GetBindPlotterLimitHeight(::ChainActive().Height() + 1, CBindPlotterInfo(*it), Params().GetConsensus()));
                 item.pushKV("unbindheightlimit", GetUnbindPlotterLimitHeight(CBindPlotterInfo(*it), ::ChainstateActive().CoinsTip(), Params().GetConsensus()));
-                item.pushKV("active", it->first == ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(it->second.plotterId).outpoint);
+                item.pushKV("active", it->first == ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(it->second.bindData).outpoint);
             }
 
             ret.push_back(item);
@@ -1353,10 +1354,14 @@ static UniValue verifybindplotterdata(const JSONRPCRequest& request)
     bool fReject = false;
     int lastActiveHeight = 0;
     CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(CTransaction(dummyTx), nHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER}, fReject, lastActiveHeight);
-    if (payload && payload->type == DATACARRIER_TYPE_BINDPLOTTER) {
+    if (payload && (payload->type == DATACARRIER_TYPE_BINDPLOTTER || payload->type == DATACARRIER_TYPE_BINDCHIAFARMER)) {
         // Verify pass
         result.pushKV("result", "success");
-        result.pushKV("plotterId", std::to_string(BindPlotterPayload::As(payload)->GetId()));
+        if (payload->type == DATACARRIER_TYPE_BINDPLOTTER) {
+            result.pushKV("plotterId", BindPlotterPayload::As(payload)->GetId().GetBurstPlotterId());
+        } else if (payload->type == DATACARRIER_TYPE_BINDCHIAFARMER) {
+            result.pushKV("plotterId", BindPlotterPayload::As(payload)->GetId().GetChiaFarmerPk().ToString());
+        }
         result.pushKV("lastActiveHeight", lastActiveHeight);
         result.pushKV("address", EncodeDestination(bindToDest));
     } else if (fReject) {
@@ -1387,12 +1392,12 @@ static UniValue getbindplotterlimit(const JSONRPCRequest& request)
             + HelpExampleRpc("getbindplotterlimit", "\"1234567890\"")
         );
 
-    uint64_t plotterId = 0;
-    if (!request.params[0].isStr() || !IsValidPlotterID(request.params[0].get_str(), &plotterId))
+    uint64_t nPlotterId = 0;
+    if (!request.params[0].isStr() || !IsValidPlotterID(request.params[0].get_str(), &nPlotterId))
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID");
 
     LOCK(cs_main);
-    const CBindPlotterInfo lastBindInfo = ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(plotterId);
+    const CBindPlotterInfo lastBindInfo = ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(CPlotterBindData(nPlotterId));
     if (!lastBindInfo.outpoint.IsNull())
         return Consensus::GetBindPlotterLimitHeight(GetSpendHeight(::ChainstateActive().CoinsTip()), lastBindInfo, Params().GetConsensus());
 
@@ -1482,17 +1487,16 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
         if (nBlockCount > 0)
             nCapacityTB = std::max((int64_t) ((nNetCapacityTB * nMinedBlockCount) / nBlockCount), (int64_t) 1);
     } else {
-        std::set<uint64_t> plotters = ::ChainstateActive().CoinsTip().GetAccountBindPlotters(accountID);
+        std::set<CPlotterBindData> plotters = ::ChainstateActive().CoinsTip().GetAccountBindPlotters(accountID, CPlotterBindData::Type::BURST);
         if (!plotters.empty()) {
-            for (const uint64_t& plotterId : plotters) {
-                mapBindPlotter[plotterId] = PlotterItem{0, nullptr};
+            for (const CPlotterBindData &bindData : plotters) {
+                mapBindPlotter[bindData.GetBurstPlotterId()] = PlotterItem{0, nullptr};
             }
             nNetCapacityTB = poc::GetNetCapacity(::ChainActive().Height(), params,
                 [&nBlockCount, &nMinedBlockCount, &plotters, &mapBindPlotter](const CBlockIndex &block) {
                     nBlockCount++;
-                    if (plotters.count(block.nPlotterId)) {
+                    if (plotters.count(CPlotterBindData(block.nPlotterId))) {
                         nMinedBlockCount++;
-                        
                         PlotterItem &item = mapBindPlotter[block.nPlotterId];
                         item.minedCount++;
                         item.pindexLast = &block;
@@ -1745,7 +1749,7 @@ static UniValue getplottermininginfo(const JSONRPCRequest& request)
         // Active bind
         if (fVerbose) {
             COutPoint outpoint;
-            const Coin &coin = ::ChainstateActive().CoinsTip().GetLastBindPlotterCoin(nPlotterId, &outpoint);
+            const Coin &coin = ::ChainstateActive().CoinsTip().GetLastBindPlotterCoin(CPlotterBindData(nPlotterId), &outpoint);
             if (!coin.IsSpent()) {
                 UniValue item(UniValue::VOBJ);
                 item.pushKV("capacity", ValueFromCapacity(nCapacityTB));
@@ -1852,7 +1856,7 @@ static UniValue listpledgeloanofaddress(const JSONRPCRequest& request)
     if (!::ChainstateActive().FlushStateToDisk(Params(), state, FlushStateMode::ALWAYS)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Unable to flush state to disk (%s)\n", FormatStateMessage(state)));
     }
-    return ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID));
+    return ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::Burst));
 }
 
 static UniValue listpledgedebitofaddress(const JSONRPCRequest& request)
@@ -1894,7 +1898,7 @@ static UniValue listpledgedebitofaddress(const JSONRPCRequest& request)
     if (!::ChainstateActive().FlushStateToDisk(Params(), state, FlushStateMode::ALWAYS)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Unable to flush state to disk (%s)\n", FormatStateMessage(state)));
     }
-    return ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID));
+    return ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::Burst));
 }
 
 static UniValue getbalanceofheight(const JSONRPCRequest& request)

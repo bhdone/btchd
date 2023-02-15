@@ -25,6 +25,10 @@ void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
 /** Register PoC RPC commands */
 void RegisterPoCRPCCommands(CRPCTable &tableRPC);
+/** Register Chia RPC commands */
+namespace chiapos {
+void RegisterChiaRPCCommands(CRPCTable &t);
+}
 
 #ifdef ENABLE_OMNICORE
 /** Register Omni data retrieval RPC commands */
@@ -47,6 +51,7 @@ static inline void RegisterAllCoreRPCCommands(CRPCTable &t, bool enableOmni = fa
     RegisterMiningRPCCommands(t);
     RegisterRawTransactionRPCCommands(t);
     RegisterPoCRPCCommands(t);
+    chiapos::RegisterChiaRPCCommands(t);
 
 #ifdef ENABLE_OMNICORE
     if (enableOmni) {

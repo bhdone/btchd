@@ -1,7 +1,7 @@
 BitcoinHD Core integration/staging tree
 =======================================
 
-https://btchd.org
+https://bhd.one
 
 The Crypto Currency System Based on CPoC.
 
@@ -19,8 +19,8 @@ About BitcoinHD
 - Lowered the cost of credit, increased the strength and breadth of consensus, and improved the security of the consensus architecture
 
 For more information, as well as an immediately useable, binary version of
-the BitcoinHD Core software, see https://btchd.org/#wallet, or read the
-[original whitepaper](https://btchd.org/BHD-Whitepaper2.0.pdf).
+the BitcoinHD Core software, see https://bhd.one/#wallet, or read the
+[original whitepaper](https://bhd.one/BHD-Whitepaper2.0.pdf).
 
 License
 -------

@@ -41,7 +41,8 @@ Result CreateBindPlotterTransaction(CWallet* wallet,
                                     const CCoinControl& coin_control,
                                     std::vector<std::string>& errors,
                                     CAmount& txfee,
-                                    CMutableTransaction& mtx);
+                                    CMutableTransaction& mtx,
+                                    bool fChiapos);
 
 //! Create point transaction.
 Result CreatePointTransaction(CWallet* wallet,
@@ -50,9 +51,21 @@ Result CreatePointTransaction(CWallet* wallet,
                               CAmount nAmount,
                               bool fSubtractFeeFromAmount,
                               const CCoinControl& coin_control,
+                              DatacarrierType type,
                               std::vector<std::string>& errors,
                               CAmount& txfee,
                               CMutableTransaction& mtx);
+
+Result CreatePointRetargetTransaction(CWallet* wallet,
+                                      COutPoint const& outpoint,
+                                      CTxDestination const& senderDest,
+                                      CTxDestination const& receiverDest,
+                                      DatacarrierType pointType,
+                                      int nPointHeight,
+                                      CCoinControl const& coin_control,
+                                      std::vector<std::string>& errors,
+                                      CAmount& txfee,
+                                      CMutableTransaction& mtx);
 
 //! Create unfreeze transaction.
 Result CreateUnfreezeTransaction(CWallet* wallet,

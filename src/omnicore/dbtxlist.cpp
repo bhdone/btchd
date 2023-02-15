@@ -590,6 +590,7 @@ void CMPTxList::LoadActivations(int blockHeight)
     }
 
     std::sort(loadOrder.begin(), loadOrder.end());
+    AssertLockHeld(cs_tally);
 
     for (std::vector<std::pair<int64_t, uint256> >::iterator it = loadOrder.begin(); it != loadOrder.end(); ++it) {
         uint256 hash = (*it).second;
@@ -645,6 +646,7 @@ void CMPTxList::LoadActivations(int blockHeight)
 
 bool CMPTxList::LoadFreezeState(int blockHeight)
 {
+    AssertLockHeld(cs_tally);
     assert(pdb);
 
     std::vector<std::pair<std::string, uint256> > loadOrder;

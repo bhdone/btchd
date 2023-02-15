@@ -20,6 +20,7 @@
 #include <util/time.h>
 #include <util/validation.h>
 #include <validation.h>
+#include <subsidy_utils.h>
 #ifdef ENABLE_WALLET
 #include <wallet/wallet.h>
 #endif
@@ -33,6 +34,9 @@
 #include <unordered_map>
 
 #include <event2/thread.h>
+
+#include <chiapos/kernel/calc_diff.h>
+#include <chiapos/kernel/utils.h>
 
 namespace {
 
@@ -62,7 +66,7 @@ std::shared_ptr<CBlock> CreateBlock(const GeneratorState &generateState)
         const char *what = e.what();
         LogPrintf("CreateBlock() fail: %s\n", what ? what : "Catch unknown exception");
     }
-    if (!pblocktemplate.get()) 
+    if (!pblocktemplate.get())
         return nullptr;
 
     CBlock *pblock = &pblocktemplate->block;
@@ -83,13 +87,17 @@ void CheckDeadlineThread()
         CBlockIndex *pTrySnatchTip = nullptr;
         {
             LOCK(cs_main);
+            CBlockIndex *pindexTip = ::ChainActive().Tip();
+            if (pindexTip->nHeight >= Params().GetConsensus().BHDIP009Height) {
+                LogPrintf("Consensus is BHDIP009, exiting POC thread...\n");
+                break;
+            }
             if (!mapGenerators.empty()) {
                 if (GetTimeOffset() > MAX_FUTURE_BLOCK_TIME) {
                     LogPrintf("Your computer time maybe abnormal (offset %" PRId64 "). " \
                         "Check your computer time or add -maxtimeadjustment=0 \n", GetTimeOffset());
                 }
                 int64_t nAdjustedTime = GetAdjustedTime();
-                CBlockIndex *pindexTip = ::ChainActive().Tip();
                 for (auto it = mapGenerators.cbegin(); it != mapGenerators.cend() && pblock == nullptr; ) {
                     if (pindexTip->GetNextGenerationSignature().GetUint64(0) == it->first) {
                         //! Current round
@@ -149,7 +157,7 @@ void CheckDeadlineThread()
                         if (!pblock) {
                             LogPrintf("Snatch block fail: height=%d, nonce=%" PRIu64 ", plotterId=%" PRIu64 "\n",
                                 itDummyProof->second.height, itDummyProof->second.nonce, itDummyProof->second.plotterId);
-                        } else if (GetBlockProof(*pblock, Params().GetConsensus()) <= GetBlockProof(*pTrySnatchTip, Params().GetConsensus())) {
+                        } else if (GetBlockWork(*pblock, Params().GetConsensus()) <= GetBlockWork(*pTrySnatchTip, Params().GetConsensus())) {
                             //! Lowest chainwork, give up
                             LogPrintf("Snatch block give up: height=%d, nonce=%" PRIu64 ", plotterId=%" PRIu64 "\n",
                                 itDummyProof->second.height, itDummyProof->second.nonce, itDummyProof->second.plotterId);
@@ -542,7 +550,7 @@ uint64_t AddNonce(uint64_t& bestDeadline, const CBlockIndex& miningBlockIndex,
             const CAccountID accountID = ExtractAccountID(dest);
             if (accountID.IsNull())
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD address");
-            if (!::ChainstateActive().CoinsTip().HaveActiveBindPlotter(accountID, nPlotterId))
+            if (!::ChainstateActive().CoinsTip().HaveActiveBindPlotter(accountID, CPlotterBindData(nPlotterId)))
                 throw JSONRPCError(RPC_INVALID_REQUEST,
                     strprintf("%" PRIu64 " with %s not active bind", nPlotterId, EncodeDestination(dest)));
         }
@@ -790,12 +798,84 @@ static inline int64_t GetCompatibleNetCapacity(int nMiningHeight, const Consensu
     }
 }
 
-CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const uint64_t& nPlotterId, int nMiningHeight,
-    const CCoinsViewCache& view, int64_t* pMinerCapacity, CAmount* pOldMiningRequireBalance,
-    const Consensus::Params& params)
+arith_uint256 CalculateAverageNetworkSpace(CBlockIndex *pindexCurr, Consensus::Params const& params) {
+    CBlockIndex *pindex = pindexCurr;
+    int nCount = params.BHDIP009PledgeCalcWindow;
+    int nActual{0};
+    arith_uint256 result;
+    while (nCount > 0 && pindex->nHeight >= params.BHDIP009Height) {
+        auto netspace = chiapos::CalculateNetworkSpace(pindex->chiaposFields.nDifficulty, pindex->chiaposFields.GetTotalIters(),
+                params.BHDIP009DifficultyConstantFactorBits, params.BHDIP009PlotIdBitsOfFilter);
+        LogPrint(BCLog::POC, "%s: calculated netspace %s on height %ld\n", __func__, chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())), pindex->nHeight);
+        ++nActual;
+        result += netspace;
+        // Next
+        pindex = pindex->pprev;
+        --nCount;
+    }
+    LogPrintf("%s: average netspace for total %ld block(s)\n", __func__, nActual);
+    if (nActual == 0) {
+        return 0;
+    }
+    return result / nActual;
+}
+
+int GetHeightForCurrentCalcWindow(int nMiningHeight, Consensus::Params const& params)
+{
+    assert(nMiningHeight > params.BHDIP009Height);
+    int nHeight = nMiningHeight - 1;
+    int lastCalcHeight = (nHeight - params.BHDIP009Height) / params.BHDIP009PledgeCalcWindow * params.BHDIP009PledgeCalcWindow + params.BHDIP009Height;
+    return lastCalcHeight;
+}
+
+PledgeParams CalculatePledgeParams(int nMiningHeight, Consensus::Params const& params) {
+    if (nMiningHeight < params.BHDIP009Height) {
+        throw std::runtime_error("Invalid nHeight for calculating the pledge params!");
+    }
+    PledgeParams result;
+    result.nMiningHeight = nMiningHeight;
+    if (nMiningHeight == params.BHDIP009Height) {
+        result.nNetCapacityTB = params.BHDIP009MinNetspacePB * 1024;
+        result.supplied = GetTotalSupplyBeforeHeight(nMiningHeight, params);
+        return result;
+    }
+    result.nCalcHeight = GetHeightForCurrentCalcWindow(nMiningHeight, params);
+    static std::map<int, PledgeParams> cachedPledgeParams;
+    auto i = cachedPledgeParams.find(result.nCalcHeight);
+    if (i != std::end(cachedPledgeParams)) {
+        // Found
+        return i->second;
+    }
+    // the height is larger than the height of BHDIP009 hard-fork
+    CBlockIndex* pindexCurr = ChainActive()[result.nCalcHeight];
+    if (pindexCurr == nullptr) {
+        // the block index cannot be found, the chain is invalid or it is still synchronizing
+        throw std::runtime_error("invalid chain or it is still synchronizing, cannot calculate pledge params.");
+    }
+    auto netspace = CalculateAverageNetworkSpace(pindexCurr, params);
+    result.nNetCapacityTB = (netspace / 1024 / 1024 / 1024 / 1024).GetLow64();
+    // Fix the netspace to minimal netspace when it is smaller than minimal
+    if (result.nNetCapacityTB < params.BHDIP009MinNetspacePB * 1024) {
+        result.nNetCapacityTB = params.BHDIP009MinNetspacePB * 1024;
+    }
+    result.supplied = GetTotalSupplyBeforeHeight(result.nCalcHeight + 1, params);
+    // Fix the amount of total supplied
+    if (result.nCalcHeight >= params.BHDIP009Height) {
+        result.supplied += GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
+    }
+    cachedPledgeParams[result.nCalcHeight] = result; // Save the calculated params to cache
+    return result;
+}
+
+CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlotterBindData& bindData, int nMiningHeight, const CCoinsViewCache& view, int64_t* pMinerCapacity, CAmount* pOldMiningRequireBalance, CAmount nBurned, const Consensus::Params& params)
 {
     AssertLockHeld(cs_main);
-    assert(GetSpendHeight(view) == nMiningHeight);
+
+    int nSpendHeight = GetSpendHeight(view);
+    if (nSpendHeight != nMiningHeight) {
+        LogPrintf("%s: nSpendHeight(%d) != nMiningHeight(%d)\n", __func__, nSpendHeight, nMiningHeight);
+        throw std::runtime_error("the height of spend and mining mismatch");
+    }
 
     if (pMinerCapacity != nullptr) *pMinerCapacity = 0;
     if (pOldMiningRequireBalance != nullptr) *pOldMiningRequireBalance = 0;
@@ -806,9 +886,11 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const uint
     int nBlockCount = 0, nMinedCount = 0;
     if (nMiningHeight < params.BHDIP006BindPlotterActiveHeight) {
         // Mined by plotter ID
+        assert(bindData.GetType() == CPlotterBindData::Type::BURST);
+        uint64_t nPlotterId = bindData.GetBurstPlotterId();
         int nOldMinedCount = 0;
         nNetCapacityTB = GetCompatibleNetCapacity(nMiningHeight, params,
-            [&nBlockCount, &nMinedCount, &nOldMinedCount, &generatorAccountID, &nPlotterId] (const CBlockIndex &block) {
+            [&nBlockCount, &nMinedCount, &nOldMinedCount, &generatorAccountID, nPlotterId] (const CBlockIndex &block) {
                 nBlockCount++;
 
                 // 1. Multi plotter generate to same wallet (like pool)
@@ -838,13 +920,23 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const uint
         }
     } else {
         // Binded plotter
-        const std::set<uint64_t> plotters = view.GetAccountBindPlotters(generatorAccountID);
+        const std::set<CPlotterBindData> plotters = view.GetAccountBindPlotters(generatorAccountID, bindData.GetType());
         nNetCapacityTB = GetCompatibleNetCapacity(nMiningHeight, params,
             [&nBlockCount, &nMinedCount, &plotters] (const CBlockIndex &block) {
                 nBlockCount++;
-
-                if (plotters.count(block.nPlotterId))
-                    nMinedCount++;
+                for (const CPlotterBindData &bindData : plotters) {
+                    if (bindData.GetType() == CPlotterBindData::Type::BURST) {
+                        if (!block.IsChiaBlock() && bindData == block.nPlotterId) {
+                            ++nMinedCount;
+                            break;
+                        }
+                    } else if (bindData.GetType() == CPlotterBindData::Type::CHIA) {
+                        if (block.IsChiaBlock() && bindData == CChiaFarmerPk(block.chiaposFields.posProof.vchFarmerPk)) {
+                            ++nMinedCount;
+                            break;
+                        }
+                    }
+                }
             }
         );
         // Remove sugar
@@ -853,9 +945,37 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const uint
     if (nMinedCount == 0 || nBlockCount == 0)
         return 0;
 
-    int64_t nMinerCapacityTB = std::max((nNetCapacityTB * nMinedCount) / nBlockCount, (int64_t) 1);
-    if (pMinerCapacity != nullptr) *pMinerCapacity = nMinerCapacityTB;
-    return GetCapacityRequireBalance(nMinerCapacityTB, miningRatio);
+    if (nMiningHeight >= params.BHDIP009Height) {
+        CBlockIndex* pindex = ::ChainActive().Tip();
+        PledgeParams pledgeParams = CalculatePledgeParams(nMiningHeight, params);
+        pledgeParams.supplied -= nBurned;
+        LogPrintf("%s: Average network space %1.6f(Tib) from height: %ld, total supplied: %s BHD (burned: %s BHD), params(difficulty=%ld, iters=%ld, DCF(bits)=%ld, Filter(bits)=%ld)\n", __func__,
+                chiapos::FormatNumberStr(std::to_string(pledgeParams.nNetCapacityTB)),
+                pledgeParams.nCalcHeight,
+                chiapos::FormatNumberStr(std::to_string(pledgeParams.supplied / COIN)),
+                chiapos::FormatNumberStr(std::to_string(nBurned / COIN)),
+                pindex->chiaposFields.nDifficulty,
+                chiapos::FormatNumberStr(std::to_string(pindex->chiaposFields.GetTotalIters())),
+                params.BHDIP009DifficultyConstantFactorBits, params.BHDIP009PlotIdBitsOfFilter);
+        nNetCapacityTB = pledgeParams.nNetCapacityTB;
+        // Restrict fund addresses will not be able to do a full mortgage
+        std::string generatorAddress = EncodeDestination(CTxDestination((ScriptHash)generatorAccountID));
+        auto it_fund = std::find(std::begin(params.BHDIP009FundAddresses), std::end(params.BHDIP009FundAddresses), generatorAddress);
+        bool isFoundationAddr = it_fund != std::end(params.BHDIP009FundAddresses);
+        if (isFoundationAddr) {
+            // the generator belongs to the foundation, fundation only keeps the network running, always assume it is mining with max netcapacity
+            nMinedCount = nBlockCount;
+        }
+        int64_t nMinerCapacityTB = std::max((nNetCapacityTB * nMinedCount) / nBlockCount, (int64_t) 1);
+        if (pMinerCapacity != nullptr) *pMinerCapacity = nMinerCapacityTB;
+        CAmount nMiningRequireBalance = pledgeParams.supplied * nMinerCapacityTB / nNetCapacityTB;
+        LogPrintf("%s: mining require balance=%ld (%s BHD), miner capacity=%s TB, mined=%ld, calced=%ld, isFoundationAddr=%s\n", __func__, nMiningRequireBalance, chiapos::FormatNumberStr(std::to_string(nMiningRequireBalance / COIN)), chiapos::FormatNumberStr(std::to_string(nMinerCapacityTB)), nMinedCount, nBlockCount, (isFoundationAddr ? "yes" : "no"));
+        return nMiningRequireBalance;
+    } else {
+        int64_t nMinerCapacityTB = std::max((nNetCapacityTB * nMinedCount) / nBlockCount, (int64_t) 1);
+        if (pMinerCapacity != nullptr) *pMinerCapacity = nMinerCapacityTB;
+        return GetCapacityRequireBalance(nMinerCapacityTB, miningRatio);
+    }
 }
 
 bool CheckProofOfCapacity(const CBlockIndex& prevBlockIndex, const CBlockHeader& block, const Consensus::Params& params)

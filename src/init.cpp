@@ -30,6 +30,8 @@
 #include <net_processing.h>
 #include <netbase.h>
 #include <poc/poc.h>
+#include <chiapos/post.h>
+#include <chiapos/test/chia_test.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -56,6 +58,8 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <walletinitinterface.h>
+#include <netmessagemaker.h>
+#include <key_io.h>
 
 #ifdef ENABLE_OMNICORE
 #include <omnicore_api.h>
@@ -83,6 +87,11 @@
 #include <zmq/zmqrpc.h>
 #endif
 
+#include <plog/Log.h>
+#include <plog/Init.h>
+#include <plog/Formatters/TxtFormatter.h>
+#include <plog/Appenders/ColorConsoleAppender.h>
+
 static bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
@@ -105,6 +114,8 @@ std::unique_ptr<BanMan> g_banman;
 #endif
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
+
+static plog::ConsoleAppender<plog::TxtFormatter> g_consoleAppender;
 
 /**
  * The PID file facilities.
@@ -193,6 +204,10 @@ void Shutdown(InitInterfaces& interfaces)
     util::ThreadRename("shutoff");
     mempool.AddTransactionsUpdated(1);
 
+    if (chiapos::StopTimelord()) {
+        LogPrintf("%s: shutdown timelord...\n", __func__);
+        chiapos::WaitTimelord();
+    }
     StopPOC();
     StopHTTPRPC();
     StopREST();
@@ -564,6 +579,13 @@ void SetupServerArgs()
     gArgs.AddArg("-forcecheckdeadline", strprintf("Force check every block work (default: %u)", DEFAULT_CHECKWORK_ENABLED), ArgsManager::ALLOW_ANY, OptionsCategory::POC);
     gArgs.AddArg("-signprivkey", "Import private key for block signature", ArgsManager::ALLOW_ANY, OptionsCategory::POC);
 
+    gArgs.AddArg("-chiatest", "Run chia test before start the server", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
+    gArgs.AddArg("-timelord", "Run timelord", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
+    gArgs.AddArg("-timelord-vdf_client", "Run timelord with a valid vdf_client executable path", ArgsManager::ALLOW_STRING, OptionsCategory::POC);
+    gArgs.AddArg("-timelord-bind", "Run timelord and bind ip address", ArgsManager::ALLOW_STRING, OptionsCategory::POC);
+    gArgs.AddArg("-timelord-port", "Run timelord and bind port", ArgsManager::ALLOW_INT, OptionsCategory::POC);
+    gArgs.AddArg("-skip-ibd", "Skip the checking procedure for `Initial block download`", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
+
 #ifdef ENABLE_OMNICORE
     gArgs.AddArg("-omni", strprintf("Enable omnicore (default: %u)", DEFAULT_OMNICORE), ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
     gArgs.AddArg("-omnistartclean", "Clear all persistence files on startup; triggers reparsing of Omni transactions (default: 0)", ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
@@ -611,7 +633,7 @@ void SetupServerArgs()
 std::string LicenseInfo()
 {
     const std::string URL_SOURCE_CODE = "<https://github.com/btchd/btchd>";
-    const std::string URL_WEBSITE = "<https://btchd.org>";
+    const std::string URL_WEBSITE = "<https://bhd.one>";
 
     return CopyrightHolders(_("Copyright (C) %s").translated) + "\n" +
            "\n" +
@@ -1276,6 +1298,10 @@ bool AppInitLockDataDirectory()
 bool AppInitMain(InitInterfaces& interfaces)
 {
     const CChainParams& chainparams = Params();
+
+    std::string strBurnToAddress = EncodeDestination(CTxDestination((ScriptHash)CAccountID()));
+    LogPrintf("%s: Burn to address %s\n", __func__, strBurnToAddress);
+
     // ********************************************************* Step 4a: application initialization
     if (!CreatePidFile()) {
         // Detailed error printed inside CreatePidFile().
@@ -1291,6 +1317,11 @@ bool AppInitMain(InitInterfaces& interfaces)
     if (!LogInstance().StartLogging()) {
             return InitError(strprintf("Could not open debug log file %s",
                 LogInstance().m_file_path.string()));
+    }
+
+    // ********************************************************* Step 4b: chiapos test
+    if (gArgs.GetBoolArg("-chiatest", false)) {
+        return chiapos::RunAllTests();
     }
 
     if (!LogInstance().m_log_timestamps)
@@ -2005,6 +2036,28 @@ bool AppInitMain(InitInterfaces& interfaces)
         return false;
     }
 
+    // PoC module dependency wallets
+    if (!StartPOC())
+        return false;
+
+    if (gArgs.GetBoolArg("-timelord", false)) {
+        if (gArgs.GetBoolArg("-debug", false)) {
+            plog::init(plog::debug, &g_consoleAppender);
+        } else {
+            plog::init(plog::info, &g_consoleAppender);
+        }
+
+        if (!chiapos::StartTimelord()) {
+            return false;
+        }
+        // Install callback
+        chiapos::RegisterTimelordProofHandler([](chiapos::CVdfProof const& vdf) {
+            chiapos::SendVdfProofOverP2PNetwork(g_connman.get(), vdf);
+            chiapos::SubmitVdfProofPacket(vdf);
+        });
+        LogPrintf("%s: timelord proof handler is registered\n", __func__);
+    }
+
     // ********************************************************* Step 13: finished
 
     SetRPCWarmupFinished();
@@ -2017,10 +2070,6 @@ bool AppInitMain(InitInterfaces& interfaces)
     scheduler.scheduleEvery([]{
         g_banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL * 1000);
-
-    // PoC module dependency wallets
-    if (!StartPOC())
-        return false;
 
     return true;
 }

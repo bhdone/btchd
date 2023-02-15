@@ -15,12 +15,15 @@
 #include <utility>
 #include <vector>
 
+#include <chiapos/plotter_id.h>
+
 class CBindPlotterInfo;
 class CBlock;
 class CFeeRate;
 class CRPCCommand;
 class CScheduler;
 class CValidationState;
+class CPlotterBindData;
 class Coin;
 class uint256;
 enum class RBFTransactionState;
@@ -265,19 +268,19 @@ public:
     virtual void requestMempoolTransactions(Notifications& notifications) = 0;
 
     //! Return true if have active bind plotter.
-    virtual bool haveActiveBindPlotter(const CAccountID &accountID, uint64_t plotterId) = 0;
+    virtual bool haveActiveBindPlotter(const CAccountID &accountID, const CPlotterBindData &bindData) = 0;
 
     //! Return unbind plotter limit height.
     virtual int getUnbindPlotterLimitHeight(const CBindPlotterInfo& info) = 0;
 
     //! Return bind plotter punishment <amount,bindLimitHeight>.
-    virtual std::pair<CAmount,int> getBindPlotterPunishment(int bindHeight, uint64_t plotterId) = 0;
+    virtual std::pair<CAmount,int> getBindPlotterPunishment(int bindHeight, const CPlotterBindData &bindData) = 0;
 
     //! Return last bind plotter info if exist.
-    virtual CBindPlotterInfo getLastBindPlotterInfo(uint64_t plotterId) = 0;
+    virtual CBindPlotterInfo getLastBindPlotterInfo(const CPlotterBindData &bindData) = 0;
 
     //! Return account balance from coins tip.
-    virtual AccountBanalces getAccountBalance(const CAccountID& accountID) = 0;
+    virtual AccountBanalces getAccountBalance(const CAccountID& accountID, CPlotterBindData::Type type) = 0;
 
     //! Return true if have coin in coins tip.
     virtual bool haveCoin(const COutPoint &outpoint) = 0;

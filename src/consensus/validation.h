@@ -73,6 +73,7 @@ enum class ValidationInvalidReason {
      * TODO process this case
      */
     TX_INVALID_BIND,          //!< invalid bind or unbind transaction
+    TX_INVALID_UNLOCK_PERIOD, //!< withdraw pledge is not allowed
 };
 
 inline bool IsTransactionReason(ValidationInvalidReason r)
@@ -157,16 +158,17 @@ public:
 // weight = (stripped_size * 3) + total_size.
 static inline int64_t GetTransactionWeight(const CTransaction& tx)
 {
-    return ::GetSerializeSize(tx, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(tx, PROTOCOL_VERSION);
+    return ::GetSerializeSize(tx, 0, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(tx, 0, PROTOCOL_VERSION);
 }
 static inline int64_t GetBlockWeight(const CBlock& block)
 {
-    return ::GetSerializeSize(block, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(block, PROTOCOL_VERSION);
+    int ser_flag = block.IsChiaBlock() ? SERIALIZE_BLOCK_CHIAPOS : 0;
+    return ::GetSerializeSize(block, 0, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS | ser_flag) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(block, 0, PROTOCOL_VERSION | ser_flag);
 }
 static inline int64_t GetTransactionInputWeight(const CTxIn& txin)
 {
     // scriptWitness size is added here because witnesses and txins are split up in segwit serialization.
-    return ::GetSerializeSize(txin, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(txin, PROTOCOL_VERSION) + ::GetSerializeSize(txin.scriptWitness.stack, PROTOCOL_VERSION);
+    return ::GetSerializeSize(txin, 0, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS) * (WITNESS_SCALE_FACTOR - 1) + ::GetSerializeSize(txin, 0, PROTOCOL_VERSION) + ::GetSerializeSize(txin.scriptWitness.stack, 0, PROTOCOL_VERSION);
 }
 
 #endif // BITCOIN_CONSENSUS_VALIDATION_H

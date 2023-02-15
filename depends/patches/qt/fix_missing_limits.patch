@@ -1,0 +1,11 @@
+--- old/qtbase/src/corelib/tools/qbytearraymatcher.h	2022-05-22 19:08:01.235690900 +0800
++++ new/qtbase/src/corelib/tools/qbytearraymatcher.h	2022-05-22 19:11:50.435690900 +0800
+@@ -40,6 +40,8 @@
+ #ifndef QBYTEARRAYMATCHER_H
+ #define QBYTEARRAYMATCHER_H
+ 
++#include <limits>
++
+ #include <QtCore/qbytearray.h>
+ 
+ QT_BEGIN_NAMESPACE

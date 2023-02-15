@@ -158,6 +158,7 @@ void COmniFeeCache::AddFee(const uint32_t &propertyId, int block, const int64_t 
 // Rolls back the cache to an earlier state (eg in event of a reorg) - block is *inclusive* (ie entries=block will get deleted)
 void COmniFeeCache::RollBackCache(int block)
 {
+    AssertLockHeld(cs_tally);
     assert(pdb);
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;

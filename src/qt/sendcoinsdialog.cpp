@@ -31,6 +31,7 @@
 
 #include <functional>
 #include <memory>
+#include <array>
 
 #include <QFontMetrics>
 #include <QLineEdit>
@@ -84,8 +85,14 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
 
     // Operate method
+    // TODO matthew: extend these options
     ui->operateMethodComboBox->addItem(tr("Pay to"), (int)PayOperateMethod::Pay);
     ui->operateMethodComboBox->addItem(tr("Point to"), (int)PayOperateMethod::Point);
+    ui->operateMethodComboBox->addItem(tr("(chia) Point to"), (int)PayOperateMethod::ChiaPoint);
+    ui->operateMethodComboBox->addItem(tr("(chia) Point to (term1)"), (int)PayOperateMethod::ChiaPointT1);
+    ui->operateMethodComboBox->addItem(tr("(chia) Point to (term2)"), (int)PayOperateMethod::ChiaPointT2);
+    ui->operateMethodComboBox->addItem(tr("(chia) Point to (term3)"), (int)PayOperateMethod::ChiaPointT3);
+    ui->operateMethodComboBox->addItem(tr("(chia) Point retarget"), (int)PayOperateMethod::ChiaPointRetarget);
     ui->operateMethodComboBox->addItem(tr("Bind to"), (int)PayOperateMethod::BindPlotter);
     addEntry();
 
@@ -248,6 +255,11 @@ void SendCoinsDialog::onOperateMethodComboBoxChanged(int index)
         switch ((PayOperateMethod)opMethodValue)
         {
         case PayOperateMethod::Point:
+        case PayOperateMethod::ChiaPoint:
+        case PayOperateMethod::ChiaPointT1:
+        case PayOperateMethod::ChiaPointT2:
+        case PayOperateMethod::ChiaPointT3:
+        case PayOperateMethod::ChiaPointRetarget:
         case PayOperateMethod::BindPlotter:
             ui->clearButton->setVisible(false);
             ui->addButton->setVisible(false);
@@ -349,7 +361,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         uint64_t plotterId;
         if (recipients[0].plotterPassphrase.size() == PROTOCOL_BINDPLOTTER_SCRIPTSIZE * 2 && IsHex(recipients[0].plotterPassphrase.toStdString())) {
             std::vector<unsigned char> bindData(ParseHex(recipients[0].plotterPassphrase.toStdString()));
-            plotterId = GetBindPlotterIdFromScript(CScript(bindData.cbegin(), bindData.cend()));
+            plotterId = GetPlotterBindDataFromScript(CScript(bindData.cbegin(), bindData.cend())).GetBurstPlotterId();
         } else {
             plotterId = PocLegacy::GeneratePlotterId(recipients[0].plotterPassphrase.toStdString());
         }
@@ -358,7 +370,7 @@ void SendCoinsDialog::on_sendButton_clicked()
             msgBox.exec();
             return;
         }
-        auto bindPunishment = chain.getBindPlotterPunishment(nSpendHeight, plotterId);
+        auto bindPunishment = chain.getBindPlotterPunishment(nSpendHeight, CPlotterBindData(plotterId));
         if (bindPunishment.first > 0) {
             ctrl.m_min_txfee = std::max(ctrl.m_min_txfee, bindPunishment.first + PROTOCOL_BINDPLOTTER_MINFEE);
             QString information = tr("This binding operation triggers anti-cheating mechanism and therefore requires a large transaction fee %1.")
@@ -376,6 +388,21 @@ void SendCoinsDialog::on_sendButton_clicked()
         ctrl.m_pick_dest = ctrl.destChange = CoinControlDialog::coinControl()->m_pick_dest;
         updateCoinControlState(ctrl);
     }
+    else if (operateMethod == PayOperateMethod::ChiaPoint) {
+        // TODO matthew: complete the method
+    }
+    else if (operateMethod == PayOperateMethod::ChiaPointT1) {
+        // TODO matthew: complete the method
+    }
+    else if (operateMethod == PayOperateMethod::ChiaPointT2) {
+        // TODO matthew: complete the method
+    }
+    else if (operateMethod == PayOperateMethod::ChiaPointT3) {
+        // TODO matthew: complete the method
+    }
+    else if (operateMethod == PayOperateMethod::ChiaPointRetarget) {
+        // TODO matthew: complete the method
+    }
     else
     {
         if (model->getOptionsModel()->getCoinControlFeatures())
@@ -389,8 +416,8 @@ void SendCoinsDialog::on_sendButton_clicked()
     CDatacarrierPayloadRef payload;
     if (prepareStatus.status == WalletModel::OK) {
         if (operateMethod == PayOperateMethod::BindPlotter) {
-            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER});
-            if (!payload || payload->type != DATACARRIER_TYPE_BINDPLOTTER) {
+            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_BINDCHIAFARMER});
+            if (!payload || (payload->type != DATACARRIER_TYPE_BINDPLOTTER && payload->type != DATACARRIER_TYPE_BINDCHIAFARMER)) {
                 QMessageBox msgBox(QMessageBox::Warning, tr("Bind plotter data"), tr("Invalid bind plotter data!"), QMessageBox::Close, this);
                 msgBox.exec();
                 return;
@@ -398,10 +425,40 @@ void SendCoinsDialog::on_sendButton_clicked()
 
             if (chain.haveActiveBindPlotter(ExtractAccountID(ctrl.m_pick_dest), BindPlotterPayload::As(payload)->GetId()))
                 prepareStatus = WalletModel::SendCoinsReturn(WalletModel::BindPlotterExist,
-                    QString::number(BindPlotterPayload::As(payload)->GetId()) + "\n" + QString::fromStdString(EncodeDestination(ctrl.m_pick_dest)));
+                    QString::fromStdString(BindPlotterPayload::As(payload)->GetId().ToString()) + "\n" + QString::fromStdString(EncodeDestination(ctrl.m_pick_dest)));
         } else if (operateMethod == PayOperateMethod::Point) {
             payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_POINT});
             if (!payload || payload->type != DATACARRIER_TYPE_POINT) {
+                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
+            }
+        } else if (operateMethod == PayOperateMethod::ChiaPoint) {
+            // TODO matthew: unfinished checking
+            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_CHIA_POINT});
+            if (!payload || payload->type != DATACARRIER_TYPE_CHIA_POINT) {
+                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
+            }
+        } else if (operateMethod == PayOperateMethod::ChiaPointT1) {
+            // TODO matthew: unfinished checking
+            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_CHIA_POINT_TERM_1});
+            if (!payload || payload->type != DATACARRIER_TYPE_CHIA_POINT_TERM_1) {
+                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
+            }
+        } else if (operateMethod == PayOperateMethod::ChiaPointT2) {
+            // TODO matthew: unfinished checking
+            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_CHIA_POINT_TERM_2});
+            if (!payload || payload->type != DATACARRIER_TYPE_CHIA_POINT_TERM_2) {
+                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
+            }
+        } else if (operateMethod == PayOperateMethod::ChiaPointT3) {
+            // TODO matthew: unfinished checking
+            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_CHIA_POINT_TERM_3});
+            if (!payload || payload->type != DATACARRIER_TYPE_CHIA_POINT_TERM_3) {
+                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
+            }
+        } else if (operateMethod == PayOperateMethod::ChiaPointRetarget) {
+            // TODO matthew: unfinished checking
+            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_CHIA_POINT_RETARGET});
+            if (!payload || payload->type != DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
                 prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
             }
         }
@@ -468,6 +525,42 @@ void SendCoinsDialog::on_sendButton_clicked()
         questionString = "<span style='color:#aa0000;'><b>" + tr("Are you sure you want point?") + "</b></span>";
         formatted.append(tr("You can withdraw this point at any time, and the amount will be returned to this address."));
     }
+    else if (operateMethod == PayOperateMethod::ChiaPoint ||
+             operateMethod == PayOperateMethod::ChiaPointT1 ||
+             operateMethod == PayOperateMethod::ChiaPointT2 ||
+             operateMethod == PayOperateMethod::ChiaPointT3) {
+        assert(payload && (DatacarrierTypeIsChiaPoint(payload->type)));
+        titleString = tr("Confirm chia point");
+        questionString = "<span style='color:#aa0000;'><b>" + tr("Are you sure you want to make a chia point?") + "</b></span>";
+        formatted.append(tr("You can withdraw this point after the agreed time with full amount and it will be returned to this address. You also can withdraw it early before the agreed date with limited amount."));
+    }
+    else if (operateMethod == PayOperateMethod::ChiaPointRetarget) {
+        assert(payload && payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET);
+        titleString = tr("Confirm chia point");
+        questionString = "<span style='color:#aa0000;'><b>" + tr("Are you sure you want to retarget a chia point?") + "</b></span>";
+        formatted.append(tr("The original target address will be revoked, the new address effects on next block."));
+    }
+    else if (operateMethod == PayOperateMethod::ChiaBindFarmerPk) {
+        assert(payload && payload->type == DATACARRIER_TYPE_BINDCHIAFARMER);
+        titleString = tr("Confirm bind plotter (chia)");
+        questionString = "<span style='color:#aa0000;'><b>" + tr("Are you sure you want to bind plotter?") + "</b></span>";
+        {
+            const SendCoinsRecipient &rcp = recipients[0];
+            QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount) + "</b>";
+            QString farmerPk = "<b>" + QString::fromStdString(BindPlotterPayload::As(payload)->GetId().ToString()) + "</b>";
+            QString address;
+            if (rcp.label.length() > 0)
+                address = GUIUtil::HtmlEscape(rcp.label) + "(<span style='font-family: monospace;'>" + rcp.address + "</span>)";
+            else
+                address = "<span style='font-family: monospace;'>" + rcp.address + "</span>";
+
+            formatted.clear();
+            formatted.append(tr("%1 bind to %2").arg(farmerPk, address));
+            formatted.append("");
+            formatted.append(tr("The operation will lock %1.").arg(amount));
+            formatted.append(tr("You can unbind later, and the locked amount will be returned to this address."));
+        }
+    }
     else if (operateMethod == PayOperateMethod::BindPlotter)
     {
         assert(payload && payload->type == DATACARRIER_TYPE_BINDPLOTTER);
@@ -476,7 +569,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         {
             const SendCoinsRecipient &rcp = recipients[0];
             QString amount = "<b>" + BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount) + "</b>";
-            QString plotterId = "<b>" + QString::number(BindPlotterPayload::As(payload)->GetId()) + "</b>";
+            QString plotterId = "<b>" + QString::fromStdString(BindPlotterPayload::As(payload)->GetId().ToString()) + "</b>";
             QString address;
             if (rcp.label.length() > 0)
                 address = GUIUtil::HtmlEscape(rcp.label) + "(<span style='font-family: monospace;'>" + rcp.address + "</span>)";
@@ -520,7 +613,7 @@ void SendCoinsDialog::on_sendButton_clicked()
                 append("</span>");
             questionString.append("<br />").
                 append(tr("%1 small bind plotter fee active on %2 block height (%3 blocks after, about %4 minute).").
-                        arg("<b>" + QString::number(BindPlotterPayload::As(payload)->GetId()) + "</b>",
+                        arg("<b>" + QString::fromStdString(BindPlotterPayload::As(payload)->GetId().ToString()) + "</b>",
                             QString::number(nBindLimitHeight),
                             QString::number(nBindLimitHeight - nSpendHeight),
                             QString::number((nBindLimitHeight - nSpendHeight) * Consensus::GetTargetSpacing(nSpendHeight, params) / 60)));
@@ -630,7 +723,7 @@ void SendCoinsDialog::on_checkBindDataButton_clicked()
     else
         address = "<span style='font-family: monospace;'>" + recipient.address + "</span>";
     address = "<b>" + address + "</b>";
-    QString plotterId = "<b>" + QString::number(BindPlotterPayload::As(payload)->GetId()) + "</b>";
+    QString plotterId = "<b>" + QString::fromStdString(BindPlotterPayload::As(payload)->GetId().ToString()) + "</b>";
 
     QString information;
     information += tr("Bind %1 to %2").arg(plotterId, address) + "<br /><br />";

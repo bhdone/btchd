@@ -216,7 +216,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod pa
         if (payOperateMethod == PayOperateMethod::Point) {
             if (vecSend.size() != 1)
                 return TransactionCreationFailed;
-            vecSend.push_back({GetPointScriptForDestination(ExtractDestination(vecSend[0].scriptPubKey)), 0, false});
+            vecSend.push_back({GetPointScriptForDestination(ExtractDestination(vecSend[0].scriptPubKey), DATACARRIER_TYPE_POINT), 0, false});
             vecSend[0].scriptPubKey = GetScriptForDestination(coinControl.m_pick_dest);
             nChangePosRet = 1;
             nTxVersion = CTransaction::UNIFORM_VERSION;
@@ -233,6 +233,59 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod pa
                 int nTipHeight = m_wallet->chain().lock()->getHeight().get_value_or(0);
                 vecSend.push_back({GetBindPlotterScriptForDestination(coinControl.m_pick_dest, rcp.plotterPassphrase.toStdString(), nTipHeight + rcp.plotterDataAliveHeight), 0, false});
             }
+            nChangePosRet = 1;
+            nTxVersion = CTransaction::UNIFORM_VERSION;
+        } else if (payOperateMethod == PayOperateMethod::ChiaPoint) {
+            if (vecSend.size() != 1)
+                return TransactionCreationFailed;
+            vecSend.push_back({GetPointScriptForDestination(ExtractDestination(vecSend[0].scriptPubKey), DATACARRIER_TYPE_CHIA_POINT), 0, false});
+            vecSend[0].scriptPubKey = GetScriptForDestination(coinControl.m_pick_dest);
+            nChangePosRet = 1;
+            nTxVersion = CTransaction::UNIFORM_VERSION;
+        } else if (payOperateMethod == PayOperateMethod::ChiaPointT1) {
+            if (vecSend.size() != 1)
+                return TransactionCreationFailed;
+            vecSend.push_back({GetPointScriptForDestination(ExtractDestination(vecSend[0].scriptPubKey), DATACARRIER_TYPE_CHIA_POINT_TERM_1), 0, false});
+            vecSend[0].scriptPubKey = GetScriptForDestination(coinControl.m_pick_dest);
+            nChangePosRet = 1;
+            nTxVersion = CTransaction::UNIFORM_VERSION;
+        } else if (payOperateMethod == PayOperateMethod::ChiaPointT2) {
+            if (vecSend.size() != 1)
+                return TransactionCreationFailed;
+            vecSend.push_back({GetPointScriptForDestination(ExtractDestination(vecSend[0].scriptPubKey), DATACARRIER_TYPE_CHIA_POINT_TERM_2), 0, false});
+            vecSend[0].scriptPubKey = GetScriptForDestination(coinControl.m_pick_dest);
+            nChangePosRet = 1;
+            nTxVersion = CTransaction::UNIFORM_VERSION;
+        } else if (payOperateMethod == PayOperateMethod::ChiaPointT3) {
+            if (vecSend.size() != 1)
+                return TransactionCreationFailed;
+            vecSend.push_back({GetPointScriptForDestination(ExtractDestination(vecSend[0].scriptPubKey), DATACARRIER_TYPE_CHIA_POINT_TERM_3), 0, false});
+            vecSend[0].scriptPubKey = GetScriptForDestination(coinControl.m_pick_dest);
+            nChangePosRet = 1;
+            nTxVersion = CTransaction::UNIFORM_VERSION;
+        } else if (payOperateMethod == PayOperateMethod::ChiaBindFarmerPk) {
+            if (vecSend.size() != 1 || recipients[0].plotterPassphrase.isEmpty())
+                return TransactionCreationFailed;
+            const SendCoinsRecipient &rcp = recipients[0];
+            if (rcp.plotterPassphrase.size() == PROTOCOL_BINDCHIAFARMER_SCRIPTSIZE * 2 && IsHex(rcp.plotterPassphrase.toStdString())) {
+                // Hex data
+                std::vector<unsigned char> bindData(ParseHex(rcp.plotterPassphrase.toStdString()));
+                vecSend.push_back({CScript(bindData.cbegin(), bindData.cend()), 0, false});
+            } else {
+                // Passphrase
+                int nTipHeight = m_wallet->chain().lock()->getHeight().get_value_or(0);
+                vecSend.push_back({GetBindPlotterScriptForDestination(coinControl.m_pick_dest, rcp.plotterPassphrase.toStdString(), nTipHeight + rcp.plotterDataAliveHeight), 0, false});
+            }
+            nChangePosRet = 1;
+            nTxVersion = CTransaction::UNIFORM_VERSION;
+        } else if (payOperateMethod == PayOperateMethod::ChiaPointRetarget) {
+            if (vecSend.size() != 1)
+                return TransactionCreationFailed;
+            // TODO matthew: complete these two arguments below
+            DatacarrierType pointType{DATACARRIER_TYPE_CHIA_POINT};
+            int nPointHeight{0};
+            vecSend.push_back({GetPointRetargetScriptForDestination(ExtractDestination(vecSend[0].scriptPubKey), pointType, nPointHeight), 0, false});
+            vecSend[0].scriptPubKey = GetScriptForDestination(coinControl.m_pick_dest);
             nChangePosRet = 1;
             nTxVersion = CTransaction::UNIFORM_VERSION;
         }
@@ -641,7 +694,7 @@ bool WalletModel::unfreezeTransaction(uint256 hash)
         questionString.append("<table style=\"text-align: left;\">");
         questionString.append("<tr><td width=100>").append(tr("Address:")).append("</td><td>").append(QString::fromStdString(wtx.value_map["from"]));
         questionString.append("</td></tr>");
-        questionString.append("<tr><td>").append(tr("Plotter ID:")).append("</td><td>").append(QString::fromStdString(wtx.value_map["plotter_id"])).append("</td></tr>");
+        questionString.append("<tr><td>").append(tr("Farmer PubKey:")).append("</td><td>").append(QString::fromStdString(wtx.value_map["plotter_id"])).append("</td></tr>");
         questionString.append("<tr><td>").append(tr("Return amount:")).append("</td><td>").append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), mtx.vout[0].nValue)).append("</td></tr>");
         questionString.append("<tr style='color:#aa0000;'><td>").append(tr("Transaction fee:")).append("</td><td>").append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), total_fee)).append("</td></tr>");
         questionString.append("</table>");

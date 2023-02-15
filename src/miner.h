@@ -22,6 +22,13 @@ class CChainParams;
 class CKey;
 class CScript;
 
+namespace chiapos
+{
+class CKey;
+class CPosProof;
+class CVdfProof;
+} // namespace chiapos
+
 namespace Consensus { struct Params; };
 
 static const bool DEFAULT_PRINTPRIORITY = false;
@@ -163,9 +170,19 @@ public:
     BlockAssembler(const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn,
-                                                   uint64_t plotterId = 0, uint64_t nonce = 0, uint64_t deadline = 0,
-                                                   const std::shared_ptr<CKey> privKey = nullptr);
+    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript &scriptPubKeyIn,
+        uint64_t plotterId = 0,
+        uint64_t nonce = 0,
+        uint64_t deadline = 0,
+        const std::shared_ptr<CKey> privKey = nullptr);
+
+    std::unique_ptr<CBlockTemplate> CreateNewChiaBlock(const CBlockIndex *pindexPrev,
+        const CScript &scriptPubKeyIn,
+        const chiapos::CKey &farmerSk,
+        uint64_t nQuality,
+        const chiapos::CPosProof &posProof,
+        const chiapos::CVdfProof &vdfProof,
+        const std::vector<chiapos::CVdfProof> &vVoidBlock);
 
     static Optional<int64_t> m_last_block_num_txs;
     static Optional<int64_t> m_last_block_weight;

@@ -18,6 +18,7 @@
 #include <util/moneystr.h>
 #include <util/time.h>
 #include <util/validation.h>
+#include "script/standard.h"
 
 CTxMemPoolEntry::CTxMemPoolEntry(const CTransactionRef& _tx, const CAmount& _nFee,
                                  int64_t _nTime, unsigned int _entryHeight,
@@ -901,7 +902,16 @@ bool CCoinsViewMemPool::GetCoin(const COutPoint &outpoint, Coin &coin) const {
             CDatacarrierPayloadRef payload;
             if (outpoint.n == 0 && ptx->IsUniform()) {
                 // parse uniform coin
-                payload = ExtractTransactionDatacarrier(*ptx, ::ChainActive().Height() + 1, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_POINT});
+                payload = ExtractTransactionDatacarrier(*ptx, ::ChainActive().Height() + 1,
+                                                  DatacarrierTypes{
+                                                            DATACARRIER_TYPE_BINDPLOTTER,
+                                                            DATACARRIER_TYPE_BINDCHIAFARMER,
+                                                            DATACARRIER_TYPE_POINT,
+                                                            DATACARRIER_TYPE_CHIA_POINT,
+                                                            DATACARRIER_TYPE_CHIA_POINT_TERM_1,
+                                                            DATACARRIER_TYPE_CHIA_POINT_TERM_2,
+                                                            DATACARRIER_TYPE_CHIA_POINT_TERM_3,
+                                                            DATACARRIER_TYPE_CHIA_POINT_RETARGET});
                 if (!payload) {
                     // BHDIP007 always active
                     return false;

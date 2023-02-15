@@ -1235,7 +1235,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
                             wtx.mapValue["plotter_id"] = relevantWalletTx.mapValue["plotter_id"];
                             wtx.mapValue["from"] = relevantWalletTx.mapValue["from"];
                             wtx.mapValue["relevant_txid"] = relevantWalletTx.GetHash().GetHex();
-                        } else if (type == "pledge") {
+                        } else if (type == "pledge" || type == "retarget") {
                             fTxDatacarrier = true;
                             fUpdated = true;
                             wtx.mapValue["type"] = "withdrawpledge";
@@ -1245,20 +1245,27 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
                         }
                     }
                 }
-            } else if (payload->type == DATACARRIER_TYPE_BINDPLOTTER) {
+            } else if (payload->type == DATACARRIER_TYPE_BINDPLOTTER || payload->type == DATACARRIER_TYPE_BINDCHIAFARMER) {
                 fTxDatacarrier = true;
                 fUpdated = true;
                 wtx.mapValue["lock"] = ""; // alias of frozen
                 wtx.mapValue["type"] = "bindplotter";
-                wtx.mapValue["plotter_id"] = std::to_string(BindPlotterPayload::As(payload)->GetId());
+                wtx.mapValue["plotter_id"] = BindPlotterPayload::As(payload)->GetId().ToString();
                 wtx.mapValue["from"] = EncodeDestination(ExtractDestination(wtx.tx->vout[0].scriptPubKey));
-            } else if (payload->type == DATACARRIER_TYPE_POINT) {
+            } else if (payload->type == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint(payload->type)) {
                 fTxDatacarrier = true;
                 fUpdated = true;
                 wtx.mapValue["lock"] = ""; // alias of frozen
                 wtx.mapValue["type"] = "pledge";
                 wtx.mapValue["from"] = EncodeDestination(ExtractDestination(wtx.tx->vout[0].scriptPubKey));
                 wtx.mapValue["to"] = EncodeDestination(ScriptHash(PointPayload::As(payload)->GetReceiverID()));
+            } else if (payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+                fTxDatacarrier = true;
+                fUpdated = true;
+                wtx.mapValue["lock"] = ""; // alias of frozen
+                wtx.mapValue["type"] = "retarget";
+                wtx.mapValue["from"] = EncodeDestination(ExtractDestination(wtx.tx->vout[0].scriptPubKey));
+                wtx.mapValue["to"] = EncodeDestination(ScriptHash(PointRetargetPayload::As(payload)->GetReceiverID()));
             } else if (payload->type == DATACARRIER_TYPE_TEXT) {
                 fTxDatacarrier = true;
                 fUpdated = true;
@@ -1275,7 +1282,9 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
     }
 
     //// debug print
-    WalletLogPrintf("AddToWallet %s  %s%s\n", wtxIn.GetHash().ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""));
+    WalletLogPrintf("AddToWallet %s  %s%s ...%s\n", wtxIn.GetHash().ToString(), (fInsertedNew ? "new" : ""), (fUpdated ? "update" : ""),
+            tinyformat::format("version=%s", (wtx.tx->IsUniform() ? "uniform" : "current"))
+            );
 
     // Write to disk
     if (fInsertedNew || fUpdated)
@@ -1671,10 +1680,20 @@ bool CWallet::IsMine(const CTransaction& tx) const
             }
         }
         // 2.point to me
-        CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(tx, 0, DatacarrierTypes{DATACARRIER_TYPE_POINT});
+        CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(tx, 0, DatacarrierTypes{DATACARRIER_TYPE_POINT,
+                                                                                               DATACARRIER_TYPE_CHIA_POINT,
+                                                                                               DATACARRIER_TYPE_CHIA_POINT_TERM_1,
+                                                                                               DATACARRIER_TYPE_CHIA_POINT_TERM_2,
+                                                                                               DATACARRIER_TYPE_CHIA_POINT_TERM_3,
+                                                                                               DATACARRIER_TYPE_CHIA_POINT_RETARGET});
         if (payload) {
-            assert(payload->type == DATACARRIER_TYPE_POINT);
-            return ::IsMine(*this, ScriptHash(PointPayload::As(payload)->GetReceiverID())) != 0;
+            if (payload->type == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint(payload->type)) {
+                return ::IsMine(*this, ScriptHash(PointPayload::As(payload)->GetReceiverID())) != 0;
+            } else if (payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+                return ::IsMine(*this, ScriptHash(PointRetargetPayload::As(payload)->GetReceiverID())) != 0;
+            } else {
+                assert(false);
+            }
         }
     }
 
@@ -2339,14 +2358,30 @@ CWalletTx::TxAction CWalletTx::GetTxAction() const
                 return TX_POINT;
             else if (itTxType->second == "withdrawpledge")
                 return TX_WITHDRAWPOINT;
+            else if (itTxType->second == "retarget")
+                return TX_POINT_RETARGET;
         }
     }
 
     return TX_NORMAL;
 }
 
+std::string CWalletTx::GetTxActionStr() const
+{
+    if (tx->IsUniform()) {
+        auto itTxType = mapValue.find("type");
+        if (itTxType == std::end(mapValue)) {
+            return "(invalid type)";
+        }
+        return itTxType->second;
+    } else {
+        return "normal";
+    }
+}
+
 bool CWalletTx::IsUnfrozen(interfaces::Chain::Lock& locked_chain) const
 {
+    AssertLockHeld(pwallet->cs_wallet);
     return tx->IsUniform() ? pwallet->IsSpent(locked_chain, GetHash(), 0) : false;
 }
 
@@ -3281,7 +3316,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 scriptChange = GetScriptForDestination(GetPrimaryDestination());
             }
             CTxOut change_prototype_txout(0, scriptChange);
-            coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
+            coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout, 0, 0);
 
             CFeeRate discard_rate = GetDiscardRate(*this);
 
@@ -3325,7 +3360,7 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                         }
                     }
                     // Include the fee cost for outputs. Note this is only used for BnB right now
-                    coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, PROTOCOL_VERSION);
+                    coin_selection_params.tx_noinputs_size += ::GetSerializeSize(txout, 0, PROTOCOL_VERSION);
 
                     if (IsDust(txout, chain().relayDustFee()))
                     {
@@ -4582,7 +4617,7 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(interfaces::Chain& chain,
         }
     }
 
-    int prev_version = walletInstance->GetVersion();
+    // int prev_version = walletInstance->GetVersion();
     if (gArgs.GetBoolArg("-upgradewallet", fFirstRun))
     {
         int nMaxVersion = gArgs.GetArg("-upgradewallet", 0);

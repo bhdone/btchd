@@ -367,7 +367,7 @@
 #define PACKAGE_TARNAME "BitcoinHD"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "https://btchd.org/"
+#define PACKAGE_URL "https://bhd.one/"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "1.4.0"

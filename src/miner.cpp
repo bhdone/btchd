@@ -26,17 +26,26 @@
 #include <util/validation.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <queue>
 #include <utility>
 
+#include <logging.h>
 #include <inttypes.h>
+#include <subsidy_utils.h>
 
-BlockAssembler::Options::Options() {
+#include <chiapos/kernel/calc_diff.h>
+#include <chiapos/block_fields.h>
+#include <chiapos/kernel/utils.h>
+#include <chiapos/kernel/bls_key.h>
+
+BlockAssembler::Options::Options()
+{
     blockMinFeeRate = CFeeRate(DEFAULT_BLOCK_MIN_TX_FEE);
     nBlockMaxWeight = DEFAULT_BLOCK_MAX_WEIGHT;
 }
 
-BlockAssembler::BlockAssembler(const CChainParams& params, const Options& options) : chainparams(params)
+BlockAssembler::BlockAssembler(const CChainParams &params, const Options &options) : chainparams(params)
 {
     blockMinFeeRate = options.blockMinFeeRate;
     // Limit weight to between 4K and MAX_BLOCK_WEIGHT-4K for sanity:
@@ -58,7 +67,7 @@ static BlockAssembler::Options DefaultOptions()
     return options;
 }
 
-BlockAssembler::BlockAssembler(const CChainParams& params) : BlockAssembler(params, DefaultOptions()) {}
+BlockAssembler::BlockAssembler(const CChainParams &params) : BlockAssembler(params, DefaultOptions()) {}
 
 void BlockAssembler::resetBlock()
 {
@@ -78,8 +87,11 @@ void BlockAssembler::resetBlock()
 Optional<int64_t> BlockAssembler::m_last_block_num_txs{nullopt};
 Optional<int64_t> BlockAssembler::m_last_block_weight{nullopt};
 
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn,
-    uint64_t plotterId, uint64_t nonce, uint64_t deadline, const std::shared_ptr<CKey> privKey)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript &scriptPubKeyIn,
+    uint64_t nPlotterId,
+    uint64_t nonce,
+    uint64_t deadline,
+    const std::shared_ptr<CKey> privKey)
 {
     int64_t nTimeStart = GetTimeMicros();
 
@@ -87,35 +99,32 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     pblocktemplate.reset(new CBlockTemplate());
 
-    if(!pblocktemplate.get())
-        return nullptr;
+    if (!pblocktemplate.get()) return nullptr;
     pblock = &pblocktemplate->block; // pointer for convenience
 
     generatorAccountID = ExtractAccountID(scriptPubKeyIn);
-    assert (!generatorAccountID.IsNull());
+    assert(!generatorAccountID.IsNull());
 
     // Add dummy coinbase tx as first transaction
     pblock->vtx.emplace_back();
-    pblocktemplate->vTxFees.push_back(-1); // updated at end
+    pblocktemplate->vTxFees.push_back(-1);       // updated at end
     pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
 
     LOCK2(cs_main, mempool.cs);
-    CBlockIndex* pindexPrev = ::ChainActive().Tip();
+    CBlockIndex *pindexPrev = ::ChainActive().Tip();
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
 
     pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
     // -regtest only: allow overriding block.nVersion with
     // -blockversion=N to test forking scenarios
-    if (chainparams.MineBlocksOnDemand())
-        pblock->nVersion = gArgs.GetArg("-blockversion", pblock->nVersion);
+    if (chainparams.MineBlocksOnDemand()) pblock->nVersion = gArgs.GetArg("-blockversion", pblock->nVersion);
 
     pblock->nTime = static_cast<uint32_t>(pindexPrev->GetBlockTime() + static_cast<int64_t>(deadline) + 1);
     const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
-    nLockTimeCutoff = (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST)
-                       ? nMedianTimePast
-                       : pblock->GetBlockTime();
+    nLockTimeCutoff =
+        (STANDARD_LOCKTIME_VERIFY_FLAGS & LOCKTIME_MEDIAN_TIME_PAST) ? nMedianTimePast : pblock->GetBlockTime();
 
     // Decide whether to include witness transactions
     // This is only needed in case the witness softfork activation is reverted
@@ -141,10 +150,13 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     CMutableTransaction coinbaseTx;
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
-    coinbaseTx.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(static_cast<int64_t>(nonce)) << CScriptNum(static_cast<int64_t>(plotterId))) + COINBASE_FLAGS;
+    coinbaseTx.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(static_cast<int64_t>(nonce))
+                                             << CScriptNum(static_cast<int64_t>(nPlotterId))) +
+                                  COINBASE_FLAGS;
     assert(coinbaseTx.vin[0].scriptSig.size() <= 100);
     // Reward
-    BlockReward blockReward = GetBlockReward(pindexPrev, nFees, generatorAccountID, plotterId, ::ChainstateActive().CoinsTip(), chainparams.GetConsensus());
+    BlockReward blockReward = GetBlockReward(pindexPrev, nFees, generatorAccountID, CPlotterBindData(nPlotterId),
+        ::ChainstateActive().CoinsTip(), chainparams.GetConsensus());
     assert(blockReward.miner + blockReward.accumulate >= 0);
     unsigned int fundOutIndex = std::numeric_limits<unsigned int>::max();
     if (blockReward.miner0 != 0) {
@@ -167,51 +179,188 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
     coinbaseTx.vout[0].nValue = blockReward.miner + blockReward.accumulate;
     if (fundOutIndex < coinbaseTx.vout.size()) {
-        coinbaseTx.vout[fundOutIndex].scriptPubKey = GetScriptForDestination(DecodeDestination(chainparams.GetConsensus().BHDFundAddress));
+        coinbaseTx.vout[fundOutIndex].scriptPubKey =
+            GetScriptForDestination(DecodeDestination(chainparams.GetConsensus().BHDFundAddress));
         coinbaseTx.vout[fundOutIndex].nValue = blockReward.fund;
     }
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;
 
-    LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
+    LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx,
+        nFees, nBlockSigOpsCost);
 
     // Fill in header
-    pblock->hashPrevBlock  = pindexPrev->GetBlockHash();
-    pblock->nNonce         = nonce;
-    pblock->nPlotterId     = plotterId;
-    pblock->nBaseTarget    = poc::CalculateBaseTarget(*pindexPrev, *pblock, chainparams.GetConsensus());
+    pblock->hashPrevBlock = pindexPrev->GetBlockHash();
+    pblock->nNonce = nonce;
+    pblock->nPlotterId = nPlotterId;
+    pblock->nBaseTarget = poc::CalculateBaseTarget(*pindexPrev, *pblock, chainparams.GetConsensus());
 
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
-    if (plotterId != 0) {
+    if (nPlotterId != 0) {
         // Signature
-        if (nHeight >= chainparams.GetConsensus().BHDIP007Height && (!privKey || !privKey->IsValid() || !sign(*pblock, *privKey))) {
+        if (nHeight >= chainparams.GetConsensus().BHDIP007Height &&
+            (!privKey || !privKey->IsValid() || !sign(*pblock, *privKey))) {
             throw std::runtime_error(strprintf("%s: Signature block error", __func__));
         }
 
         CValidationState state;
         if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
-            throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
+            throw std::runtime_error(
+                strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
         }
     }
     int64_t nTime2 = GetTimeMicros();
 
-    LogPrint(BCLog::BENCH, "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n", 0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1), 0.001 * (nTime2 - nTimeStart));
+    LogPrint(BCLog::BENCH,
+        "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n",
+        0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1),
+        0.001 * (nTime2 - nTimeStart));
 
     return std::move(pblocktemplate);
 }
 
-void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries& testSet)
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewChiaBlock(const CBlockIndex *pindexPrev,
+    const CScript &scriptPubKeyIn,
+    const chiapos::CKey &farmerSk,
+    uint64_t nQuality,
+    const chiapos::CPosProof &posProof,
+    const chiapos::CVdfProof &vdfProof,
+    const std::vector<chiapos::CVdfProof> &vVoidBlock)
 {
-    for (CTxMemPool::setEntries::iterator iit = testSet.begin(); iit != testSet.end(); ) {
+    int64_t nTimeStart = GetTimeMicros();
+
+    resetBlock();
+
+    pblocktemplate.reset(new CBlockTemplate());
+
+    if (!pblocktemplate.get()) return nullptr;
+    pblock = &pblocktemplate->block; // pointer for convenience
+
+    generatorAccountID = ExtractAccountID(scriptPubKeyIn);
+    assert(!generatorAccountID.IsNull());
+
+    // Add dummy coinbase tx as first transaction
+    pblock->vtx.emplace_back();
+    pblocktemplate->vTxFees.push_back(-1);       // updated at end
+    pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
+
+    AssertLockHeld(cs_main);
+    assert(pindexPrev != nullptr);
+
+    LOCK(mempool.cs);
+    nHeight = pindexPrev->nHeight + 1;
+
+    const Consensus::Params &params = chainparams.GetConsensus();
+    pblock->nVersion = ComputeBlockVersion(pindexPrev, params);
+    // -regtest only: allow overriding block.nVersion with
+    // -blockversion=N to test forking scenarios
+    if (chainparams.MineBlocksOnDemand()) pblock->nVersion = gArgs.GetArg("-blockversion", pblock->nVersion);
+
+    pblock->nTime = GetAdjustedTime();
+
+    // Decide whether to include witness transactions
+    // This is only needed in case the witness softfork activation is reverted
+    // (which would require a very deep reorganization).
+    // Note that the mempool would accept transactions with witness data before
+    // IsWitnessEnabled, but we would only ever mine blocks after IsWitnessEnabled
+    // unless there is a massive block reorganization with the witness softfork
+    // not activated.
+    // TODO: replace this with a call to main to assess validity of a mempool
+    // transaction (which in most cases can be a no-op).
+    fIncludeWitness = IsWitnessEnabled(pindexPrev, params);
+
+    int nPackagesSelected = 0;
+    int nDescendantsUpdated = 0;
+    addPackageTxs(nPackagesSelected, nDescendantsUpdated);
+
+    int64_t nTime1 = GetTimeMicros();
+
+    m_last_block_num_txs = nBlockTx;
+    m_last_block_weight = nBlockWeight;
+
+    // Create coinbase transaction.
+    CMutableTransaction coinbaseTx;
+    coinbaseTx.vin.resize(1);
+    coinbaseTx.vin[0].prevout.SetNull();
+
+    chiapos::PubKey farmerPk = farmerSk.GetPubkey();
+    chiapos::Bytes vchFarmerPk = chiapos::MakeBytes(farmerPk);
+
+    coinbaseTx.vin[0].scriptSig = (CScript() << nHeight << vchFarmerPk) + COINBASE_FLAGS;
+    assert(coinbaseTx.vin[0].scriptSig.size() <= 100);
+
+    CCoinsViewCache &view = ::ChainstateActive().CoinsTip();
+    BlockReward blockReward = GetBlockReward(
+        pindexPrev, nFees, generatorAccountID, CPlotterBindData(CChiaFarmerPk(vchFarmerPk)), view, params);
+    assert(blockReward.miner + blockReward.accumulate >= 0);
+    if (nHeight == params.BHDIP009Height) {
+        coinbaseTx.vout.resize(2); // Yes, we need to put all extra amount to fund address
+    } else {
+        coinbaseTx.vout.resize(1);
+    }
+    coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
+    coinbaseTx.vout[0].nValue = blockReward.miner + blockReward.accumulate;
+    if (nHeight == params.BHDIP009Height) {
+        CTxDestination fundDest = DecodeDestination(params.BHDIP009FundAddresses[0]);
+        coinbaseTx.vout[1].scriptPubKey = GetScriptForDestination(fundDest);
+        coinbaseTx.vout[1].nValue = blockReward.fund009;
+    }
+    pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
+    pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, params);
+    pblocktemplate->vTxFees[0] = -nFees;
+
+    // Fill in header, they are all zero for burst related fields
+    pblock->hashPrevBlock = pindexPrev->GetBlockHash();
+    pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
+    pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
+
+    uint64_t nDifficultyPrev;
+    if (nHeight == params.BHDIP009Height) {
+        nDifficultyPrev = params.BHDIP009StartDifficulty;
+    } else {
+        nDifficultyPrev = pindexPrev->chiaposFields.nDifficulty;
+    }
+
+    pblock->chiaposFields.posProof = posProof;
+    pblock->chiaposFields.vdfProof = vdfProof;
+    pblock->chiaposFields.vVoidBlockVdf = vVoidBlock;
+    pblock->chiaposFields.nDifficulty =
+        chiapos::AdjustDifficulty(nDifficultyPrev, pblock->chiaposFields.GetTotalDuration(), params.BHDIP008TargetSpacing);
+    pblock->chiaposFields.nQuality = nQuality;
+
+    LogPrintf("%s: difficulty=%ld, farmer-pk: %s, duration: %ld, iters: %ld\n", __func__, pblock->chiaposFields.nDifficulty,
+              chiapos::BytesToHex(pblock->chiaposFields.posProof.vchFarmerPk), pblock->chiaposFields.GetTotalDuration(),
+              pblock->chiaposFields.GetTotalIters());
+
+    // Make a signature by using farmer private-key for the block
+    uint256 unsignedHash = pblock->GetUnsignaturedHash();
+    LogPrintf("%s: making signature hash: %s\n", __func__, unsignedHash.GetHex());
+    pblock->chiaposFields.vchFarmerSignature = chiapos::MakeBytes(farmerSk.Sign(chiapos::MakeBytes(unsignedHash)));
+
+    LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx,
+        nFees, nBlockSigOpsCost);
+
+    int64_t nTime2 = GetTimeMicros();
+
+    LogPrint(BCLog::BENCH,
+        "CreateNewBlock() packages: %.2fms (%d packages, %d updated descendants), validity: %.2fms (total %.2fms)\n",
+        0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1),
+        0.001 * (nTime2 - nTimeStart));
+
+    return std::move(pblocktemplate);
+}
+
+void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries &testSet)
+{
+    for (CTxMemPool::setEntries::iterator iit = testSet.begin(); iit != testSet.end();) {
         // Only test txs not already in the block
         if (inBlock.count(*iit)) {
             testSet.erase(iit++);
-        }
-        else {
+        } else {
             iit++;
         }
     }
@@ -220,10 +369,8 @@ void BlockAssembler::onlyUnconfirmed(CTxMemPool::setEntries& testSet)
 bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost) const
 {
     // TODO: switch to weight-based accounting for packages instead of vsize-based accounting.
-    if (nBlockWeight + WITNESS_SCALE_FACTOR * packageSize >= nBlockMaxWeight)
-        return false;
-    if (nBlockSigOpsCost + packageSigOpsCost >= MAX_BLOCK_SIGOPS_COST)
-        return false;
+    if (nBlockWeight + WITNESS_SCALE_FACTOR * packageSize >= nBlockMaxWeight) return false;
+    if (nBlockSigOpsCost + packageSigOpsCost >= MAX_BLOCK_SIGOPS_COST) return false;
     return true;
 }
 
@@ -231,13 +378,11 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, int64_t packageSigOpsCost
 // - transaction finality (locktime)
 // - premature witness (in case segwit transactions are added to mempool before
 //   segwit activation)
-bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package)
+bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries &package)
 {
     for (CTxMemPool::txiter it : package) {
-        if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))
-            return false;
-        if (!fIncludeWitness && it->GetTx().HasWitness())
-            return false;
+        if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff)) return false;
+        if (!fIncludeWitness && it->GetTx().HasWitness()) return false;
     }
     return true;
 }
@@ -255,14 +400,13 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 
     bool fPrintPriority = gArgs.GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
     if (fPrintPriority) {
-        LogPrintf("fee %s txid %s\n",
-                  CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString(),
-                  iter->GetTx().GetHash().ToString());
+        LogPrintf("fee %s txid %s\n", CFeeRate(iter->GetModifiedFee(), iter->GetTxSize()).ToString(),
+            iter->GetTx().GetHash().ToString());
     }
 }
 
-int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded,
-        indexed_modified_transaction_set &mapModifiedTx)
+int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries &alreadyAdded,
+    indexed_modified_transaction_set &mapModifiedTx)
 {
     int nDescendantsUpdated = 0;
     for (CTxMemPool::txiter it : alreadyAdded) {
@@ -270,8 +414,7 @@ int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& already
         mempool.CalculateDescendants(it, descendants);
         // Insert all descendants (not yet in block) into the modified set
         for (CTxMemPool::txiter desc : descendants) {
-            if (alreadyAdded.count(desc))
-                continue;
+            if (alreadyAdded.count(desc)) continue;
             ++nDescendantsUpdated;
             modtxiter mit = mapModifiedTx.find(desc);
             if (mit == mapModifiedTx.end()) {
@@ -297,13 +440,15 @@ int BlockAssembler::UpdatePackagesForAdded(const CTxMemPool::setEntries& already
 // guaranteed to fail again, but as a belt-and-suspenders check we put it in
 // failedTx and avoid re-evaluation, since the re-evaluation would be using
 // cached size/sigops/fee values that are not actually correct.
-bool BlockAssembler::SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set &mapModifiedTx, CTxMemPool::setEntries &failedTx)
+bool BlockAssembler::SkipMapTxEntry(CTxMemPool::txiter it,
+    indexed_modified_transaction_set &mapModifiedTx,
+    CTxMemPool::setEntries &failedTx)
 {
-    assert (it != mempool.mapTx.end());
+    assert(it != mempool.mapTx.end());
     return mapModifiedTx.count(it) || inBlock.count(it) || failedTx.count(it);
 }
 
-void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::vector<CTxMemPool::txiter>& sortedEntries)
+void BlockAssembler::SortForBlock(const CTxMemPool::setEntries &package, std::vector<CTxMemPool::txiter> &sortedEntries)
 {
     // Sort package by ancestor count
     // If a transaction A depends on transaction B, then A's ancestor count
@@ -339,7 +484,8 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     // and modifying them for their already included ancestors
     UpdatePackagesForAdded(inBlock, mapModifiedTx);
 
-    CTxMemPool::indexed_transaction_set::index<ancestor_score>::type::iterator mi = mempool.mapTx.get<ancestor_score>().begin();
+    CTxMemPool::indexed_transaction_set::index<ancestor_score>::type::iterator mi =
+        mempool.mapTx.get<ancestor_score>().begin();
     CTxMemPool::txiter iter;
 
     // Limit the number of attempts to add transactions to the block when it is
@@ -350,11 +496,10 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
     CCoinsViewCache view(&::ChainstateActive().CoinsTip());
 
-    while (mi != mempool.mapTx.get<ancestor_score>().end() || !mapModifiedTx.empty())
-    {
+    while (mi != mempool.mapTx.get<ancestor_score>().end() || !mapModifiedTx.empty()) {
         // First try to find a new transaction in mapTx to evaluate.
         if (mi != mempool.mapTx.get<ancestor_score>().end() &&
-                SkipMapTxEntry(mempool.mapTx.project<0>(mi), mapModifiedTx, failedTx)) {
+            SkipMapTxEntry(mempool.mapTx.project<0>(mi), mapModifiedTx, failedTx)) {
             ++mi;
             continue;
         }
@@ -372,7 +517,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
             // Try to compare the mapTx entry to the mapModifiedTx entry
             iter = mempool.mapTx.project<0>(mi);
             if (modit != mapModifiedTx.get<ancestor_score>().end() &&
-                    CompareTxMemPoolEntryByAncestorFee()(*modit, CTxMemPoolModifiedEntry(iter))) {
+                CompareTxMemPoolEntryByAncestorFee()(*modit, CTxMemPoolModifiedEntry(iter))) {
                 // The best entry in mapModifiedTx has higher score
                 // than the one from mapTx.
                 // Switch which transaction (package) to consider
@@ -414,8 +559,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
             ++nConsecutiveFailed;
 
-            if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight >
-                    nBlockMaxWeight - 4000) {
+            if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight > nBlockMaxWeight - 4000) {
                 // Give up if we're close to full and haven't succeeded in a while
                 break;
             }
@@ -446,10 +590,10 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
         std::vector<CTxMemPool::txiter> sortedEntries;
         SortForBlock(ancestors, sortedEntries);
 
-        for (size_t i=0; i<sortedEntries.size(); ++i) {
+        for (size_t i = 0; i < sortedEntries.size(); ++i) {
             // Check transaction inputs and type
-            if (!Consensus::CheckTxInputs(sortedEntries[i]->GetTx(), view, ::ChainstateActive().CoinsTip(), nHeight, generatorAccountID,
-                    Consensus::CheckTxLevel::ConsensusPackaging, chainparams.GetConsensus())) {
+            if (!Consensus::CheckTxInputs(sortedEntries[i]->GetTx(), view, ::ChainstateActive().CoinsTip(), nHeight,
+                    generatorAccountID, Consensus::CheckTxLevel::ConsensusPackaging, chainparams.GetConsensus())) {
                 // All descendants move to failed
                 for (size_t j = i; j < sortedEntries.size(); ++j) {
                     failedTx.insert(sortedEntries[j]);
@@ -480,7 +624,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
 bool BlockAssembler::sign(CBlock &block, const CKey &privKey)
 {
-    assert (privKey.IsValid());
+    assert(privKey.IsValid());
     CPubKey pubKey = privKey.GetPubKey();
     if (ExtractAccountID(pubKey) != ExtractAccountID(block.vtx[0]->vout[0].scriptPubKey)) {
         return false;

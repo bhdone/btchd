@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <string>
+#include <limits>
 #if defined WIN32 && defined __GLIBCXX__
 #include <ext/stdio_filebuf.h>
 #endif

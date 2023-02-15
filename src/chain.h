@@ -13,6 +13,8 @@
 #include <tinyformat.h>
 #include <uint256.h>
 
+#include <chiapos/block_fields.h>
+
 #include <vector>
 
 /**
@@ -133,6 +135,8 @@ enum BlockStatus: uint32_t {
     BLOCK_HAVE_SIGNATURE     =  256, //!< signature data for block
 
     BLOCK_UNCONDITIONAL      =  512, //!< unconditional block. Only valid after BHDIP008
+
+    BLOCK_CHIAPOS            = 1024, //!< the block should be verified with chiapos proofs
 };
 
 /** The block chain is a tree shaped structure starting with the
@@ -205,6 +209,8 @@ public:
     //! Generate next block required this value.
     uint256 nextGenerationSignature;
 
+    chiapos::CBlockFields chiaposFields;
+
     void SetNull()
     {
         phashBlock = nullptr;
@@ -232,11 +238,18 @@ public:
         nPlotterId     = 0;
         vchPubKey.clear();
         vchSignature.clear();
+
+        chiaposFields.SetNull();
     }
 
     CBlockIndex()
     {
         SetNull();
+    }
+
+    bool IsChiaBlock() const
+    {
+        return !chiaposFields.IsNull();
     }
 
     explicit CBlockIndex(const CBlockHeader& block)
@@ -251,6 +264,7 @@ public:
         nPlotterId     = block.nPlotterId;
         vchPubKey      = block.vchPubKey;
         vchSignature   = block.vchSignature;
+        chiaposFields  = block.chiaposFields;
     }
 
     FlatFilePos GetBlockPos() const {
@@ -284,6 +298,7 @@ public:
         block.nPlotterId     = nPlotterId;
         block.vchPubKey      = vchPubKey;
         block.vchSignature   = vchSignature;
+        block.chiaposFields  = chiaposFields;
         return block;
     }
 
@@ -380,8 +395,8 @@ public:
     }
 };
 
-arith_uint256 GetBlockProof(const CBlockHeader& header, const Consensus::Params&);
-arith_uint256 GetBlockProof(const CBlockIndex& block, const Consensus::Params&);
+arith_uint256 GetBlockWork(const CBlockHeader& header, const Consensus::Params&);
+arith_uint256 GetBlockWork(const CBlockIndex& block, const Consensus::Params&);
 /** Return the time it would take to redo the work difference between from and to, assuming the current hashrate corresponds to the difficulty at tip, in seconds. */
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params&);
 /** Find the forking point between two chain tips. */
@@ -393,13 +408,18 @@ class CDiskBlockIndex : public CBlockIndex
 {
 public:
     uint256 hashPrev;
+    bool fChiapos;
 
     CDiskBlockIndex() {
         hashPrev = uint256();
+        fChiapos = false;
     }
 
-    explicit CDiskBlockIndex(const CBlockIndex* pindex) : CBlockIndex(*pindex) {
+    explicit CDiskBlockIndex(const CBlockIndex* pindex, bool fInChiapos) : CBlockIndex(*pindex), fChiapos(fInChiapos) {
         hashPrev = (pprev ? pprev->GetBlockHash() : uint256());
+        if (fChiapos) {
+            nStatus |= BLOCK_CHIAPOS;
+        }
     }
 
     ADD_SERIALIZE_METHODS;
@@ -412,6 +432,9 @@ public:
 
         READWRITE(VARINT(nHeight, VarIntMode::NONNEGATIVE_SIGNED));
         READWRITE(VARINT(nStatus));
+        if (nStatus & BLOCK_CHIAPOS) {
+            fChiapos = true;
+        }
         READWRITE(VARINT(nTx));
         READWRITE(VARINT(*reinterpret_cast<uint64_t*>(generatorAccountID.begin()))); //! Compatible pre-version wallet
         if (nStatus & (BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO))
@@ -426,12 +449,17 @@ public:
         READWRITE(hashPrev);
         READWRITE(hashMerkleRoot);
         READWRITE(nTime);
-        READWRITE(nBaseTarget);
-        READWRITE(nNonce);
-        READWRITE(nPlotterId);
-        if (nStatus & BLOCK_HAVE_SIGNATURE) {
-            READWRITE(LIMITED_VECTOR(vchPubKey, CPubKey::COMPRESSED_PUBLIC_KEY_SIZE));
-            READWRITE(LIMITED_VECTOR(vchSignature, CPubKey::SIGNATURE_SIZE));
+
+        if (fChiapos) {
+            READWRITE(chiaposFields);
+        } else {
+            READWRITE(nBaseTarget);
+            READWRITE(nNonce);
+            READWRITE(nPlotterId);
+            if (nStatus & BLOCK_HAVE_SIGNATURE) {
+                READWRITE(LIMITED_VECTOR(vchPubKey, CPubKey::COMPRESSED_PUBLIC_KEY_SIZE));
+                READWRITE(LIMITED_VECTOR(vchSignature, CPubKey::SIGNATURE_SIZE));
+            }
         }
     }
 
@@ -447,6 +475,7 @@ public:
         block.nPlotterId      = nPlotterId;
         block.vchPubKey       = vchPubKey;
         block.vchSignature    = vchSignature;
+        block.chiaposFields   = chiaposFields;
         return block.GetHash();
     }
 

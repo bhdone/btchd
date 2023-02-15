@@ -634,7 +634,7 @@
         <translation>암호: %1</translation>
     </message>
     <message>
-        <source>Plotter ID: %1</source>
+        <source>Farmer PubKey: %1</source>
         <translation>채광 ID: %1</translation>
     </message>
 </context>
@@ -2959,7 +2959,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%1 블록 높이에서 바인딩 해제 플로터가 활성화되었습니다 (약 %3 분 후 %2 블록).</translation>
     </message>
     <message>
-        <source>Plotter ID</source>
+        <source>Farmer PubKey</source>
         <translation>마이닝 ID</translation>
     </message>
     <message>
@@ -3388,7 +3388,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>주소:</translation>
     </message>
     <message>
-        <source>Plotter ID:</source>
+        <source>Farmer PubKey:</source>
         <translation>마이닝 ID:</translation>
     </message>
     <message>

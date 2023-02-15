@@ -19,5 +19,5 @@ depending on the speed of your computer and network connection, the synchronizat
 process can take anywhere from a few hours to a day or more.
 
 See the BitcoinHD wiki at:
-  https://btchd.org/wiki/Main_Page
+  https://bhd.one/wiki/Main_Page
 for more help and information.

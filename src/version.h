@@ -60,4 +60,6 @@ static const int BLOCKINTERVAL180_VERSION = 80024;
 //! Omnicore protocal support
 static const int SUBCHAIN_OMNICORE_VERSION = 80025;
 
+static const int CHIAPOS_VERSION = 80026;
+
 #endif // BITCOIN_VERSION_H

@@ -238,6 +238,19 @@ extern const char *GETBLOCKTXN;
  * @since protocol version 70014 as described by BIP 152
  */
 extern const char *BLOCKTXN;
+/**
+ * Contains VDF proof fields.
+ * After a new VDF proof is calculated, the message should be sent over the P2P network
+ * @since chia-pos protocol
+ */
+extern const char *VDF;
+/**
+ * Require a VDF proof
+ * The request will be sent to P2P network and received by timelord,
+ * vdf proof will be sent to P2P network as soon as it has been calculated
+ * @since chia-pos protocol
+ */
+extern const char *REQVDF;
 };
 
 /* Get a vector of all valid message types (see above) */

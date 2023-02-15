@@ -347,6 +347,8 @@ static UniValue omni_getfeetrigger(const JSONRPCRequest& request)
         RequireExistingProperty(propertyId);
     }
 
+    AssertLockHeld(cs_tally);
+
     UniValue response(UniValue::VARR);
 
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
@@ -478,6 +480,8 @@ static UniValue omni_getfeecache(const JSONRPCRequest& request)
     if (propertyId > 0) {
         RequireExistingProperty(propertyId);
     }
+
+    AssertLockHeld(cs_tally);
 
     UniValue response(UniValue::VARR);
 
@@ -2028,7 +2032,7 @@ static UniValue omni_listblocktransactions(const JSONRPCRequest& request)
 
     LOCK(cs_tally);
 
-    for(const auto tx : block.vtx) {
+    for(const auto& tx : block.vtx) {
         if (pDbTransactionList->exists(tx->GetHash())) {
             // later we can add a verbose flag to decode here, but for now callers can send returned txids into gettransaction_MP
             // add the txid into the response as it's an MP transaction

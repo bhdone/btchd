@@ -161,7 +161,7 @@ public:
         try {
             CDataStream ssKey(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
             ssKey >> key;
-        } catch (const std::exception&) {
+        } catch (const std::exception &e) {
             return false;
         }
         return true;
@@ -173,7 +173,7 @@ public:
             CDataStream ssValue(slValue.data(), slValue.data() + slValue.size(), SER_DISK, CLIENT_VERSION);
             ssValue.Xor(dbwrapper_private::GetObfuscateKey(parent));
             ssValue >> value;
-        } catch (const std::exception&) {
+        } catch (const std::exception &e) {
             return false;
         }
         return true;

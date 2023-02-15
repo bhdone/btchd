@@ -376,10 +376,10 @@ public:
         }
     }
 
-    bool haveActiveBindPlotter(const CAccountID &accountID, uint64_t plotterId) override
+    bool haveActiveBindPlotter(const CAccountID &accountID, const CPlotterBindData &bindData) override
     {
         LOCK(::cs_main);
-        return ::ChainstateActive().CoinsTip().HaveActiveBindPlotter(accountID, plotterId);
+        return ::ChainstateActive().CoinsTip().HaveActiveBindPlotter(accountID, bindData);
     }
 
     int getUnbindPlotterLimitHeight(const CBindPlotterInfo& info) override
@@ -388,12 +388,12 @@ public:
         return Consensus::GetUnbindPlotterLimitHeight(info, ::ChainstateActive().CoinsTip(), Params().GetConsensus());
     }
 
-    std::pair<CAmount,int> getBindPlotterPunishment(int bindHeight, uint64_t plotterId) override
+    std::pair<CAmount,int> getBindPlotterPunishment(int bindHeight, const CPlotterBindData &bindData) override
     {
         const Consensus::Params& consensusParams = Params().GetConsensus();
         if (bindHeight >= consensusParams.BHDIP006LimitBindPlotterHeight) {
             LOCK(::cs_main);
-            const CBindPlotterInfo lastBindInfo = ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(plotterId);
+            const CBindPlotterInfo lastBindInfo = ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(bindData);
             if (!lastBindInfo.outpoint.IsNull()) {
                 int limitBindHeight = Consensus::GetBindPlotterLimitHeight(bindHeight, lastBindInfo, consensusParams);
                 if (bindHeight < limitBindHeight) {
@@ -407,17 +407,18 @@ public:
         return std::make_pair(0, 0);
     }
 
-    CBindPlotterInfo getLastBindPlotterInfo(uint64_t plotterId) override
+    CBindPlotterInfo getLastBindPlotterInfo(const CPlotterBindData &bindData) override
     {
         LOCK(::cs_main);
-        return ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(plotterId);
+        return ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(bindData);
     }
 
-    AccountBanalces getAccountBalance(const CAccountID& accountID) override
+    AccountBanalces getAccountBalance(const CAccountID& accountID, CPlotterBindData::Type type) override
     {
         LOCK(::cs_main);
         AccountBanalces balances;
-        balances.balance = ::ChainstateActive().CoinsTip().GetAccountBalance(accountID, &balances.frozen_balance, &balances.point_sent_balance, &balances.point_received_balance);
+        balances.balance = ::ChainstateActive().CoinsTip().GetAccountBalance(accountID, &balances.frozen_balance,
+                &balances.point_sent_balance, &balances.point_received_balance);
         balances.frozen_balance += balances.point_sent_balance; // include point sent and bind plotter frozen
         return balances;
     }
