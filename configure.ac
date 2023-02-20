@@ -614,6 +614,7 @@ case $host in
    *linux*)
      TARGET_OS=linux
      LEVELDB_TARGET_FLAGS="-DOS_LINUX"
+     AX_CHECK_LINK_FLAG([[-static]],[LDFLAGS="$LDFLAGS -static-libstdc++ -static-libgcc"])
      ;;
    *kfreebsd*)
      LEVELDB_TARGET_FLAGS="-DOS_KFREEBSD"
