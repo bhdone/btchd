@@ -199,7 +199,6 @@ CAmount CalcActualAmountByTerm(CAmount nAmount, miner::DepositTerm type) {
 }
 
 CAmount CalcActualAmount(CAmount original, int nPledgeHeight, int nWithdrawHeight, miner::DepositTerm type, bool* pExpired) {
-    auto txid = static_cast<int>(type);
     auto nExpireOnHeight = GetNumOfExpiredHeight(nPledgeHeight, type);
     if (nWithdrawHeight >= nExpireOnHeight) {
         if (pExpired) {
