@@ -918,7 +918,10 @@ CAmount CCoinsViewDB::GetBalancePointSend(DatacarrierType type, CAccountID const
 
 CAmount CCoinsViewDB::CalculateTermAmount(CAmount coinAmount, PledgeTerm const& term, PledgeTerm const& fallbackTerm, int nPointHeight, int nHeight) const {
     int nLockedHeights = nHeight - nPointHeight;
-    assert(nLockedHeights >= 0);
+    if (nLockedHeights < 0) {
+        nLockedHeights = 0;
+        LogPrintf("%s: (warning) nLockedHeight < 0, nPointHeight=%ld, nHeight=%ld, nLockedHeight is set to 0", __func__, nPointHeight, nHeight);
+    }
     if (nLockedHeights >= term.nLockHeight) {
         // Fallback with term 0
         return fallbackTerm.nWeightPercent * coinAmount / 100;
