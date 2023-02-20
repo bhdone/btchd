@@ -962,14 +962,16 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
         std::string generatorAddress = EncodeDestination(CTxDestination((ScriptHash)generatorAccountID));
         auto it_fund = std::find(std::begin(params.BHDIP009FundAddresses), std::end(params.BHDIP009FundAddresses), generatorAddress);
         bool isFoundationAddr = it_fund != std::end(params.BHDIP009FundAddresses);
+        int64_t nMinerCapacityTB;
         if (isFoundationAddr) {
             // the generator belongs to the foundation, fundation only keeps the network running, always assume it is mining with max netcapacity
-            nMinedCount = nBlockCount;
+            nMinerCapacityTB = std::max(nNetCapacityTB, (int64_t) 1);
+        } else {
+            nMinerCapacityTB = std::max((nNetCapacityTB * nMinedCount) / nBlockCount, (int64_t) 1);
         }
-        int64_t nMinerCapacityTB = std::max((nNetCapacityTB * nMinedCount) / nBlockCount, (int64_t) 1);
         if (pMinerCapacity != nullptr) *pMinerCapacity = nMinerCapacityTB;
         CAmount nMiningRequireBalance = pledgeParams.supplied * nMinerCapacityTB / nNetCapacityTB;
-        LogPrintf("%s: mining require balance=%ld (%s BHD), miner capacity=%s TB, mined=%ld, calced=%ld, isFoundationAddr=%s\n", __func__, nMiningRequireBalance, chiapos::FormatNumberStr(std::to_string(nMiningRequireBalance / COIN)), chiapos::FormatNumberStr(std::to_string(nMinerCapacityTB)), nMinedCount, nBlockCount, (isFoundationAddr ? "yes" : "no"));
+        LogPrintf("%s: mining require balance=%ld (%s BHD), miner capacity=%s TB, mined=%ld/%ld, isFoundationAddr=%s\n", __func__, nMiningRequireBalance, chiapos::FormatNumberStr(std::to_string(nMiningRequireBalance / COIN)), chiapos::FormatNumberStr(std::to_string(nMinerCapacityTB)), nMinedCount, nBlockCount, (isFoundationAddr ? "yes" : "no"));
         return nMiningRequireBalance;
     } else {
         int64_t nMinerCapacityTB = std::max((nNetCapacityTB * nMinedCount) / nBlockCount, (int64_t) 1);
