@@ -3,7 +3,7 @@ $(package)_version=v0.0.51
 $(package)_download_path=https://github.com/bhdone/bhd_vdf/archive/refs/tags/
 $(package)_download_file=$($(package)_version).tar.gz
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=c557a8d167859dad9ab4ae177bbbd7e940fac24be2d11fd1a6738672e92f2f01
+$(package)_sha256_hash=4b13896f588924df08f95f8333a914d0e759933c75346bc32036c0427c99ae53
 
 define $(package)_fetch_cmds
 $(call fetch_file,$(package),$($(package)_download_path),$($(package)_download_file),$($(package)_file_name),$($(package)_sha256_hash))
