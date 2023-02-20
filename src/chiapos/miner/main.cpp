@@ -143,6 +143,10 @@ CChainParams const& GetChainParams() {
 }  // namespace miner
 
 int HandleCommand_GenConfig(std::string const& config_path) {
+    if (fs::exists(config_path)) {
+        PLOG_ERROR << "the config file does already exist, if you want to generate a new one, please delete it first";
+        return 1;
+    }
     PLOG_INFO << "writing a empty config file: " << config_path;
 
     miner::Config config;
