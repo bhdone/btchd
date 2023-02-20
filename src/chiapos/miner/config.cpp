@@ -49,7 +49,7 @@ std::string Config::ToJsonString() const {
     rpc.pushKV("password", m_rpc.passwd);
 
     root.pushKV("rpc", rpc);
-    return root.write();
+    return root.write(4);
 }
 
 void Config::ParseFromJsonString(std::string const& json_str) {
