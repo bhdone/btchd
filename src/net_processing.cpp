@@ -1483,7 +1483,7 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
             // Fast-path: in this case it is possible to serve the block directly from disk,
             // as the network format matches the format on disk
             std::vector<uint8_t> block_data;
-            LogPrintf("%s: reading MSG_WITNESS_BLOCK from disk, height=%d\n", __func__, pindex->nHeight);
+            LogPrint(BCLog::DB, "%s: reading MSG_WITNESS_BLOCK from disk, height=%d\n", __func__, pindex->nHeight);
             // Don't set pblock as we've sent the block
             std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
             if (!ReadBlockFromDisk(*pblockRead, pindex, consensusParams)) {
