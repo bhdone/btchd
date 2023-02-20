@@ -917,7 +917,6 @@ CAmount CCoinsViewDB::GetBalancePointSend(DatacarrierType type, CAccountID const
 }
 
 CAmount CCoinsViewDB::CalculateTermAmount(CAmount coinAmount, PledgeTerm const& term, PledgeTerm const& fallbackTerm, int nPointHeight, int nHeight) const {
-    CAmount actualAmount;
     int nLockedHeights = nHeight - nPointHeight;
     assert(nLockedHeights >= 0);
     if (nLockedHeights >= term.nLockHeight) {
