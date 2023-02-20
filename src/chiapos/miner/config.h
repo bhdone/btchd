@@ -47,8 +47,8 @@ private:
     std::string m_reward_dest;
     std::vector<std::string> m_plot_path_list;
     std::string m_seed;
-    bool m_testnet;
-    bool m_no_proxy;
+    bool m_testnet{true};
+    bool m_no_proxy{true};
 };
 
 }  // namespace miner
