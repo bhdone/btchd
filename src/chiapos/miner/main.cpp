@@ -452,6 +452,23 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    if (result.count("command")) {
+        miner::g_args.command = result["command"].as<std::string>();
+    } else {
+        throw std::runtime_error("no command, please use --help to read how to use the program.");
+    }
+
+    auto config_path = result["config"].as<std::string>();
+    if (config_path.empty()) {
+        throw std::runtime_error("no config path, please use `--config` to set the path to your config");
+    }
+
+    // we need to generate config before parsing it
+    auto cmd = miner::ParseCommandFromString(miner::g_args.command);
+    if (cmd == miner::CommandType::GEN_CONFIG) {
+        return HandleCommand_GenConfig(config_path);
+    }
+
     miner::g_args.check = result["check"].as<bool>();
     miner::g_args.verbose = result["verbose"].as<bool>();
     miner::g_args.valid_only = result["valid"].as<bool>();
@@ -465,17 +482,7 @@ int main(int argc, char** argv) {
         miner::g_args.address = result["address"].as<std::string>();
     }
 
-    auto config_path = result["config"].as<std::string>();
-    if (config_path.empty()) {
-        throw std::runtime_error("no config path, please use `--config` to set the path to your config");
-    }
     miner::g_config = tools::ParseConfig(config_path);
-
-    if (result.count("command")) {
-        miner::g_args.command = result["command"].as<std::string>();
-    } else {
-        throw std::runtime_error("no command, please use --help to read how to use the program.");
-    }
 
     if (result.count("datadir")) {
         // Customized datadir
@@ -521,8 +528,6 @@ int main(int argc, char** argv) {
 
     try {
         switch (miner::ParseCommandFromString(miner::g_args.command)) {
-            case miner::CommandType::GEN_CONFIG:
-                return HandleCommand_GenConfig(config_path);
             case miner::CommandType::MINING:
                 return HandleCommand_Mining();
             case miner::CommandType::BIND:
@@ -537,6 +542,7 @@ int main(int argc, char** argv) {
                 return HandleCommand_Supplied();
             case miner::CommandType::REGARGET:
                 return HandleCommand_Retarget();
+            case miner::CommandType::GEN_CONFIG:
             case miner::CommandType::UNKNOWN:
             case miner::CommandType::MAX:
                 break;
