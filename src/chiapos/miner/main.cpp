@@ -455,6 +455,21 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    miner::g_args.verbose = result["verbose"].as<bool>();
+    auto& logger = plog::init((miner::g_args.verbose ? plog::debug : plog::info), &console_appender);
+
+    std::string log_path = result["log"].as<std::string>();
+    log_path = result["log"].as<std::string>();
+    if (!log_path.empty()) {
+        int max_size = result["log-max_size"].as<int>();
+        int max_count = result["log-max_count"].as<int>();
+        static plog::RollingFileAppender<plog::TxtFormatter> rollingfile_appender(log_path.c_str(), max_size,
+                                                                                  max_count);
+        logger.addAppender(&rollingfile_appender);
+    }
+
+    PLOG_DEBUG << "Initialized log system";
+
     if (result.count("command")) {
         miner::g_args.command = result["command"].as<std::string>();
     } else {
@@ -473,7 +488,6 @@ int main(int argc, char** argv) {
     }
 
     miner::g_args.check = result["check"].as<bool>();
-    miner::g_args.verbose = result["verbose"].as<bool>();
     miner::g_args.valid_only = result["valid"].as<bool>();
     miner::g_args.amount = result["amount"].as<int>();
     miner::g_args.term = miner::DepositTermFromString(result["term"].as<std::string>());
@@ -509,21 +523,6 @@ int main(int argc, char** argv) {
     if (result.count("filter-bits")) {
         miner::g_args.filter_bits = result["filter-bits"].as<int>();
     }
-
-    plog::Severity severity_type = (miner::g_args.verbose ? plog::debug : plog::info);
-    auto& logger = plog::init((miner::g_args.verbose ? plog::debug : plog::info), &console_appender);
-
-    std::string log_path = result["log"].as<std::string>();
-    log_path = result["log"].as<std::string>();
-    if (!log_path.empty()) {
-        int max_size = result["log-max_size"].as<int>();
-        int max_count = result["log-max_count"].as<int>();
-        static plog::RollingFileAppender<plog::TxtFormatter> rollingfile_appender(log_path.c_str(), max_size,
-                                                                                  max_count);
-        logger.addAppender(&rollingfile_appender);
-    }
-
-    PLOG_DEBUG << "Initialized log system";
 
     PLOG_INFO << "network: " << (miner::g_config.Testnet() ? "testnet" : "main");
 
