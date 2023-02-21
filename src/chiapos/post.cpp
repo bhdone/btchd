@@ -311,8 +311,6 @@ bool SubmitVdfProofPacket(CVdfProof const& vdf) {
     if (i != std::end(g_mapVdf)) {
         if (vdf.nVdfIters == i->second.nVdfIters) {
             // The proof does already exist
-            LogPrintf("%s: the received VDF proof (challenge=%s) does already exist\n", __func__,
-                      vdf.challenge.GetHex());
             return false;
         }
     }
@@ -327,7 +325,7 @@ bool SubmitVdfProofPacket(CVdfProof const& vdf) {
     }
     if (!VerifyVdf(vdf.challenge, MakeZeroForm(), vdf.nVdfIters, MakeVDFForm(vdf.vchY), vdf.vchProof,
                    vdf.nWitnessType)) {
-        LogPrintf("%s: the received VDF proof is invalid (challenge=%s)\n", __func__, vdf.challenge.GetHex());
+        LogPrintf("%s: VDF proof is invalid `%s`\n", __func__, vdf.challenge.GetHex());
         // The vdf received from P2P network is invalid
         return false;
     }
@@ -336,8 +334,8 @@ bool SubmitVdfProofPacket(CVdfProof const& vdf) {
     } else {
         i->second = vdf;
     }
-    LogPrintf("%s: new VDF proof (challenge=%s) (iters=%ld) is saved\n", __func__, vdf.challenge.GetHex(),
-              vdf.nVdfIters);
+    LogPrintf("%s: VDF proof `%s`, iters=%ld (%s) is saved\n", __func__, vdf.challenge.GetHex(),
+              vdf.nVdfIters, chiapos::FormatNumberStr(std::to_string(vdf.nVdfIters)));
     return true;
 }
 

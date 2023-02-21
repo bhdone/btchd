@@ -3013,7 +3013,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
-        LogPrintf("%s: receiving headers count=%d from peer %d\n", __func__, nCount, pfrom->GetId());
+        LogPrint(BCLog::NET, "%s: receiving headers count=%d from peer %d\n", __func__, nCount, pfrom->GetId());
         if (nCount > MAX_HEADERS_RESULTS) {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20, strprintf("headers message size = %u", nCount));
@@ -3302,7 +3302,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         chiapos::CVdfProof vdf;
         vRecv >> vdf;
 
-        LogPrintf("Received a new VDF proof by challenge: `%s` from peer=%d\n", vdf.challenge.GetHex(), pfrom->GetId());
+        LogPrint(BCLog::NET, "%s: VDF proof(peer=%d): `%s`, iters=%ld (%s)\n", __func__, pfrom->GetId(),
+                vdf.challenge.GetHex(), vdf.nVdfIters, chiapos::FormatNumberStr(std::to_string(vdf.nVdfIters)));
 
         chiapos::SubmitVdfProofPacket(vdf);
 
@@ -3345,14 +3346,14 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         vRecv >> challenge;
         vRecv >> nIters;
 
-        LogPrintf("Received a new VDF request by challenge: `%s`, iters: %s from peer=%d\n",
-            challenge.GetHex(), chiapos::FormatNumberStr(std::to_string(nIters)), pfrom->GetId());
+        LogPrint(BCLog::NET, "%s: VDF req(peer=%d): `%s`, iters=%ld (%s)\n", __func__, pfrom->GetId(),
+            challenge.GetHex(), nIters, chiapos::FormatNumberStr(std::to_string(nIters)));
 
         while (currChallenge != challenge) {
             // Find the VDF proof for currChallenge
             auto proof = chiapos::QueryReceivedVdfProofPacket(currChallenge);
             if (!proof.has_value()) {
-                LogPrintf("The challenge required is invalid, the message will be ignored, req=%s, curr=%s\n", challenge.GetHex(), currChallenge.GetHex());
+                LogPrintf("%s: Invalid VDF req: req=`%s`, curr=`%s`\n", __func__, challenge.GetHex(), currChallenge.GetHex());
                 return true;
             }
             currChallenge = chiapos::MakeChallenge(currChallenge, proof->vchProof);
