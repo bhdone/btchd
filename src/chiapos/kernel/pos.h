@@ -52,6 +52,8 @@ class CPlotFile {
 public:
     explicit CPlotFile(std::string filePath);
 
+    bool IsReady() const { return m_impl != nullptr; }
+
     PlotId GetPlotId() const;
 
     bool ReadMemo(PlotMemo& outMemo);

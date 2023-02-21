@@ -55,13 +55,26 @@ struct PlotFileImpl {
 };
 
 CPlotFile::CPlotFile(std::string filePath) : m_path(std::move(filePath)) {
-    m_impl.reset(new PlotFileImpl{std::make_shared<DiskProver>(m_path)});
-    PLOG_DEBUG << "plotId from file " << m_path << ": " << BytesToHex(m_impl->diskProver->GetId());
+    try {
+        m_impl.reset(new PlotFileImpl{std::make_shared<DiskProver>(m_path)});
+        PLOG_DEBUG << "plotId from file " << m_path << ": " << BytesToHex(m_impl->diskProver->GetId());
+    } catch (std::exception const& e) {
+        m_impl.reset();
+        PLOG_DEBUG << "cannot open plot file to read: " << m_path;
+    }
 }
 
-PlotId CPlotFile::GetPlotId() const { return MakeUint256(m_impl->diskProver->GetId()); }
+PlotId CPlotFile::GetPlotId() const {
+    if (m_impl == nullptr) {
+        return {};
+    }
+    return MakeUint256(m_impl->diskProver->GetId());
+}
 
 bool CPlotFile::ReadMemo(PlotMemo& outMemo) {
+    if (m_impl == nullptr) {
+        return false;
+    }
     try {
         Bytes memo = m_impl->diskProver->GetMemo();
         PlotMemo plot_memo;
@@ -86,6 +99,9 @@ bool CPlotFile::ReadMemo(PlotMemo& outMemo) {
 }
 
 bool CPlotFile::GetQualityString(uint256 const& challenge, std::vector<QualityStringPack>& out) const {
+    if (m_impl == nullptr) {
+        return false;
+    }
     try {
         std::vector<LargeBits> qualities = m_impl->diskProver->GetQualitiesForChallenge(challenge.begin());
         std::vector<QualityStringPack> qs_pack_vec;
@@ -108,6 +124,9 @@ bool CPlotFile::GetQualityString(uint256 const& challenge, std::vector<QualitySt
 }
 
 bool CPlotFile::GetFullProof(uint256 const& challenge, int index, Bytes& out) const {
+    if (m_impl == nullptr) {
+        return false;
+    }
     try {
         int proof_bytes = (int)m_impl->diskProver->GetSize() * 8;
         LargeBits proof = m_impl->diskProver->GetFullProof(challenge.begin(), index);
