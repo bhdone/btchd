@@ -61,46 +61,64 @@ CPlotFile::CPlotFile(std::string filePath) : m_path(std::move(filePath)) {
 
 PlotId CPlotFile::GetPlotId() const { return MakeUint256(m_impl->diskProver->GetId()); }
 
-PlotMemo CPlotFile::ReadMemo() {
-    Bytes memo = m_impl->diskProver->GetMemo();
-    PlotMemo plot_memo;
-    plot_memo.plot_id = m_impl->diskProver->GetId();
-    if (memo.size() == 48 + 48 + 32) {
-        plot_memo.plot_id_type = PlotPubKeyType::OGPlots;
-        plot_memo.pool_pk_or_puzzle_hash = SubBytes(memo, 0, 48);
-        plot_memo.farmer_pk = SubBytes(memo, 48, 48);
-        plot_memo.local_master_sk = SubBytes(memo, 48 + 48);
-    } else if (memo.size() == 32 + 48 + 32) {
-        plot_memo.plot_id_type = PlotPubKeyType::PooledPlots;
-        plot_memo.pool_pk_or_puzzle_hash = SubBytes(memo, 0, 32);
-        plot_memo.farmer_pk = SubBytes(memo, 32, 48);
-        plot_memo.local_master_sk = SubBytes(memo, 32 + 48);
+bool CPlotFile::ReadMemo(PlotMemo& outMemo) {
+    try {
+        Bytes memo = m_impl->diskProver->GetMemo();
+        PlotMemo plot_memo;
+        plot_memo.plot_id = m_impl->diskProver->GetId();
+        if (memo.size() == 48 + 48 + 32) {
+            plot_memo.plot_id_type = PlotPubKeyType::OGPlots;
+            plot_memo.pool_pk_or_puzzle_hash = SubBytes(memo, 0, 48);
+            plot_memo.farmer_pk = SubBytes(memo, 48, 48);
+            plot_memo.local_master_sk = SubBytes(memo, 48 + 48);
+        } else if (memo.size() == 32 + 48 + 32) {
+            plot_memo.plot_id_type = PlotPubKeyType::PooledPlots;
+            plot_memo.pool_pk_or_puzzle_hash = SubBytes(memo, 0, 32);
+            plot_memo.farmer_pk = SubBytes(memo, 32, 48);
+            plot_memo.local_master_sk = SubBytes(memo, 32 + 48);
+        }
+        outMemo = plot_memo;
+        return true;
+    } catch (std::exception const& e) {
+        PLOGE << "cannot read memo from plot: " << m_path;
     }
-    return plot_memo;
+    return false;
 }
 
-std::vector<QualityStringPack> CPlotFile::GetQualityString(uint256 const& challenge) const {
-    std::vector<LargeBits> qualities = m_impl->diskProver->GetQualitiesForChallenge(challenge.begin());
-    std::vector<QualityStringPack> qs_pack_vec;
-    int index{0};
-    for (auto const& quality : qualities) {
-        QualityStringPack qs_pack;
-        qs_pack.plot_path = m_path;
-        Bytes quality_bytes = ToBytes(quality);
-        qs_pack.quality_str.FromBytes(quality_bytes, quality.GetSize());
-        qs_pack.k = m_impl->diskProver->GetSize();
-        qs_pack.index = index++;
-        qs_pack_vec.push_back(std::move(qs_pack));
+bool CPlotFile::GetQualityString(uint256 const& challenge, std::vector<QualityStringPack>& out) const {
+    try {
+        std::vector<LargeBits> qualities = m_impl->diskProver->GetQualitiesForChallenge(challenge.begin());
+        std::vector<QualityStringPack> qs_pack_vec;
+        int index{0};
+        for (auto const& quality : qualities) {
+            QualityStringPack qs_pack;
+            qs_pack.plot_path = m_path;
+            Bytes quality_bytes = ToBytes(quality);
+            qs_pack.quality_str.FromBytes(quality_bytes, quality.GetSize());
+            qs_pack.k = m_impl->diskProver->GetSize();
+            qs_pack.index = index++;
+            qs_pack_vec.push_back(std::move(qs_pack));
+        }
+        out = qs_pack_vec;
+        return true;
+    } catch (std::exception const& e) {
+        PLOGE << "cannot get quality string from plot: " << m_path;
     }
-    return qs_pack_vec;
+    return false;
 }
 
-Bytes CPlotFile::GetFullProof(uint256 const& challenge, int index) const {
-    int proof_bytes = (int)m_impl->diskProver->GetSize() * 8;
-    LargeBits proof = m_impl->diskProver->GetFullProof(challenge.begin(), index);
-    Bytes proof_data(proof_bytes);
-    proof.ToBytes(proof_data.data());
-    return proof_data;
+bool CPlotFile::GetFullProof(uint256 const& challenge, int index, Bytes& out) const {
+    try {
+        int proof_bytes = (int)m_impl->diskProver->GetSize() * 8;
+        LargeBits proof = m_impl->diskProver->GetFullProof(challenge.begin(), index);
+        Bytes proof_data(proof_bytes);
+        proof.ToBytes(proof_data.data());
+        out = proof_data;
+        return true;
+    } catch (std::exception const& e) {
+        PLOGE << "cannot read full proof from plot: " << m_path;
+    }
+    return false;
 }
 
 Bytes ToBytes(PubKeyOrHash const& val) { return boost::apply_visitor(MakePubKeyOrHashBytes(), val); }

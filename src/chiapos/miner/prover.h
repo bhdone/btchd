@@ -22,9 +22,9 @@ public:
 
     std::vector<chiapos::QualityStringPack> GetQualityStrings(uint256 const& challenge, int bits_of_filter) const;
 
-    static chiapos::Bytes QueryFullProof(Path const& plot_path, uint256 const& challenge, int index);
+    static bool QueryFullProof(Path const& plot_path, uint256 const& challenge, int index, chiapos::Bytes& out);
 
-    static chiapos::PlotMemo ReadPlotMemo(Path const& plot_file_path);
+    static bool ReadPlotMemo(Path const& plot_file_path, chiapos::PlotMemo& out);
 
     static chiapos::Bytes CalculateLocalPkBytes(chiapos::Bytes const& local_master_sk);
 

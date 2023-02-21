@@ -54,11 +54,11 @@ public:
 
     PlotId GetPlotId() const;
 
-    PlotMemo ReadMemo();
+    bool ReadMemo(PlotMemo& outMemo);
 
-    std::vector<QualityStringPack> GetQualityString(uint256 const& challenge) const;
+    bool GetQualityString(uint256 const& challenge, std::vector<QualityStringPack>& out) const;
 
-    Bytes GetFullProof(uint256 const& challenge, int index) const;
+    bool GetFullProof(uint256 const& challenge, int index, Bytes& out) const;
 
 private:
     std::string m_path;

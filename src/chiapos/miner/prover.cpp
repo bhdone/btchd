@@ -109,20 +109,22 @@ std::vector<chiapos::QualityStringPack> Prover::GetQualityStrings(uint256 const&
             continue;
         }
         PLOG_DEBUG << "passed for plot-id: " << plotFile.GetPlotId().GetHex() << ", challenge: " << challenge.GetHex();
-        std::vector<chiapos::QualityStringPack> qstrs = plotFile.GetQualityString(challenge);
-        std::copy(std::begin(qstrs), std::end(qstrs), std::back_inserter(res));
+        std::vector<chiapos::QualityStringPack> qstrs;
+        if (plotFile.GetQualityString(challenge, qstrs)) {
+            std::copy(std::begin(qstrs), std::end(qstrs), std::back_inserter(res));
+        }
     }
     return res;
 }
 
-chiapos::Bytes Prover::QueryFullProof(Path const& plot_path, uint256 const& challenge, int index) {
+bool Prover::QueryFullProof(Path const& plot_path, uint256 const& challenge, int index, chiapos::Bytes& out) {
     chiapos::CPlotFile plotFile(plot_path.string());
-    return plotFile.GetFullProof(challenge, index);
+    return plotFile.GetFullProof(challenge, index, out);
 }
 
-chiapos::PlotMemo Prover::ReadPlotMemo(Path const& plot_file_path) {
+bool Prover::ReadPlotMemo(Path const& plot_file_path, chiapos::PlotMemo& out) {
     chiapos::CPlotFile plotFile(plot_file_path.string());
-    return plotFile.ReadMemo();
+    return plotFile.ReadMemo(out);
 }
 
 chiapos::Bytes Prover::CalculateLocalPkBytes(chiapos::Bytes const& local_master_sk) {

@@ -53,7 +53,10 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
     if (out_plot_path) {
         *out_plot_path = qs_pack.plot_path;
     }
-    chiapos::PlotMemo memo = Prover::ReadPlotMemo(qs_pack.plot_path);
+    chiapos::PlotMemo memo;
+    if (!Prover::ReadPlotMemo(qs_pack.plot_path, memo)) {
+        return {};
+    }
     RPCClient::PosProof proof;
     proof.mixed_quality_string = mixed_quality_string;
     proof.quality = chiapos::CalculateQuality(mixed_quality_string, qs_pack.k);
@@ -62,10 +65,12 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
     proof.plot_id = chiapos::MakeUint256(memo.plot_id);
     proof.pool_pk_or_hash = chiapos::MakePubKeyOrHash(memo.plot_id_type, memo.pool_pk_or_puzzle_hash);
     proof.local_pk = chiapos::MakeArray<chiapos::PK_LEN>(Prover::CalculateLocalPkBytes(memo.local_master_sk));
-    proof.proof = Prover::QueryFullProof(qs_pack.plot_path, challenge, qs_pack.index);
+    if (!Prover::QueryFullProof(qs_pack.plot_path, challenge, qs_pack.index, proof.proof)) {
+        return {};
+    }
 #ifdef DEBUG
     bool verified = chiapos::VerifyPos(challenge, proof.local_pk, chiapos::MakeArray<chiapos::PK_LEN>(memo.farmer_pk),
-                                       proof.pool_pk_or_hash, proof.k, proof.proof, nullptr, filter_bits);
+            proof.pool_pk_or_hash, proof.k, proof.proof, nullptr, filter_bits);
     assert(verified);
 #endif
     return proof;
