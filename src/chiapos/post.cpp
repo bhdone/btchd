@@ -309,7 +309,7 @@ static std::map<uint256, CVdfProof> g_mapVdf;
 bool SubmitVdfProofPacket(CVdfProof const& vdf) {
     auto i = g_mapVdf.find(vdf.challenge);
     if (i != std::end(g_mapVdf)) {
-        if (vdf.nVdfIters <= i->second.nVdfIters) {
+        if (vdf.nVdfIters == i->second.nVdfIters) {
             // The proof does already exist
             LogPrintf("%s: the received VDF proof (challenge=%s) does already exist\n", __func__,
                       vdf.challenge.GetHex());
