@@ -141,6 +141,10 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
     if (nTargetHeight < params.BHDIP009Height) {
         return false;
     }
+    // Version
+    if (fields.nVersion != CHIAHEADER_VERSION) {
+        return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT, "invalid-version");
+    }
     uint256 initialChallenge;
     if (nTargetHeight == params.BHDIP009Height) {
         Bytes emptyProof(100, 0);

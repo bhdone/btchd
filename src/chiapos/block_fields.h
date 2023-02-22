@@ -11,6 +11,8 @@
 
 namespace chiapos {
 
+const uint64_t CHIAHEADER_VERSION = 0x100;
+
 class CPosProof {
 public:
     uint256 challenge;  // The challenge for PoS
@@ -72,6 +74,7 @@ public:
 
 class CBlockFields {
 public:
+    uint64_t nVersion{CHIAHEADER_VERSION};
     uint64_t nDifficulty;
     uint64_t nQuality;
 
@@ -107,6 +110,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
+        READWRITE(nVersion);
         READWRITE(nDifficulty);
         READWRITE(nQuality);
         READWRITE(posProof);
