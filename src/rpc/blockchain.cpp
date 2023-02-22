@@ -195,7 +195,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
             txs.push_back(tx->GetHash().GetHex());
     }
     if (!block.vtx.empty() && block.vtx[0]->IsCoinBase()) {
-        result.pushKV("miner", EncodeDestination(CTxDestination((ScriptHash)block.vtx[0]->vout[0].scriptPubKey)));
+        result.pushKV("miner", EncodeDestination(ExtractDestination(block.vtx[0]->vout[0].scriptPubKey)));
         result.pushKV("rewardAmount", block.vtx[0]->vout[0].nValue);
     }
     result.pushKV("tx", txs);
