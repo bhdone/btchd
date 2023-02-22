@@ -519,10 +519,7 @@ int main(int argc, char** argv) {
     }
 
     miner::g_args.difficulty_constant_factor_bits = result["dcf-bits"].as<int>();
-
-    if (result.count("filter-bits")) {
-        miner::g_args.filter_bits = result["filter-bits"].as<int>();
-    }
+    miner::g_args.filter_bits = result["filter-bits"].as<int>();
 
     PLOG_INFO << "network: " << (miner::g_config.Testnet() ? "testnet" : "main");
 
