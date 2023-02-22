@@ -36,6 +36,7 @@
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
 #include <warnings.h>
+#include <key_io.h>
 
 #include <assert.h>
 #include <stdint.h>
@@ -188,6 +189,10 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
         }
         else
             txs.push_back(tx->GetHash().GetHex());
+    }
+    if (!block.vtx.empty() && block.vtx[0]->IsCoinBase()) {
+        result.pushKV("miner", EncodeDestination(CTxDestination((ScriptHash)block.vtx[0]->vout[0].scriptPubKey)));
+        result.pushKV("rewardAmount", block.vtx[0]->vout[0].nValue);
     }
     result.pushKV("tx", txs);
     result.pushKV("time", block.GetBlockTime());
