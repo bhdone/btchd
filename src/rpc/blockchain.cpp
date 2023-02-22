@@ -48,6 +48,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <map>
 
 #include <chiapos/kernel/utils.h>
 #include <chiapos/kernel/pos.h>
@@ -999,6 +1000,42 @@ static UniValue getblock(const JSONRPCRequest& request)
     }
 
     return blockToJSON(block, tip, pblockindex, verbosity >= 2);
+}
+
+UniValue countblockowners(JSONRPCRequest const& request)
+{
+    if (request.params.size() != 1) {
+        throw std::runtime_error("you need to provide the number of height");
+    }
+
+    LOCK(cs_main);
+
+    int nStartHeight = atoi(request.params[0].get_str());
+    if (nStartHeight >= ::ChainActive().Height()) {
+        throw std::runtime_error("the number of height is out of range");
+    }
+
+    std::map<std::string, int> summary;
+
+    auto pindex = ::ChainActive().Tip();
+    while (pindex->nHeight >= nStartHeight) {
+        auto block = GetBlockChecked(pindex);
+        auto dest = ExtractDestination(block.vtx[0]->vout[0].scriptPubKey);
+        auto addr = EncodeDestination(dest);
+        auto it = summary.find(addr);
+        if (it == std::end(summary)) {
+            summary.insert(std::make_pair(addr, 1));
+        } else {
+            summary[addr] = it->second + 1;
+        }
+        pindex = pindex->pprev;
+    }
+
+    UniValue res(UniValue::VOBJ);
+    for (auto const& entry : summary) {
+        res.pushKV(entry.first, entry.second);
+    }
+    return res;
 }
 
 static UniValue pruneblockchain(const JSONRPCRequest& request)
@@ -2379,6 +2416,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         "preciousblock",          &preciousblock,          {"blockhash"} },
     { "blockchain",         "scantxoutset",           &scantxoutset,           {"action", "scanobjects"} },
     { "blockchain",         "getblockfilter",         &getblockfilter,         {"blockhash", "filtertype"} },
+    { "blockchain",         "countblockowners",       &countblockowners,       {"fromheight"} },
 
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        {"blockhash"} },
