@@ -98,12 +98,12 @@ int Miner::Run() {
     uint64_t iters;
     while (1) {
         std::this_thread::yield();
-        PLOG_INFO << "Status: " << ToString(m_state);
+        PLOG_INFO << "==== Status: " << ToString(m_state) << " ====";
         if (m_state == State::RequireChallenge) {
             if (!m_client.CheckChiapos()) {
                 continue;
             }
-            PLOG_INFO << "--> chia pos is ready";
+            PLOG_INFO << "chia pos is ready";
             // Reset variables
             pos.reset();
             vdf.reset();
@@ -111,10 +111,10 @@ int Miner::Run() {
             // Query challenge
             queried_challenge = m_client.QueryChallenge();
             current_challenge = queried_challenge.challenge;
-            PLOG_INFO << "--> challenge is ready: " << current_challenge.GetHex();
+            PLOG_INFO << "challenge is ready: " << current_challenge.GetHex();
             m_state = State::FindPoS;
         } else if (m_state == State::FindPoS) {
-            PLOG_INFO << "--> finding PoS for challenge: " << current_challenge.GetHex()
+            PLOG_INFO << "finding PoS for challenge: " << current_challenge.GetHex()
                       << ", dcf_bits: " << m_difficulty_constant_factor_bits << ", filter_bits: " << m_filter_bits;
             pos = pos::QueryBestPosProof(m_prover, current_challenge, m_difficulty_constant_factor_bits, m_filter_bits);
             if (pos.has_value()) {
@@ -122,51 +122,51 @@ int Miner::Run() {
                 chiapos::PlotId plot_id = chiapos::MakePlotId(pos->local_pk, m_farmer_pk, pos->pool_pk_or_hash);
                 if (plot_id != pos->plot_id) {
                     // The provided mnemonic is invalid or it doesn't match to the farmer
-                    PLOG_ERROR << "--> !!! Invalid mnemonic! Please check and fix your configure file!";
+                    PLOG_ERROR << "!!! Invalid mnemonic! Please check and fix your configure file!";
                     return 1;
                 }
                 // Get the iters from PoS
-                PLOG_INFO << "--> PoS has been found, quality: "
+                PLOG_INFO << "PoS has been found, quality: "
                           << chiapos::FormatNumberStr(std::to_string(pos->quality));
                 iters = chiapos::CalculateIterationsQuality(pos->mixed_quality_string, pos->k,
                                                             queried_challenge.difficulty,
                                                             m_difficulty_constant_factor_bits);
-                PLOG_INFO << "--> Calculated iters=" << chiapos::FormatNumberStr(std::to_string(iters)) << ", with k=" << static_cast<int>(pos->k)
+                PLOG_INFO << "Calculated iters=" << chiapos::FormatNumberStr(std::to_string(iters)) << ", with k=" << static_cast<int>(pos->k)
                           << ", difficulty=" << queried_challenge.difficulty
                           << ", dcf_bits=" << m_difficulty_constant_factor_bits;
             } else {
                 // Get the iters for next void block
-                PLOG_INFO << "--> PoS cannot be found";
+                PLOG_INFO << "PoS cannot be found";
                 iters = queried_challenge.prev_vdf_iters / queried_challenge.prev_vdf_duration *
                         queried_challenge.target_duration;
             }
             m_state = State::WaitVDF;
         } else if (m_state == State::WaitVDF) {
-            PLOG_INFO << "--> request VDF proof for challenge: " << current_challenge.GetHex() << ", iters: " << chiapos::FormatNumberStr(std::to_string(iters));
+            PLOG_INFO << "request VDF proof for challenge: " << current_challenge.GetHex() << ", iters: " << chiapos::FormatNumberStr(std::to_string(iters));
             m_client.RequireVdf(current_challenge, iters);
-            PLOG_INFO << "--> waiting for VDF proofs...";
+            PLOG_INFO << "waiting for VDF proofs...";
             std::atomic_bool running{true};
             BreakReason reason =
                     CheckAndBreak(running, queried_challenge.challenge, current_challenge, iters, vdf_mtx, vdf);
             if (reason == BreakReason::ChallengeIsChanged) {
-                PLOG_INFO << "--> challenge has been changed";
+                PLOG_INFO << "!!!!! Challenge is changed !!!!!";
                 m_state = State::RequireChallenge;
             } else if (reason == BreakReason::VDFIsAcquired) {
-                PLOG_INFO << "--> a VDF proof has been received";
+                PLOG_INFO << "a VDF proof has been received";
                 m_state = State::ProcessVDF;
             }
         } else if (m_state == State::ProcessVDF) {
             if (pos.has_value()) {
-                PLOG_INFO << "--> all proofs are ready to submit";
+                PLOG_INFO << "all proofs are ready to submit";
                 m_state = State::SubmitProofs;
             } else {
-                PLOG_INFO << "--> no valid PoS, trying to find another one";
+                PLOG_INFO << "no valid PoS, trying to find another one";
                 current_challenge = chiapos::MakeChallenge(current_challenge, vdf->proof);
                 void_block_vec.push_back(*vdf);
                 m_state = State::FindPoS;
             }
         } else if (m_state == State::SubmitProofs) {
-            PLOG_INFO << "--> preparing proofs";
+            PLOG_INFO << "preparing proofs";
             RPCClient::ProofPack pp;
             pp.prev_block_hash = queried_challenge.prev_block_hash;
             pp.prev_block_height = queried_challenge.prev_block_height;
@@ -177,9 +177,9 @@ int Miner::Run() {
             pp.reward_dest = m_reward_dest;
             try {
                 m_client.SubmitProof(pp);
-                PLOG_INFO << "--> proofs have been submitted";
+                PLOG_INFO << "$$$$$ Proofs have been submitted $$$$$";
             } catch (std::exception const& e) {
-                PLOG_ERROR << "--> SubmitProof throws an exception: " << e.what();
+                PLOG_ERROR << "SubmitProof throws an exception: " << e.what();
             }
             m_state = State::RequireChallenge;
         }
