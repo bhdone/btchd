@@ -1200,7 +1200,7 @@ bool CBlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, 
                         pcursor->Next();
                         continue;
                     }
-                    LogPrintf("%s: loaded diskindex with chiapos consensus, height=%d\n", __func__, diskindex.nHeight);
+                    LogPrint(BCLog::NET, "%s: loaded diskindex with chiapos consensus, height=%d\n", __func__, diskindex.nHeight);
                 }
                 // Construct block index object
                 CBlockIndex* pindexNew = insertBlockIndex(diskindex.GetBlockHash());
