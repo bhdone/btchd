@@ -221,16 +221,19 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
     auto const& params = Params().GetConsensus();
     if (blockindex->nHeight >= params.BHDIP009Height) {
         // PoS fields
-        result.pushKV("pos", GetPosFields(blockindex->chiaposFields.posProof));
-        result.pushKV("vdf", GetVdfFields(blockindex->chiaposFields.vdfProof));
+        result.pushKV("chia_pos", GetPosFields(blockindex->chiaposFields.posProof));
+        result.pushKV("chia_vdf", GetVdfFields(blockindex->chiaposFields.vdfProof));
         UniValue voidBlocks(UniValue::VARR);
         for (auto const& vdf : blockindex->chiaposFields.vVoidBlockVdf) {
             voidBlocks.push_back(GetVdfFields(vdf));
         }
         // Misc for chia fields
-        result.pushKV("difficulty", blockindex->chiaposFields.nDifficulty);
-        result.pushKV("quality", blockindex->chiaposFields.nQuality);
-        result.pushKV("farmerSignature", chiapos::BytesToHex(blockindex->chiaposFields.vchFarmerSignature));
+        result.pushKV("chia_totalIters", blockindex->chiaposFields.GetTotalIters());
+        result.pushKV("chia_duration", blockindex->chiaposFields.GetTotalDuration());
+        result.pushKV("chia_difficulty", blockindex->chiaposFields.nDifficulty);
+        result.pushKV("chia_blockWork", CalcChiaBlockWork(blockindex->chiaposFields).GetLow64());
+        result.pushKV("chia_quality", blockindex->chiaposFields.nQuality);
+        result.pushKV("chia_farmerSignature", chiapos::BytesToHex(blockindex->chiaposFields.vchFarmerSignature));
     }
 
     if (blockindex->pprev)
