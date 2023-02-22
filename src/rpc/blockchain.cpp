@@ -67,6 +67,9 @@ static CUpdatedBlock latestblock;
 double GetDifficulty(const CBlockIndex* blockindex)
 {
     assert(blockindex);
+    if (blockindex->nBaseTarget == 0) {
+        return blockindex->chiaposFields.nDifficulty;
+    }
     return (double)((poc::TWO64 / blockindex->nBaseTarget).GetLow64());
 }
 
