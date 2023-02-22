@@ -105,6 +105,10 @@ std::vector<chiapos::QualityStringPack> Prover::GetQualityStrings(uint256 const&
     std::vector<chiapos::QualityStringPack> res;
     for (auto const& path : m_plotter_files) {
         chiapos::CPlotFile plotFile(path.string());
+        if (!plotFile.IsReady()) {
+            PLOG_ERROR << "bad plot: " << path.string();
+            continue;
+        }
         if (bits_of_filter > 0 && !chiapos::PassesFilter(plotFile.GetPlotId(), challenge, bits_of_filter)) {
             continue;
         }
