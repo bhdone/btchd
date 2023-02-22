@@ -84,7 +84,7 @@ static int ComputeNextBlockAndDepth(const CBlockIndex* tip, const CBlockIndex* b
 }
 
 UniValue GetPosFields(chiapos::CPosProof const& pos) {
-    UniValue outValue;
+    UniValue outValue(UniValue::VOBJ);
     outValue.pushKV("pos_poolPkOrHash", chiapos::BytesToHex(pos.vchPoolPkOrHash));
     outValue.pushKV("pos_localPk", chiapos::BytesToHex(pos.vchLocalPk));
     outValue.pushKV("pos_farmerPk", chiapos::BytesToHex(pos.vchFarmerPk));
@@ -95,7 +95,7 @@ UniValue GetPosFields(chiapos::CPosProof const& pos) {
 }
 
 UniValue GetVdfFields(chiapos::CVdfProof const& vdfProof) {
-    UniValue outValue;
+    UniValue outValue(UniValue::VOBJ);
     outValue.pushKV("vdf_Challenge", vdfProof.challenge.GetHex());
     outValue.pushKV("vdf_Y", chiapos::BytesToHex(vdfProof.vchY));
     outValue.pushKV("vdf_Proof", chiapos::BytesToHex(vdfProof.vchProof));
