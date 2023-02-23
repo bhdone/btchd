@@ -17,6 +17,8 @@ int const MAX_K = 50;
 int const NUMBER_OF_ZEROS_BITS_FOR_FILTER = 9;
 int const NUMBER_OF_ZEROS_BITS_FOR_FILTER_TESTNET = 5;
 
+int const DIFFICULTY_CONSTANT_FACTOR_BITS = 32;
+
 arith_uint256 Pow2(int bits);
 
 uint64_t AdjustDifficulty(uint64_t prev_block_difficulty, uint64_t curr_block_duration, uint64_t target_duration);

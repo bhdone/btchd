@@ -25,7 +25,7 @@ Int expected_plot_size(uint8_t k) {
 }  // namespace calc
 
 
-int const QUALITY_BASE_BITS = 64;
+int const QUALITY_BASE_BITS = 32;
 
 arith_uint256 Pow2(int bits) { return arith_uint256(1) << bits; }
 
@@ -39,8 +39,7 @@ arith_uint256 LimitQualityStringBits(uint256 const& quality_string, int bits) {
     return UintToArith256(quality_string) & (Pow2(bits) - 1);
 }
 
-uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_t difficulty,
-                                    int difficulty_constant_factor_bits) {
+uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_t difficulty, int difficulty_constant_factor_bits) {
     assert(difficulty > 0);
     uint64_t quality = CalculateQuality(mixed_quality_string);
     auto iters = arith_uint256(difficulty) * Pow2(difficulty_constant_factor_bits) / quality;
