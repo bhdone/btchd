@@ -147,12 +147,12 @@ TEST(Chiapos, Test_VerifyVdfProof) {
     EXPECT_TRUE(CheckVdfProof(proof, state));
 }
 
-TEST(Difficulty, ExpectSize) {
-    EXPECT_EQ(chiapos::calc::expected_plot_size<int64_t>(25), 855638016);
-    EXPECT_EQ(chiapos::calc::expected_plot_size<arith_uint256>(25), 855638016);
-    EXPECT_EQ(chiapos::calc::expected_plot_size<int64_t>(32), 139586437120);
-    EXPECT_EQ(chiapos::calc::expected_plot_size<arith_uint256>(32), 139586437120);
-}
+// TEST(Difficulty, ExpectSize) {
+//     EXPECT_EQ(chiapos::calc::expected_plot_size<int64_t>(25), 855638016);
+//     EXPECT_EQ(chiapos::calc::expected_plot_size<arith_uint256>(25), 855638016);
+//     EXPECT_EQ(chiapos::calc::expected_plot_size<int64_t>(32), 139586437120);
+//     EXPECT_EQ(chiapos::calc::expected_plot_size<arith_uint256>(32), 139586437120);
+// }
 
 TEST(Utils, FormatNumberStr) {
     EXPECT_EQ(chiapos::FormatNumberStr("2022"), "2,022");

@@ -24,13 +24,13 @@ namespace miner {
 namespace pos {
 
 chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::QualityStringPack> const& qs_pack_vec,
-                                                     uint256 const& challenge, int difficulty_constant_factor_bits) {
+        uint256 const& challenge, int difficulty_constant_factor_bits) {
     assert(!qs_pack_vec.empty());
     chiapos::QualityStringPack res;
     uint64_t best_quality{0};
     for (chiapos::QualityStringPack const& qs_pack : qs_pack_vec) {
         uint256 mixed_quality_string = chiapos::GetMixedQualityString(qs_pack.quality_str.ToBytes(), challenge);
-        uint64_t quality = chiapos::CalculateQuality(mixed_quality_string, qs_pack.k);
+        uint64_t quality = chiapos::CalculateQuality(mixed_quality_string);
         if (quality >= best_quality) {
             res = qs_pack;
             best_quality = quality;
@@ -40,15 +40,14 @@ chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::Qualit
 }
 
 chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256 const& challenge,
-                                                         int difficulty_constant_factor_bits, int filter_bits,
-                                                         std::string* out_plot_path) {
+        int difficulty_constant_factor_bits, int filter_bits, std::string* out_plot_path) {
     auto qs_pack_vec = prover.GetQualityStrings(challenge, filter_bits);
+    PLOG_INFO << "total " << qs_pack_vec.size() << " answer(s), filter_bits=" << filter_bits;
     if (qs_pack_vec.empty()) {
         // No prove can pass the filter
         return {};
     }
-    chiapos::QualityStringPack qs_pack =
-            QueryTheBestQualityString(qs_pack_vec, challenge, difficulty_constant_factor_bits);
+    chiapos::QualityStringPack qs_pack = QueryTheBestQualityString(qs_pack_vec, challenge, difficulty_constant_factor_bits);
     uint256 mixed_quality_string = chiapos::GetMixedQualityString(qs_pack.quality_str.ToBytes(), challenge);
     if (out_plot_path) {
         *out_plot_path = qs_pack.plot_path;
@@ -59,7 +58,7 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
     }
     RPCClient::PosProof proof;
     proof.mixed_quality_string = mixed_quality_string;
-    proof.quality = chiapos::CalculateQuality(mixed_quality_string, qs_pack.k);
+    proof.quality = chiapos::CalculateQuality(mixed_quality_string);
     proof.challenge = challenge;
     proof.k = qs_pack.k;
     proof.plot_id = chiapos::MakeUint256(memo.plot_id);
@@ -68,6 +67,7 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
     if (!Prover::QueryFullProof(qs_pack.plot_path, challenge, qs_pack.index, proof.proof)) {
         return {};
     }
+    PLOGI << "quality=" << chiapos::FormatNumberStr(std::to_string(proof.quality)) << ", k=" << proof.k << ", farmer-pk: " << chiapos::BytesToHex(memo.farmer_pk);
 #ifdef DEBUG
     bool verified = chiapos::VerifyPos(challenge, proof.local_pk, chiapos::MakeArray<chiapos::PK_LEN>(memo.farmer_pk),
             proof.pool_pk_or_hash, proof.k, proof.proof, nullptr, filter_bits);
@@ -126,11 +126,8 @@ int Miner::Run() {
                     return 1;
                 }
                 // Get the iters from PoS
-                PLOG_INFO << "PoS has been found, quality: "
-                          << chiapos::FormatNumberStr(std::to_string(pos->quality));
-                iters = chiapos::CalculateIterationsQuality(pos->mixed_quality_string, pos->k,
-                                                            queried_challenge.difficulty,
-                                                            m_difficulty_constant_factor_bits);
+                PLOG_INFO << "PoS has been found, quality: " << chiapos::FormatNumberStr(std::to_string(pos->quality));
+                iters = chiapos::CalculateIterationsQuality(pos->mixed_quality_string, queried_challenge.difficulty, m_difficulty_constant_factor_bits);
                 PLOG_INFO << "Calculated iters=" << chiapos::FormatNumberStr(std::to_string(iters)) << ", with k=" << static_cast<int>(pos->k)
                           << ", difficulty=" << queried_challenge.difficulty
                           << ", dcf_bits=" << m_difficulty_constant_factor_bits;
