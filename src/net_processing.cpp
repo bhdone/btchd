@@ -3353,7 +3353,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // Find the VDF proof for currChallenge
             auto proof = chiapos::QueryReceivedVdfProofPacket(currChallenge);
             if (!proof.has_value()) {
-                LogPrintf("%s: Invalid VDF req: req=`%s`, curr=`%s`\n", __func__, challenge.GetHex(), currChallenge.GetHex());
+                LogPrint(BCLog::NET, "%s: Invalid VDF req: req=`%s`, curr=`%s`, peer=%d\n", __func__, challenge.GetHex(), currChallenge.GetHex(), pfrom->GetId());
                 return true;
             }
             currChallenge = chiapos::MakeChallenge(currChallenge, proof->vchProof);
