@@ -68,7 +68,10 @@ PlotId CPlotFile::GetPlotId() const {
     if (m_impl == nullptr) {
         return {};
     }
-    return MakeUint256(m_impl->diskProver->GetId());
+    if (m_cached_plotid.IsNull()) {
+        m_cached_plotid = MakeUint256(m_impl->diskProver->GetId());
+    }
+    return m_cached_plotid;
 }
 
 bool CPlotFile::ReadMemo(PlotMemo& outMemo) {

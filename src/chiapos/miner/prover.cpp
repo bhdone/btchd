@@ -96,19 +96,21 @@ std::vector<Path> StrListToPathList(std::vector<std::string> const& str_list) {
 Prover::Prover(std::vector<Path> const& path_list) {
     for (auto const& path : path_list) {
         auto files = EnumPlotsFromDir(path.string());
-        std::copy(std::begin(files), std::end(files), std::back_inserter(m_plotter_files));
+        for (auto const& file : files) {
+            chiapos::CPlotFile plotFile(file);
+            if (plotFile.IsReady()) {
+                m_plotter_files.push_back(std::move(plotFile));
+            } else {
+                PLOG_ERROR << "bad plot: " << file;
+            }
+        }
     }
     PLOG_INFO << "found total " << m_plotter_files.size() << " plots";
 }
 
 std::vector<chiapos::QualityStringPack> Prover::GetQualityStrings(uint256 const& challenge, int bits_of_filter) const {
     std::vector<chiapos::QualityStringPack> res;
-    for (auto const& path : m_plotter_files) {
-        chiapos::CPlotFile plotFile(path.string());
-        if (!plotFile.IsReady()) {
-            PLOG_ERROR << "bad plot: " << path.string();
-            continue;
-        }
+    for (auto const& plotFile : m_plotter_files) {
         if (bits_of_filter > 0 && !chiapos::PassesFilter(plotFile.GetPlotId(), challenge, bits_of_filter)) {
             continue;
         }

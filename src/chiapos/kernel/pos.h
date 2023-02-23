@@ -62,8 +62,11 @@ public:
 
     bool GetFullProof(uint256 const& challenge, int index, Bytes& out) const;
 
+    std::string GetPath() const { return m_path; }
+
 private:
     std::string m_path;
+    mutable uint256 m_cached_plotid;
     std::shared_ptr<PlotFileImpl> m_impl;
 };
 

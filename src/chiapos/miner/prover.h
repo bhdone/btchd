@@ -15,7 +15,7 @@ namespace miner {
 std::vector<Path> StrListToPathList(std::vector<std::string> const& str_list);
 
 class Prover {
-    std::vector<Path> m_plotter_files;
+    std::vector<chiapos::CPlotFile> m_plotter_files;
 
 public:
     explicit Prover(std::vector<Path> const& path_list);
