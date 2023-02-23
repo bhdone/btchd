@@ -457,7 +457,14 @@ void WaitTimelord() {
     g_timelord->Wait();
 }
 
+using ChallengePair = std::pair<uint256, uint64_t>;
+std::set<ChallengePair> g_queried_challenges;
+
 void UpdateChallengeToTimelord(uint256 challenge, uint64_t iters) {
+    if (g_queried_challenges.find(std::make_pair(challenge, iters)) != std::end(g_queried_challenges)) {
+        return;
+    }
+    g_queried_challenges.insert(std::make_pair(challenge, iters));
     // first we query the proof from cache
     CTimeLord::ProofRecord proof_record;
     bool found = g_timelord->QueryIters(challenge, iters, proof_record);
