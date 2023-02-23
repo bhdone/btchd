@@ -136,7 +136,7 @@ public:
         assert(consensus.BHDIP008FundRoyaltyForLowMortgage > consensus.BHDIP001FundRoyaltyForFullMortgage);
 
         consensus.BHDIP009SkipTestChainChecks = false; // Do not check validation for blocks of burst consensus
-        consensus.BHDIP009Height = 810444; // TODO When reach the height the consensus will change to chiapos
+        consensus.BHDIP009Height = 9999999; // TODO When reach the height the consensus will change to chiapos
         // The reward address should be filled
         consensus.BHDIP009FundAddresses = { "3Maw3PdwSvtXgBKJ9QPGwRSQW8AgQrGK3W" };
         consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
