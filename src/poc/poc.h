@@ -237,6 +237,8 @@ struct PledgeParams {
 };
 PledgeParams CalculatePledgeParams(int nMiningHeight, Consensus::Params const& params);
 
+arith_uint256 CalculateAverageNetworkSpace(CBlockIndex *pindexCurr, Consensus::Params const& params);
+
 }
 
 bool StartPOC();

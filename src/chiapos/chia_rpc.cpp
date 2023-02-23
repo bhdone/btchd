@@ -253,13 +253,21 @@ static UniValue queryNetspace(JSONRPCRequest const& request) {
         RPCExamples{HelpExampleCli("querynetspace", "")})
         .Check(request);
 
+    LOCK(cs_main);
+
     auto params = Params().GetConsensus();
-    auto pledgeParams = poc::CalculatePledgeParams(ChainActive().Height(), params);
+    auto pledgeParams = poc::CalculatePledgeParams(::ChainActive().Height(), params);
+
+    CBlockIndex* pindex = ::ChainActive().Tip();
+    auto netspace = poc::CalculateAverageNetworkSpace(pindex, params);
+    auto netspaceTB = netspace / 1000 / 1000 / 1000 / 1000;
 
     UniValue res(UniValue::VOBJ);
     res.pushKV("netCapacityTB", pledgeParams.nNetCapacityTB);
     res.pushKV("calculatedOnHeight", pledgeParams.nCalcHeight);
     res.pushKV("supplied", pledgeParams.supplied / COIN);
+    res.pushKV("netspace", chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())));
+    res.pushKV("netspace_TB", netspaceTB.getdouble());
 
     return res;
 }
