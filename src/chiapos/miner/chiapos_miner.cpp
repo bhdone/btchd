@@ -67,7 +67,7 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
     if (!Prover::QueryFullProof(qs_pack.plot_path, challenge, qs_pack.index, proof.proof)) {
         return {};
     }
-    PLOGI << "quality=" << chiapos::FormatNumberStr(std::to_string(proof.quality)) << ", k=" << proof.k << ", farmer-pk: " << chiapos::BytesToHex(memo.farmer_pk);
+    PLOGI << "quality=" << chiapos::FormatNumberStr(std::to_string(proof.quality)) << ", k=" << (int)proof.k << ", farmer-pk: " << chiapos::BytesToHex(memo.farmer_pk);
 #ifdef DEBUG
     bool verified = chiapos::VerifyPos(challenge, proof.local_pk, chiapos::MakeArray<chiapos::PK_LEN>(memo.farmer_pk),
             proof.pool_pk_or_hash, proof.k, proof.proof, nullptr, filter_bits);

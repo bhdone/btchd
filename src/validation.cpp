@@ -3873,7 +3873,7 @@ static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state,
 
     if (pindexPrev->nHeight + 1 >= chainparams.GetConsensus().BHDIP009Height) {
         LogPrint(BCLog::POC, "%s: checking chiapos fields...\n", __func__);
-        LogPrintf("%s: difficulty=%ld\n", __func__, block.chiaposFields.nDifficulty);
+        LogPrintf("%s: difficulty=%ld, k=%d\n", __func__, block.chiaposFields.nDifficulty, block.chiaposFields.posProof.nPlotK);
         if (!chiapos::CheckBlockFields(block.chiaposFields, block.nTime, pindexPrev, state, chainparams.GetConsensus())) {
             return false;
         }
