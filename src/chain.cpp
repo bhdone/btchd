@@ -194,7 +194,10 @@ int const WORK_FACTOR = 10000;
 
 arith_uint256 CalcChiaBlockWork(chiapos::CBlockFields const& fields)
 {
-    return fields.nQuality * WORK_FACTOR / fields.GetTotalIters();
+    if (fields.GetTotalIters() > 0) {
+        return fields.nQuality * WORK_FACTOR / fields.GetTotalIters();
+    }
+    return 0;
 }
 
 arith_uint256 GetBlockWork(const CBlockHeader& header, const Consensus::Params& params)
