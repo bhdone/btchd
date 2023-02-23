@@ -143,6 +143,7 @@ public:
         consensus.BHDIP009StartBlockIters = 100000 * consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009DifficultyConstantFactorBits = chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS;
         consensus.BHDIP009PlotIdBitsOfFilter = chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER;
+        consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 100;
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
         consensus.BHDIP009StartDifficulty = (arith_uint256(1000000000) * consensus.BHDIP009StartBlockIters / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits) / chiapos::Pow2(consensus.BHDIP009PlotIdBitsOfFilter)).GetLow64();
@@ -423,7 +424,8 @@ public:
         consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
         consensus.BHDIP009StartBlockIters = 100000 * consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009DifficultyConstantFactorBits = chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS;
-        consensus.BHDIP009PlotIdBitsOfFilter = chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER;
+        consensus.BHDIP009PlotIdBitsOfFilter = chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER_TESTNET;
+        consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 40;
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K_TEST_NET;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
         consensus.BHDIP009StartDifficulty = 1;

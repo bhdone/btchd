@@ -92,6 +92,11 @@ static UniValue queryChallenge(JSONRPCRequest const& request) {
     res.pushKV("prev_block_height", pindexPrev->nHeight);
     res.pushKV("target_height", nTargetHeight);
     res.pushKV("target_duration", params.BHDIP008TargetSpacing);
+    if (nTargetHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight) {
+        res.pushKV("filter_bits", 0);
+    } else {
+        res.pushKV("filter_bits", params.BHDIP009PlotIdBitsOfFilter);
+    }
     return res;
 }
 

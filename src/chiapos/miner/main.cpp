@@ -121,7 +121,6 @@ struct Arguments {
     std::string address;
     // Network related
     int difficulty_constant_factor_bits;  // dcf bits (chain parameter)
-    int filter_bits;                      // filter bits (chain parameter)
     std::string datadir;                  // The root path of the data directory
     std::string cookie_path;              // The file stores the connecting information of current btchd server
 } g_args;
@@ -163,9 +162,7 @@ int HandleCommand_Mining() {
     miner::Prover prover(miner::StrListToPathList(miner::g_config.GetPlotPath()));
     std::unique_ptr<miner::RPCClient> pclient = tools::CreateRPCClient(miner::g_config, miner::g_args.cookie_path);
     // Start mining
-    miner::Miner miner(*pclient, prover, miner::g_config.GetFarmerSk(), miner::g_config.GetFarmerPk(),
-                       miner::g_config.GetRewardDest(), miner::g_args.difficulty_constant_factor_bits,
-                       miner::g_args.filter_bits);
+    miner::Miner miner(*pclient, prover, miner::g_config.GetFarmerSk(), miner::g_config.GetFarmerPk(), miner::g_config.GetRewardDest(), miner::g_args.difficulty_constant_factor_bits);
     return miner.Run();
 }
 
@@ -434,9 +431,6 @@ int main(int argc, char** argv) {
             ("dcf-bits", "Difficulty constant factor bits",
              cxxopts::value<int>()->default_value(
                      std::to_string(chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS)))  // --dcf-bits
-            ("filter-bits", "Filter bits for plot-id",
-             cxxopts::value<int>()->default_value(
-                     std::to_string(chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER)))  // --filter-bits
             ("d,datadir", "The root path of the data directory",
              cxxopts::value<std::string>())  // --datadir, -d
             ("cookie", "Full path to `.cookie` from btchd datadir",
@@ -519,7 +513,6 @@ int main(int argc, char** argv) {
     }
 
     miner::g_args.difficulty_constant_factor_bits = result["dcf-bits"].as<int>();
-    miner::g_args.filter_bits = result["filter-bits"].as<int>();
 
     PLOG_INFO << "network: " << (miner::g_config.Testnet() ? "testnet" : "main");
 

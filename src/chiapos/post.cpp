@@ -37,7 +37,7 @@ uint256 MakeChallenge(CBlockIndex* pindex, Consensus::Params const& params) {
     }
 }
 
-bool CheckPosProof(CPosProof const& proof, CValidationState& state, Consensus::Params const& params) {
+bool CheckPosProof(CPosProof const& proof, CValidationState& state, Consensus::Params const& params, int nTargetHeight) {
     static char const* SZ_BAD_WHAT = "bad-chia-pos";
 
     if (proof.challenge.IsNull()) {
@@ -90,10 +90,11 @@ bool CheckPosProof(CPosProof const& proof, CValidationState& state, Consensus::P
              __func__, proof.challenge.GetHex(), BytesToHex(proof.vchLocalPk), BytesToHex(proof.vchFarmerPk),
              BytesToHex(proof.vchPoolPkOrHash), proof.nPlotK, BytesToHex(proof.vchProof));
 
+    int nBitsOfFilter = nTargetHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter;
     bool verified =
             VerifyPos(proof.challenge, MakeArray<PK_LEN>(proof.vchLocalPk), MakeArray<PK_LEN>(proof.vchFarmerPk),
                       MakePubKeyOrHash(static_cast<PlotPubKeyType>(proof.nPlotType), proof.vchPoolPkOrHash),
-                      proof.nPlotK, proof.vchProof, nullptr, params.BHDIP009PlotIdBitsOfFilter);
+                      proof.nPlotK, proof.vchProof, nullptr, nBitsOfFilter);
     if (!verified) {
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
                              "cannot verify proof");
@@ -240,7 +241,7 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
                              "invalid pos challenge");
     }
-    if (!CheckPosProof(fields.posProof, state, params)) {
+    if (!CheckPosProof(fields.posProof, state, params, nTargetHeight)) {
         return false;
     }
 

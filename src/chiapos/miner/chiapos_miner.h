@@ -21,8 +21,7 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
 /// Miner is a state machine
 class Miner {
 public:
-    Miner(RPCClient& client, Prover& prover, chiapos::SecreKey farmer_sk, chiapos::PubKey farmer_pk,
-          std::string reward_dest, int difficulty_constant_factor_bits, int filter_bits);
+    Miner(RPCClient& client, Prover& prover, chiapos::SecreKey farmer_sk, chiapos::PubKey farmer_pk, std::string reward_dest, int difficulty_constant_factor_bits);
 
     int Run();
 
@@ -46,7 +45,6 @@ private:
     chiapos::PubKey m_farmer_pk;
     std::string m_reward_dest;
     int m_difficulty_constant_factor_bits;
-    int m_filter_bits;
     // State
     std::atomic<State> m_state{State::RequireChallenge};
 };

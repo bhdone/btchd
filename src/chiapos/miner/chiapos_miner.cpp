@@ -78,15 +78,10 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
 
 }  // namespace pos
 
-Miner::Miner(RPCClient& client, Prover& prover, chiapos::SecreKey farmer_sk, chiapos::PubKey farmer_pk,
-             std::string reward_dest, int difficulty_constant_factor_bits, int filter_bits)
-        : m_client(client),
-          m_prover(prover),
-          m_farmer_sk(std::move(farmer_sk)),
-          m_farmer_pk(std::move(farmer_pk)),
-          m_reward_dest(std::move(reward_dest)),
-          m_difficulty_constant_factor_bits(difficulty_constant_factor_bits),
-          m_filter_bits(filter_bits) {}
+Miner::Miner(RPCClient& client, Prover& prover, chiapos::SecreKey farmer_sk, chiapos::PubKey farmer_pk, std::string reward_dest, int difficulty_constant_factor_bits)
+        : m_client(client), m_prover(prover), m_farmer_sk(std::move(farmer_sk))
+        , m_farmer_pk(std::move(farmer_pk)), m_reward_dest(std::move(reward_dest))
+        , m_difficulty_constant_factor_bits(difficulty_constant_factor_bits) {}
 
 int Miner::Run() {
     RPCClient::Challenge queried_challenge;
@@ -111,12 +106,12 @@ int Miner::Run() {
             // Query challenge
             queried_challenge = m_client.QueryChallenge();
             current_challenge = queried_challenge.challenge;
-            PLOG_INFO << "challenge is ready: " << current_challenge.GetHex();
+            PLOG_INFO << "challenge is ready: " << current_challenge.GetHex() << ", target height: " << queried_challenge.target_height << ", filter_bits: " << queried_challenge.filter_bits;
             m_state = State::FindPoS;
         } else if (m_state == State::FindPoS) {
             PLOG_INFO << "finding PoS for challenge: " << current_challenge.GetHex()
-                      << ", dcf_bits: " << m_difficulty_constant_factor_bits << ", filter_bits: " << m_filter_bits;
-            pos = pos::QueryBestPosProof(m_prover, current_challenge, m_difficulty_constant_factor_bits, m_filter_bits);
+                      << ", dcf_bits: " << m_difficulty_constant_factor_bits << ", filter_bits: " << queried_challenge.filter_bits;
+            pos = pos::QueryBestPosProof(m_prover, current_challenge, m_difficulty_constant_factor_bits, queried_challenge.filter_bits);
             if (pos.has_value()) {
                 // Check plot-id
                 chiapos::PlotId plot_id = chiapos::MakePlotId(pos->local_pk, m_farmer_pk, pos->pool_pk_or_hash);

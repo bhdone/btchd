@@ -81,6 +81,7 @@ RPCClient::Challenge RPCClient::QueryChallenge() {
     ch.prev_vdf_duration = res.result["prev_vdf_duration"].get_int64();
     ch.target_height = res.result["target_height"].get_int();
     ch.target_duration = res.result["target_duration"].get_int64();
+    ch.filter_bits = res.result["filter_bits"].get_int();
     return ch;
 }
 

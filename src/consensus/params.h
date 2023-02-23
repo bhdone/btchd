@@ -114,6 +114,7 @@ struct Params {
     uint64_t BHDIP009StartBlockIters;
     int BHDIP009DifficultyConstantFactorBits;
     int BHDIP009PlotIdBitsOfFilter;
+    int BHDIP009PlotIdBitsOfFilterEnableOnHeight;
     int BHDIP009PlotSizeMin;
     int BHDIP009PlotSizeMax;
     uint64_t BHDIP009MinNetspacePB;

@@ -64,6 +64,7 @@ public:
         uint64_t prev_vdf_duration;
         int target_height;
         uint64_t target_duration;
+        int filter_bits;
     };
 
     struct PosProof {
