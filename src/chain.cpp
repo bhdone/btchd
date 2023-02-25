@@ -190,11 +190,15 @@ void CBlockIndex::BuildSkip()
         pskip = pprev->GetAncestor(GetSkipHeight(nHeight));
 }
 
-int const WORK_FACTOR = 10000;
+int const WORK_FACTOR = 10000000;
 
 arith_uint256 CalcChiaBlockWork(chiapos::CBlockFields const& fields)
 {
-    return fields.nDifficulty;
+    uint64_t nTotalIters = fields.GetTotalIters();
+    if (nTotalIters > 0) {
+        return arith_uint256(WORK_FACTOR) * fields.nQuality / nTotalIters;
+    }
+    return 0;
 }
 
 arith_uint256 GetBlockWork(const CBlockHeader& header, const Consensus::Params& params)
