@@ -338,7 +338,7 @@ bool SubmitVdfProofPacket(CVdfProof const& vdf) {
     } else {
         i->second = vdf;
     }
-    LogPrintf("%s: VDF proof `%s`, iters=%ld (%s) is saved\n", __func__, vdf.challenge.GetHex(),
+    LogPrint(BCLog::NET, "%s: VDF proof `%s`, iters=%ld (%s) is saved\n", __func__, vdf.challenge.GetHex(),
               vdf.nVdfIters, chiapos::FormatNumberStr(std::to_string(vdf.nVdfIters)));
     return true;
 }
