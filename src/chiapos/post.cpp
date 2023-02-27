@@ -484,7 +484,7 @@ void UpdateChallengeToTimelord(uint256 challenge, uint64_t iters) {
             psession->CalcIters(iters);
         });
     } else {
-        LogPrintf("%s: timelord for challenge %s is already running, send request of iters=%s\n", __func__, challenge.GetHex(),
+        LogPrint(BCLog::NET, "%s: timelord for challenge %s is already running, send request of iters=%s\n", __func__, challenge.GetHex(),
                   chiapos::FormatNumberStr(std::to_string(iters)));
         // The challenge is good
         std::lock_guard<std::mutex> lg(g_mtxCalcIters);
