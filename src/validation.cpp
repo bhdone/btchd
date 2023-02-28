@@ -3872,8 +3872,7 @@ static bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state,
         FormatISO8601DateTime(block.GetBlockTime()));
 
     if (pindexPrev->nHeight + 1 >= chainparams.GetConsensus().BHDIP009Height) {
-        LogPrint(BCLog::POC, "%s: checking chiapos fields...\n", __func__);
-        LogPrintf("%s: difficulty=%ld, k=%d\n", __func__, block.chiaposFields.nDifficulty, block.chiaposFields.posProof.nPlotK);
+        LogPrint(BCLog::POC, "%s: difficulty=%ld, k=%d\n", __func__, block.chiaposFields.nDifficulty, block.chiaposFields.posProof.nPlotK);
         if (!chiapos::CheckBlockFields(block.chiaposFields, block.nTime, pindexPrev, state, chainparams.GetConsensus())) {
             return false;
         }
@@ -3963,7 +3962,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const CChainParams
         if (block.chiaposFields.posProof.vchFarmerPk.size() != chiapos::PK_LEN) {
             return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, "bad-chia-farmerpk", "farmer public-key is empty");
         }
-        LogPrintf("%s: verifying signature hash: %s, farmer-pk: %s\n", __func__, block.GetUnsignaturedHash().GetHex(), chiapos::BytesToHex(block.chiaposFields.posProof.vchFarmerPk));
+        LogPrint(BCLog::NET, "%s: verifying signature hash: %s, farmer-pk: %s\n", __func__, block.GetUnsignaturedHash().GetHex(), chiapos::BytesToHex(block.chiaposFields.posProof.vchFarmerPk));
         if (!chiapos::VerifySignature(chiapos::MakeArray<chiapos::PK_LEN>(block.chiaposFields.posProof.vchFarmerPk),
                                       chiapos::MakeArray<chiapos::SIG_LEN>(block.chiaposFields.vchFarmerSignature),
                                       chiapos::MakeBytes(block.GetUnsignaturedHash()))) {
