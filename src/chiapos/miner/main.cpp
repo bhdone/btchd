@@ -435,6 +435,7 @@ int main(int argc, char** argv) {
              cxxopts::value<std::string>())  // --datadir, -d
             ("cookie", "Full path to `.cookie` from btchd datadir",
              cxxopts::value<std::string>())  // --cookie
+            ("timelord-addr", "The address to connect to the timelord service", cxxopts::value<std::string>()->default_value("127.0.0.1")) // --timelord-addr
             ("command", std::string("Command") + miner::GetCommandsList(),
              cxxopts::value<std::string>())  // --command
             ;
