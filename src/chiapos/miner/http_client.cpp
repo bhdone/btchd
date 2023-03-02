@@ -25,6 +25,7 @@ std::tuple<bool, int, std::string> HTTPClient::Send(std::string const& buff) {
     curl_slist* header_list;
     header_list = curl_slist_append(nullptr, "Content-Type: application/json-rpc");
     header_list = curl_slist_append(header_list, "Accept: application/json");
+    header_list = curl_slist_append(header_list, "Connection: close");
     curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, header_list);
     curl_easy_setopt(m_curl, CURLOPT_POST, 1L);
     curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, buff.c_str());
