@@ -40,10 +40,6 @@ std::tuple<bool, int, std::string> HTTPClient::Send(std::string const& buff) {
         }
     }
 
-    if (plog::get()->getMaxSeverity() >= plog::Severity::debug) {
-        curl_easy_setopt(m_curl, CURLOPT_VERBOSE, 1L);
-    }
-
     curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, this);
     curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, &HTTPClient::RecvCallback);
 

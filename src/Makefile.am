@@ -719,7 +719,8 @@ CHIAPOS_MINER_H = \
   chiapos/miner/rpc_client.h \
   chiapos/miner/chiapos_miner.h \
   chiapos/miner/http_client.h \
-  chiapos/miner/tools.h
+  chiapos/miner/tools.h \
+  chiapos/miner/timelord_client.h
 
 CHIAPOS_MINER_CPPS = \
   chiapos/plotter_id.cpp \
@@ -732,7 +733,8 @@ CHIAPOS_MINER_CPPS = \
   chiapos/miner/keyman.cpp \
   chiapos/miner/main.cpp \
   chiapos/miner/tools.cpp \
-  chiapos/miner/test1.cpp
+  chiapos/miner/test1.cpp \
+  chiapos/miner/timelord_client.cpp
 
 btchd_miner_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DCURL_STATICLIB
 btchd_miner_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(GTEST_INCLUDES)
