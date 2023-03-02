@@ -1,17 +1,20 @@
 #include "chiapos_miner.h"
 
 #include <arith_uint256.h>
+#include <plog/Log.h>
+
+#include <uint256.h>
+#include <vdf_computer.h>
+
 #include <chiapos/kernel/calc_diff.h>
 #include <chiapos/kernel/pos.h>
 #include <chiapos/kernel/utils.h>
 #include <chiapos/kernel/vdf.h>
 #include <chiapos/miner/bhd_types.h>
 #include <chiapos/miner/rpc_client.h>
-#include <plog/Log.h>
-#include <uint256.h>
-#include <vdf_computer.h>
 
 #include <atomic>
+#include <boost/asio.hpp>
 #include <chrono>
 #include <cstdint>
 #include <mutex>
@@ -20,11 +23,14 @@
 #include <tuple>
 #include <vector>
 
+#include "msg_ids.h"
+#include "timelord_client.h"
+
 namespace miner {
 namespace pos {
 
 chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::QualityStringPack> const& qs_pack_vec,
-        uint256 const& challenge, int difficulty_constant_factor_bits) {
+                                                     uint256 const& challenge, int difficulty_constant_factor_bits) {
     assert(!qs_pack_vec.empty());
     chiapos::QualityStringPack res;
     uint64_t best_quality{0};
@@ -40,14 +46,16 @@ chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::Qualit
 }
 
 chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256 const& challenge,
-        int difficulty_constant_factor_bits, int filter_bits, std::string* out_plot_path) {
+                                                         int difficulty_constant_factor_bits, int filter_bits,
+                                                         std::string* out_plot_path) {
     auto qs_pack_vec = prover.GetQualityStrings(challenge, filter_bits);
     PLOG_INFO << "total " << qs_pack_vec.size() << " answer(s), filter_bits=" << filter_bits;
     if (qs_pack_vec.empty()) {
         // No prove can pass the filter
         return {};
     }
-    chiapos::QualityStringPack qs_pack = QueryTheBestQualityString(qs_pack_vec, challenge, difficulty_constant_factor_bits);
+    chiapos::QualityStringPack qs_pack =
+            QueryTheBestQualityString(qs_pack_vec, challenge, difficulty_constant_factor_bits);
     uint256 mixed_quality_string = chiapos::GetMixedQualityString(qs_pack.quality_str.ToBytes(), challenge);
     if (out_plot_path) {
         *out_plot_path = qs_pack.plot_path;
@@ -67,10 +75,11 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
     if (!Prover::QueryFullProof(qs_pack.plot_path, challenge, qs_pack.index, proof.proof)) {
         return {};
     }
-    PLOGI << "quality=" << chiapos::FormatNumberStr(std::to_string(proof.quality)) << ", k=" << (int)proof.k << ", farmer-pk: " << chiapos::BytesToHex(memo.farmer_pk);
+    PLOGI << "quality=" << chiapos::FormatNumberStr(std::to_string(proof.quality)) << ", k=" << (int)proof.k
+          << ", farmer-pk: " << chiapos::BytesToHex(memo.farmer_pk);
 #ifdef DEBUG
     bool verified = chiapos::VerifyPos(challenge, proof.local_pk, chiapos::MakeArray<chiapos::PK_LEN>(memo.farmer_pk),
-            proof.pool_pk_or_hash, proof.k, proof.proof, nullptr, filter_bits);
+                                       proof.pool_pk_or_hash, proof.k, proof.proof, nullptr, filter_bits);
     assert(verified);
 #endif
     return proof;
@@ -78,10 +87,30 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
 
 }  // namespace pos
 
-Miner::Miner(RPCClient& client, Prover& prover, chiapos::SecreKey farmer_sk, chiapos::PubKey farmer_pk, std::string reward_dest, int difficulty_constant_factor_bits)
-        : m_client(client), m_prover(prover), m_farmer_sk(std::move(farmer_sk))
-        , m_farmer_pk(std::move(farmer_pk)), m_reward_dest(std::move(reward_dest))
-        , m_difficulty_constant_factor_bits(difficulty_constant_factor_bits) {}
+Miner::Miner(RPCClient& client, Prover& prover, chiapos::SecreKey farmer_sk, chiapos::PubKey farmer_pk,
+             std::string reward_dest, int difficulty_constant_factor_bits)
+        : m_client(client),
+          m_prover(prover),
+          m_farmer_sk(std::move(farmer_sk)),
+          m_farmer_pk(std::move(farmer_pk)),
+          m_reward_dest(std::move(reward_dest)),
+          m_difficulty_constant_factor_bits(difficulty_constant_factor_bits) {}
+
+Miner::~Miner() {
+    if (m_pthread_timelord) {
+        PLOGD << "exiting timelord client...";
+        assert(m_ptimelord_client != nullptr);
+        m_ptimelord_client->Exit();
+        m_pthread_timelord->join();
+    }
+}
+
+void Miner::StartTimelord(std::string const& hostname, unsigned short port) {
+    PLOGD << "starting timelord client...";
+    m_ptimelord_client.reset(new TimelordClient(ioc_));
+    m_ptimelord_client->Connect(hostname, port);
+    m_pthread_timelord.reset(new std::thread(std::bind(&Miner::TimelordProc, this)));
+}
 
 int Miner::Run() {
     RPCClient::Challenge queried_challenge;
@@ -106,12 +135,16 @@ int Miner::Run() {
             // Query challenge
             queried_challenge = m_client.QueryChallenge();
             current_challenge = queried_challenge.challenge;
-            PLOG_INFO << "challenge is ready: " << current_challenge.GetHex() << ", target height: " << queried_challenge.target_height << ", filter_bits: " << queried_challenge.filter_bits;
+            PLOG_INFO << "challenge is ready: " << current_challenge.GetHex()
+                      << ", target height: " << queried_challenge.target_height
+                      << ", filter_bits: " << queried_challenge.filter_bits;
             m_state = State::FindPoS;
         } else if (m_state == State::FindPoS) {
             PLOG_INFO << "finding PoS for challenge: " << current_challenge.GetHex()
-                      << ", dcf_bits: " << m_difficulty_constant_factor_bits << ", filter_bits: " << queried_challenge.filter_bits;
-            pos = pos::QueryBestPosProof(m_prover, current_challenge, m_difficulty_constant_factor_bits, queried_challenge.filter_bits);
+                      << ", dcf_bits: " << m_difficulty_constant_factor_bits
+                      << ", filter_bits: " << queried_challenge.filter_bits;
+            pos = pos::QueryBestPosProof(m_prover, current_challenge, m_difficulty_constant_factor_bits,
+                                         queried_challenge.filter_bits);
             if (pos.has_value()) {
                 // Check plot-id
                 chiapos::PlotId plot_id = chiapos::MakePlotId(pos->local_pk, m_farmer_pk, pos->pool_pk_or_hash);
@@ -122,9 +155,10 @@ int Miner::Run() {
                 }
                 // Get the iters from PoS
                 PLOG_INFO << "PoS has been found, quality: " << chiapos::FormatNumberStr(std::to_string(pos->quality));
-                iters = chiapos::CalculateIterationsQuality(pos->mixed_quality_string, queried_challenge.difficulty, m_difficulty_constant_factor_bits);
-                PLOG_INFO << "Calculated iters=" << chiapos::FormatNumberStr(std::to_string(iters)) << ", with k=" << static_cast<int>(pos->k)
-                          << ", difficulty=" << queried_challenge.difficulty
+                iters = chiapos::CalculateIterationsQuality(pos->mixed_quality_string, queried_challenge.difficulty,
+                                                            m_difficulty_constant_factor_bits);
+                PLOG_INFO << "Calculated iters=" << chiapos::FormatNumberStr(std::to_string(iters))
+                          << ", with k=" << static_cast<int>(pos->k) << ", difficulty=" << queried_challenge.difficulty
                           << ", dcf_bits=" << m_difficulty_constant_factor_bits;
             } else {
                 // Get the iters for next void block
@@ -134,7 +168,8 @@ int Miner::Run() {
             }
             m_state = State::WaitVDF;
         } else if (m_state == State::WaitVDF) {
-            PLOG_INFO << "request VDF proof for challenge: " << current_challenge.GetHex() << ", iters: " << chiapos::FormatNumberStr(std::to_string(iters));
+            PLOG_INFO << "request VDF proof for challenge: " << current_challenge.GetHex()
+                      << ", iters: " << chiapos::FormatNumberStr(std::to_string(iters));
             m_client.RequireVdf(current_challenge, iters);
             PLOG_INFO << "waiting for VDF proofs...";
             std::atomic_bool running{true};
@@ -182,6 +217,11 @@ int Miner::Run() {
 Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, uint256 const& initial_challenge,
                                         uint256 const& current_challenge, uint64_t iters_limits,
                                         std::mutex& vdf_write_lock, chiapos::optional<RPCClient::VdfProof>& out_vdf) {
+    // before we get in the loop, we need to send the request to timelord if it is running
+    if (m_pthread_timelord) {
+        PLOGD << "request proof from timelord";
+        m_ptimelord_client->Calc(current_challenge, iters_limits);
+    }
     while (running) {
         try {
             // Query current challenge, compare
@@ -189,6 +229,24 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, uint256 const
             if (ch.challenge != initial_challenge) {
                 // Challenge is changed
                 return BreakReason::ChallengeIsChanged;
+            }
+            // Query proof from timelord if it is created
+            if (m_pthread_timelord) {
+                auto detail = QueryProofFromTimelord(current_challenge, iters_limits);
+                if (detail.has_value()) {
+                    RPCClient::VdfProof vdf;
+                    vdf.challenge = current_challenge;
+                    vdf.y = chiapos::MakeVDFForm(detail->y);
+                    vdf.proof = detail->proof;
+                    vdf.witness_type = detail->witness_type;
+                    vdf.iters = detail->iters;
+                    vdf.duration = detail->duration;
+                    {
+                        std::lock_guard<std::mutex> lg(vdf_write_lock);
+                        out_vdf = vdf;
+                    }
+                    return BreakReason::VDFIsAcquired;
+                }
             }
             // Query VDF and when the VDF is ready we break the VDF computer and use the VDF proof
             RPCClient::VdfProof vdf = m_client.QueryVdf(current_challenge, iters_limits);
@@ -220,6 +278,85 @@ std::string Miner::ToString(State state) {
             return "SubmitProofs";
     }
     assert(false);
+}
+
+void Miner::TimelordProc() { ioc_.run(); }
+
+chiapos::optional<ProofDetail> Miner::QueryProofFromTimelord(uint256 const& challenge, uint64_t iters) const {
+    std::lock_guard<std::mutex> lg(m_mtx_proofs);
+    auto it = m_proofs.find(challenge);
+    if (it == std::end(m_proofs)) {
+        return {};
+    }
+    for (auto const& detail : it->second) {
+        if (detail.iters > iters) {
+            return detail;
+        }
+    }
+    return {};
+}
+
+void Miner::SaveProof(uint256 const& challenge, ProofDetail const& detail) {
+    std::lock_guard<std::mutex> lg(m_mtx_proofs);
+    auto it = m_proofs.find(challenge);
+    if (it == std::end(m_proofs)) {
+        m_proofs.insert(std::make_pair(challenge, std::vector<ProofDetail>{std::move(detail)}));
+    } else {
+        it->second.push_back(std::move(detail));
+    }
+}
+
+void Miner::HandleTimelord_Connected() { PLOGD << "connected to timelord"; }
+
+void Miner::HandleTimelord_Error(FrontEndClient::ErrorType type, std::string const& errs) {
+    PLOGE << "timelord client reports error: type=" << static_cast<int>(type) << ", errs: " << errs;
+}
+
+void Miner::HandleTimelord_Msg(UniValue const& msg) {
+    if (!msg.exists("id")) {
+        PLOGE << "there is no `id` can be found from the message sent by timelord service";
+        return;
+    }
+    auto msg_id = static_cast<TimelordMsgs>(msg["id"].get_int());
+    PLOGD << "timelord sent msg: " << TimelordMsgIdToString(msg_id);
+    if (msg_id == TimelordMsgs::PROOF) {
+        HandleTimelord_MsgProof(msg);
+    } else if (msg_id == TimelordMsgs::READY) {
+        HandleTimelord_MsgReady(msg);
+    } else if (msg_id == TimelordMsgs::CALC_REPLY) {
+        HandleTimelord_MsgCalcReply(msg);
+    }
+}
+
+void Miner::HandleTimelord_MsgProof(UniValue const& msg) {
+    auto challenge = uint256S(msg["challenge"].get_str());
+    ProofDetail detail;
+    detail.y = chiapos::BytesFromHex(msg["y"].get_str());
+    detail.proof = chiapos::BytesFromHex(msg["proof"].get_str());
+    detail.witness_type = msg["witness_type"].get_int();
+    detail.iters = msg["iters"].get_int64();
+    detail.duration = msg["duration"].get_int();
+    SaveProof(challenge, detail);
+}
+
+void Miner::HandleTimelord_MsgReady(UniValue const& msg) {}
+
+void Miner::HandleTimelord_MsgCalcReply(UniValue const& msg) {
+    bool calculating = msg["calculating"].get_bool();
+    uint256 challenge = uint256S(msg["challenge"].get_str());
+    if (!calculating) {
+        PLOGD << "timelord reports that the challenge " << challenge.GetHex() << " won't be calculated";
+    }
+    if (msg.exists("y")) {
+        // we got proof immediately
+        ProofDetail detail;
+        detail.y = chiapos::BytesFromHex(msg["y"].get_str());
+        detail.proof = chiapos::BytesFromHex(msg["proof"].get_str());
+        detail.witness_type = msg["witness_type"].get_int();
+        detail.iters = msg["iters"].get_int64();
+        detail.duration = msg["duration"].get_int();
+        SaveProof(challenge, detail);
+    }
 }
 
 }  // namespace miner

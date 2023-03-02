@@ -7,9 +7,15 @@
 #include <functional>
 #include <mutex>
 #include <string>
+#include <optional>
+
+// #include <boost/asio.hpp>
+// namespace asio = boost::asio;
 
 #include "prover.h"
 #include "rpc_client.h"
+
+#include "timelord_client.h"
 
 namespace miner {
 namespace pos {
@@ -21,7 +27,12 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
 /// Miner is a state machine
 class Miner {
 public:
-    Miner(RPCClient& client, Prover& prover, chiapos::SecreKey farmer_sk, chiapos::PubKey farmer_pk, std::string reward_dest, int difficulty_constant_factor_bits);
+    Miner(RPCClient& client, Prover& prover, chiapos::SecreKey farmer_sk, chiapos::PubKey farmer_pk,
+          std::string reward_dest, int difficulty_constant_factor_bits);
+
+    ~Miner();
+
+    void StartTimelord(std::string const& hostname, unsigned short port);
 
     int Run();
 
@@ -37,6 +48,24 @@ private:
 
     static std::string ToString(State state);
 
+    void TimelordProc();
+
+    chiapos::optional<ProofDetail> QueryProofFromTimelord(uint256 const& challenge, uint64_t iters) const;
+
+    void SaveProof(uint256 const& challenge, ProofDetail const& detail);
+
+    void HandleTimelord_Connected();
+
+    void HandleTimelord_Error(FrontEndClient::ErrorType type, std::string const& errs);
+
+    void HandleTimelord_Msg(UniValue const& msg);
+
+    void HandleTimelord_MsgProof(UniValue const& msg);
+
+    void HandleTimelord_MsgReady(UniValue const& msg);
+
+    void HandleTimelord_MsgCalcReply(UniValue const& msg);
+
 private:
     // utilities
     RPCClient& m_client;
@@ -47,6 +76,12 @@ private:
     int m_difficulty_constant_factor_bits;
     // State
     std::atomic<State> m_state{State::RequireChallenge};
+    // thread and timelord
+    asio::io_context ioc_;
+    std::unique_ptr<std::thread> m_pthread_timelord;
+    std::unique_ptr<TimelordClient> m_ptimelord_client;
+    mutable std::mutex m_mtx_proofs;
+    std::map<uint256, std::vector<ProofDetail>> m_proofs;
 };
 
 }  // namespace miner

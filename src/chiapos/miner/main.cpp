@@ -12,8 +12,8 @@
 #include <uint256.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
-#include <vdf_computer.h>
 #include <util/validation.h>
+#include <vdf_computer.h>
 
 #include <boost/asio.hpp>
 #include <chrono>
@@ -39,6 +39,8 @@
 #include "rpc_client.h"
 #include "test1.h"
 #include "tools.h"
+
+#include "timelord_client.h"
 
 const std::function<std::string(char const*)> G_TRANSLATION_FUN = nullptr;
 
@@ -123,6 +125,9 @@ struct Arguments {
     int difficulty_constant_factor_bits;  // dcf bits (chain parameter)
     std::string datadir;                  // The root path of the data directory
     std::string cookie_path;              // The file stores the connecting information of current btchd server
+    bool timelord;
+    std::string timelord_addr;
+    unsigned short timelord_port;
 } g_args;
 
 miner::Config g_config;
@@ -162,7 +167,12 @@ int HandleCommand_Mining() {
     miner::Prover prover(miner::StrListToPathList(miner::g_config.GetPlotPath()));
     std::unique_ptr<miner::RPCClient> pclient = tools::CreateRPCClient(miner::g_config, miner::g_args.cookie_path);
     // Start mining
-    miner::Miner miner(*pclient, prover, miner::g_config.GetFarmerSk(), miner::g_config.GetFarmerPk(), miner::g_config.GetRewardDest(), miner::g_args.difficulty_constant_factor_bits);
+    miner::Miner miner(*pclient, prover, miner::g_config.GetFarmerSk(), miner::g_config.GetFarmerPk(),
+                       miner::g_config.GetRewardDest(), miner::g_args.difficulty_constant_factor_bits);
+    // do we have timelord service
+    if (miner::g_args.timelord) {
+        miner.StartTimelord(miner::g_args.timelord_addr, miner::g_args.timelord_port);
+    }
     return miner.Run();
 }
 
@@ -199,7 +209,8 @@ CAmount CalcActualAmountByTerm(CAmount nAmount, miner::DepositTerm type) {
     return info.nWeightPercent * nAmount / 100;
 }
 
-CAmount CalcActualAmount(CAmount original, int nPledgeHeight, int nWithdrawHeight, miner::DepositTerm type, bool* pExpired) {
+CAmount CalcActualAmount(CAmount original, int nPledgeHeight, int nWithdrawHeight, miner::DepositTerm type,
+                         bool* pExpired) {
     auto nExpireOnHeight = GetNumOfExpiredHeight(nPledgeHeight, type);
     if (nWithdrawHeight >= nExpireOnHeight) {
         if (pExpired) {
@@ -228,20 +239,22 @@ int HandleCommand_Deposit() {
                 continue;
             }
             bool expired;
-            CAmount actual_amount = CalcActualAmount(entry.amount, (entry.retarget ? entry.point_height : entry.height), current_height, entry.term, &expired);
+            CAmount actual_amount = CalcActualAmount(entry.amount, (entry.retarget ? entry.point_height : entry.height),
+                                                     current_height, entry.term, &expired);
             int pledge_index = (int)entry.term - (int)miner::DepositTerm::NoTerm;
             int lock_height = params.GetConsensus().BHDIP009PledgeTerms[pledge_index].nLockHeight;
-            PLOG_DEBUG << "Calculating withdraw amount: lock_height=" << lock_height << ", point_height=" << entry.point_height << ", current_height=" << current_height << ", amount=" << entry.amount;
+            PLOG_DEBUG << "Calculating withdraw amount: lock_height=" << lock_height
+                       << ", point_height=" << entry.point_height << ", current_height=" << current_height
+                       << ", amount=" << entry.amount;
             CAmount withdraw_amount = GetWithdrawAmount(lock_height, entry.point_height, current_height, entry.amount);
             std::cout << std::setw(7) << (entry.valid ? std::to_string(entry.height) : "--  ")
-                      << (entry.retarget ? " [ retarget ] " : " [   point  ] ")
-                      << chiapos::BytesToHex(entry.tx_id) << " --> " << entry.to
-                      << std::setw(10) << chiapos::FormatNumberStr(std::to_string(static_cast<int>(entry.amount))) << " BHD [ "
-                      << std::setw(6) << miner::DepositTermToString(entry.term) << " ] "
-                      << std::setw(10) << chiapos::FormatNumberStr(std::to_string(actual_amount)) << " BHD (actual) "
-                      << std::setw(10) << chiapos::FormatNumberStr(std::to_string(withdraw_amount)) << " BHD (withdraw) "
-                      << ((entry.height != 0 && expired) ? "expired" : "")
-                      << std::endl;
+                      << (entry.retarget ? " [ retarget ] " : " [   point  ] ") << chiapos::BytesToHex(entry.tx_id)
+                      << " --> " << entry.to << std::setw(10)
+                      << chiapos::FormatNumberStr(std::to_string(static_cast<int>(entry.amount))) << " BHD [ "
+                      << std::setw(6) << miner::DepositTermToString(entry.term) << " ] " << std::setw(10)
+                      << chiapos::FormatNumberStr(std::to_string(actual_amount)) << " BHD (actual) " << std::setw(10)
+                      << chiapos::FormatNumberStr(std::to_string(withdraw_amount)) << " BHD (withdraw) "
+                      << ((entry.height != 0 && expired) ? "expired" : "") << std::endl;
         }
         return 0;
     }
@@ -434,8 +447,12 @@ int main(int argc, char** argv) {
             ("d,datadir", "The root path of the data directory",
              cxxopts::value<std::string>())  // --datadir, -d
             ("cookie", "Full path to `.cookie` from btchd datadir",
-             cxxopts::value<std::string>())  // --cookie
-            ("timelord-addr", "The address to connect to the timelord service", cxxopts::value<std::string>()->default_value("127.0.0.1")) // --timelord-addr
+             cxxopts::value<std::string>())                            // --cookie
+            ("timelord", "Establish connnection to timelord service")  // --timelord
+            ("timelord-addr", "The address to connect to the timelord service",
+             cxxopts::value<std::string>()->default_value("127.0.0.1"))  // --timelord-addr
+            ("timelord-port", "Timelord service listen to this port",
+             cxxopts::value<unsigned short>()->default_value("29292"))  // --timelord-port
             ("command", std::string("Command") + miner::GetCommandsList(),
              cxxopts::value<std::string>())  // --command
             ;
@@ -512,6 +529,10 @@ int main(int argc, char** argv) {
             miner::g_args.cookie_path = cookie_path.string();
         }
     }
+
+    miner::g_args.timelord = result.count("timelord") > 0;
+    miner::g_args.timelord_addr = result["timelord-addr"].as<std::string>();
+    miner::g_args.timelord_port = result["timelord-port"].as<unsigned short>();
 
     miner::g_args.difficulty_constant_factor_bits = result["dcf-bits"].as<int>();
 
