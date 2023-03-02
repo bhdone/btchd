@@ -14,6 +14,8 @@ enum class TimelordMsgs : int {
 
 inline std::string TimelordMsgIdToString(TimelordMsgs msg_id) {
     switch (msg_id) {
+        case TimelordMsgs::PONG:
+            return "PONG";
         case TimelordMsgs::PROOF:
             return "PROOF";
         case TimelordMsgs::READY:
@@ -22,8 +24,6 @@ inline std::string TimelordMsgIdToString(TimelordMsgs msg_id) {
             return "SPEED";
         case TimelordMsgs::CALC_REPLY:
             return "CALC_REPLY";
-        default:
-            return "OTHERS";
     }
 }
 

@@ -96,9 +96,15 @@ public:
     void RequestServiceShutdown();
 
 private:
+    void DoWriteNextPing();
+
+    void DoWaitPong();
+
     void HandleConnect();
 
     void HandleMessage(UniValue const& msg);
+
+    void HandleMessage_Pong(UniValue const& msg);
 
     void HandleMessage_Proof(UniValue const& msg);
 
@@ -108,8 +114,11 @@ private:
 
     void HandleClose();
 
+    asio::io_context& ioc_;
     FrontEndClient client_;
     std::map<int, MessageHandler> msg_handlers_;
+    asio::steady_timer timer_pingpong_;
+    std::unique_ptr<asio::steady_timer> ptimer_waitpong_;
     ConnectionHandler conn_handler_;
     ErrorHandler err_handler_;
     ProofReceiver proof_receiver_;

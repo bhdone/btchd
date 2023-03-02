@@ -8,6 +8,9 @@
 
 #include "msg_ids.h"
 
+static int const SECONDS_TO_PING = 60;
+static int const WAIT_PONG_TIMEOUT_SECONDS = 10;
+
 using std::placeholders::_1;
 using std::placeholders::_2;
 
@@ -124,7 +127,9 @@ void FrontEndClient::DoSendNext() {
     });
 }
 
-TimelordClient::TimelordClient(asio::io_context& ioc) : client_(ioc) {
+TimelordClient::TimelordClient(asio::io_context& ioc) : ioc_(ioc), client_(ioc), timer_pingpong_(ioc) {
+    msg_handlers_.insert(std::make_pair(static_cast<int>(TimelordMsgs::PONG),
+                                        std::bind(&TimelordClient::HandleMessage_Pong, this, _1)));
     msg_handlers_.insert(std::make_pair(static_cast<int>(TimelordMsgs::PROOF),
                                         std::bind(&TimelordClient::HandleMessage_Proof, this, _1)));
     msg_handlers_.insert(std::make_pair(static_cast<int>(TimelordMsgs::CALC_REPLY),
@@ -155,12 +160,43 @@ void TimelordClient::Connect(std::string const& host, unsigned short port) {
     client_.Connect(host, port);
 }
 
-void TimelordClient::Exit() {}
+void TimelordClient::Exit() {
+    error_code ignored_ec;
+    timer_pingpong_.cancel(ignored_ec);
+    client_.Exit();
+}
+
+void TimelordClient::DoWriteNextPing() {
+    timer_pingpong_.expires_after(std::chrono::seconds(SECONDS_TO_PING));
+    timer_pingpong_.async_wait([this](error_code const& ec) {
+        if (ec) {
+            return;
+        }
+        UniValue msg(UniValue::VOBJ);
+        msg.pushKV("id", static_cast<int>(TimelordClientMsgs::PING));
+        client_.SendMessage(msg);
+        DoWaitPong();
+        DoWriteNextPing();
+    });
+}
+
+void TimelordClient::DoWaitPong() {
+    ptimer_waitpong_.reset(new asio::steady_timer(ioc_));
+    ptimer_waitpong_->expires_after(std::chrono::seconds(WAIT_PONG_TIMEOUT_SECONDS));
+    ptimer_waitpong_->async_wait([this](error_code const& ec) {
+        if (!ec) {
+            // timeout, report error
+            PLOGE << "PONG timeout, the connection might be dead";
+        }
+        ptimer_waitpong_.reset();
+    });
+}
 
 void TimelordClient::HandleConnect() {
     if (conn_handler_) {
         conn_handler_();
     }
+    DoWriteNextPing();
 }
 
 void TimelordClient::HandleMessage(UniValue const& msg) {
@@ -169,6 +205,13 @@ void TimelordClient::HandleMessage(UniValue const& msg) {
     auto it = msg_handlers_.find(msg_id);
     if (it != std::end(msg_handlers_)) {
         it->second(msg);
+    }
+}
+
+void TimelordClient::HandleMessage_Pong(UniValue const& msg) {
+    if (ptimer_waitpong_) {
+        error_code ignored_ec;
+        ptimer_waitpong_->cancel(ignored_ec);
     }
 }
 
