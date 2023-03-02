@@ -100,6 +100,10 @@ private:
 
     void HandleMessage(UniValue const& msg);
 
+    void HandleMessage_Proof(UniValue const& msg);
+
+    void HandleMessage_CalcReply(UniValue const& msg);
+
     void HandleError(FrontEndClient::ErrorType type, std::string const& errs);
 
     void HandleClose();

@@ -55,7 +55,7 @@ void FrontEndClient::SendMessage(UniValue const& msg) {
         throw std::runtime_error("please connect to server before sending message");
     }
     bool do_send = sending_msgs_.empty();
-    sending_msgs_.push_back(msg.getValStr());
+    sending_msgs_.push_back(msg.write());
     if (do_send) {
         DoSendNext();
     }
@@ -90,14 +90,15 @@ void FrontEndClient::DoReadNext() {
             Exit();
             return;
         }
-        std::istreambuf_iterator<char> begin(&read_buf_), end;
-        std::string result(begin, end);
+        std::string result = static_cast<char const*>(read_buf_.data().data());
+        read_buf_.consume(bytes);
         try {
             UniValue msg;
             msg.read(result);
             msg_handler_(msg);
         } catch (std::exception const& e) {
             PLOGE << "READ: " << e.what();
+            PLOGE << "DATA total=" << bytes << ": " << result;
             err_handler_(FrontEndClient::ErrorType::READ, ec.message());
         }
         DoReadNext();
@@ -124,18 +125,10 @@ void FrontEndClient::DoSendNext() {
 }
 
 TimelordClient::TimelordClient(asio::io_context& ioc) : client_(ioc) {
-    msg_handlers_.insert(std::make_pair(static_cast<int>(TimelordMsgs::PROOF), [this](UniValue const& msg) {
-        if (proof_receiver_) {
-            auto challenge = uint256S(msg["challenge"].get_str());
-            ProofDetail detail;
-            detail.y = chiapos::BytesFromHex(msg["y"].get_str());
-            detail.proof = chiapos::BytesFromHex(msg["proof"].get_str());
-            detail.witness_type = msg["witness_type"].get_int();
-            detail.iters = msg["iters"].get_int64();
-            detail.duration = msg["duration"].get_int();
-            proof_receiver_(challenge, detail);
-        }
-    }));
+    msg_handlers_.insert(std::make_pair(static_cast<int>(TimelordMsgs::PROOF),
+                                        std::bind(&TimelordClient::HandleMessage_Proof, this, _1)));
+    msg_handlers_.insert(std::make_pair(static_cast<int>(TimelordMsgs::CALC_REPLY),
+                                        std::bind(&TimelordClient::HandleMessage_CalcReply, this, _1)));
 }
 
 void TimelordClient::SetConnectionHandler(ConnectionHandler conn_handler) { conn_handler_ = std::move(conn_handler); }
@@ -145,7 +138,7 @@ void TimelordClient::SetErrorHandler(ErrorHandler err_handler) { err_handler_ = 
 void TimelordClient::SetProofReceiver(ProofReceiver proof_receiver) { proof_receiver_ = std::move(proof_receiver); }
 
 void TimelordClient::Calc(uint256 const& challenge, uint64_t iters) {
-    UniValue msg;
+    UniValue msg(UniValue::VOBJ);
     msg.pushKV("id", static_cast<int>(TimelordClientMsgs::CALC));
     msg.pushKV("challenge", challenge.GetHex());
     msg.pushKV("iters", iters);
@@ -172,9 +165,42 @@ void TimelordClient::HandleConnect() {
 
 void TimelordClient::HandleMessage(UniValue const& msg) {
     auto msg_id = msg["id"].get_int();
+    PLOGI << "msgid: " << TimelordMsgIdToString(static_cast<TimelordMsgs>(msg_id));
     auto it = msg_handlers_.find(msg_id);
     if (it != std::end(msg_handlers_)) {
         it->second(msg);
+    }
+}
+
+void TimelordClient::HandleMessage_Proof(UniValue const& msg) {
+    if (proof_receiver_) {
+        auto challenge = uint256S(msg["challenge"].get_str());
+        ProofDetail detail;
+        detail.y = chiapos::BytesFromHex(msg["y"].get_str());
+        detail.proof = chiapos::BytesFromHex(msg["proof"].get_str());
+        detail.witness_type = msg["witness_type"].get_int();
+        detail.iters = msg["iters"].get_int64();
+        detail.duration = msg["duration"].get_int();
+        proof_receiver_(challenge, detail);
+    }
+}
+
+void TimelordClient::HandleMessage_CalcReply(UniValue const& msg) {
+    bool calculating = msg["calculating"].get_bool();
+    uint256 challenge = uint256S(msg["challenge"].get_str());
+    if (msg.exists("y")) {
+        // we got proof immediately
+        ProofDetail detail;
+        detail.y = chiapos::BytesFromHex(msg["y"].get_str());
+        detail.proof = chiapos::BytesFromHex(msg["proof"].get_str());
+        detail.witness_type = msg["witness_type"].get_int();
+        detail.iters = msg["iters"].get_int64();
+        detail.duration = msg["duration"].get_int();
+        if (proof_receiver_) {
+            proof_receiver_(challenge, detail);
+        }
+    } else if (!calculating) {
+        PLOGE << "timelord reports that the challenge " << challenge.GetHex() << " won't be calculated";
     }
 }
 

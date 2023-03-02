@@ -58,13 +58,7 @@ private:
 
     void HandleTimelord_Error(FrontEndClient::ErrorType type, std::string const& errs);
 
-    void HandleTimelord_Msg(UniValue const& msg);
-
-    void HandleTimelord_MsgProof(UniValue const& msg);
-
-    void HandleTimelord_MsgReady(UniValue const& msg);
-
-    void HandleTimelord_MsgCalcReply(UniValue const& msg);
+    void HandleTimelord_Proof(uint256 const& challenge, ProofDetail const& detail);
 
 private:
     // utilities

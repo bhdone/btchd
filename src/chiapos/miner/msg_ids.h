@@ -20,6 +20,8 @@ inline std::string TimelordMsgIdToString(TimelordMsgs msg_id) {
             return "READY";
         case TimelordMsgs::SPEED:
             return "SPEED";
+        case TimelordMsgs::CALC_REPLY:
+            return "CALC_REPLY";
         default:
             return "OTHERS";
     }

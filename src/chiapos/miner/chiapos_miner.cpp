@@ -26,6 +26,9 @@
 #include "msg_ids.h"
 #include "timelord_client.h"
 
+using std::placeholders::_1;
+using std::placeholders::_2;
+
 namespace miner {
 namespace pos {
 
@@ -98,7 +101,7 @@ Miner::Miner(RPCClient& client, Prover& prover, chiapos::SecreKey farmer_sk, chi
 
 Miner::~Miner() {
     if (m_pthread_timelord) {
-        PLOGD << "exiting timelord client...";
+        PLOGI << "exiting timelord client...";
         assert(m_ptimelord_client != nullptr);
         m_ptimelord_client->Exit();
         m_pthread_timelord->join();
@@ -106,9 +109,12 @@ Miner::~Miner() {
 }
 
 void Miner::StartTimelord(std::string const& hostname, unsigned short port) {
-    PLOGD << "starting timelord client...";
+    PLOGI << "starting timelord client...";
     m_ptimelord_client.reset(new TimelordClient(ioc_));
     m_ptimelord_client->Connect(hostname, port);
+    m_ptimelord_client->SetConnectionHandler(std::bind(&Miner::HandleTimelord_Connected, this));
+    m_ptimelord_client->SetErrorHandler(std::bind(&Miner::HandleTimelord_Error, this, _1, _2));
+    m_ptimelord_client->SetProofReceiver(std::bind(&Miner::HandleTimelord_Proof, this, _1, _2));
     m_pthread_timelord.reset(new std::thread(std::bind(&Miner::TimelordProc, this)));
 }
 
@@ -157,7 +163,7 @@ int Miner::Run() {
                 PLOG_INFO << "PoS has been found, quality: " << chiapos::FormatNumberStr(std::to_string(pos->quality));
                 iters = chiapos::CalculateIterationsQuality(pos->mixed_quality_string, queried_challenge.difficulty,
                                                             m_difficulty_constant_factor_bits);
-                PLOG_INFO << "Calculated iters=" << chiapos::FormatNumberStr(std::to_string(iters))
+                PLOG_INFO << "iters=" << chiapos::FormatNumberStr(std::to_string(iters))
                           << ", with k=" << static_cast<int>(pos->k) << ", difficulty=" << queried_challenge.difficulty
                           << ", dcf_bits=" << m_difficulty_constant_factor_bits;
             } else {
@@ -234,6 +240,7 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, uint256 const
             if (m_pthread_timelord) {
                 auto detail = QueryProofFromTimelord(current_challenge, iters_limits);
                 if (detail.has_value()) {
+                    PLOGI << "queried vdf proof from timelord";
                     RPCClient::VdfProof vdf;
                     vdf.challenge = current_challenge;
                     vdf.y = chiapos::MakeVDFForm(detail->y);
@@ -289,7 +296,7 @@ chiapos::optional<ProofDetail> Miner::QueryProofFromTimelord(uint256 const& chal
         return {};
     }
     for (auto const& detail : it->second) {
-        if (detail.iters > iters) {
+        if (detail.iters >= iters) {
             return detail;
         }
     }
@@ -300,10 +307,11 @@ void Miner::SaveProof(uint256 const& challenge, ProofDetail const& detail) {
     std::lock_guard<std::mutex> lg(m_mtx_proofs);
     auto it = m_proofs.find(challenge);
     if (it == std::end(m_proofs)) {
-        m_proofs.insert(std::make_pair(challenge, std::vector<ProofDetail>{std::move(detail)}));
+        m_proofs.insert(std::make_pair(challenge, std::vector<ProofDetail>{detail}));
     } else {
-        it->second.push_back(std::move(detail));
+        it->second.push_back(detail);
     }
+    PLOGI << "proof is saved.";
 }
 
 void Miner::HandleTimelord_Connected() { PLOGD << "connected to timelord"; }
@@ -312,51 +320,6 @@ void Miner::HandleTimelord_Error(FrontEndClient::ErrorType type, std::string con
     PLOGE << "timelord client reports error: type=" << static_cast<int>(type) << ", errs: " << errs;
 }
 
-void Miner::HandleTimelord_Msg(UniValue const& msg) {
-    if (!msg.exists("id")) {
-        PLOGE << "there is no `id` can be found from the message sent by timelord service";
-        return;
-    }
-    auto msg_id = static_cast<TimelordMsgs>(msg["id"].get_int());
-    PLOGD << "timelord sent msg: " << TimelordMsgIdToString(msg_id);
-    if (msg_id == TimelordMsgs::PROOF) {
-        HandleTimelord_MsgProof(msg);
-    } else if (msg_id == TimelordMsgs::READY) {
-        HandleTimelord_MsgReady(msg);
-    } else if (msg_id == TimelordMsgs::CALC_REPLY) {
-        HandleTimelord_MsgCalcReply(msg);
-    }
-}
-
-void Miner::HandleTimelord_MsgProof(UniValue const& msg) {
-    auto challenge = uint256S(msg["challenge"].get_str());
-    ProofDetail detail;
-    detail.y = chiapos::BytesFromHex(msg["y"].get_str());
-    detail.proof = chiapos::BytesFromHex(msg["proof"].get_str());
-    detail.witness_type = msg["witness_type"].get_int();
-    detail.iters = msg["iters"].get_int64();
-    detail.duration = msg["duration"].get_int();
-    SaveProof(challenge, detail);
-}
-
-void Miner::HandleTimelord_MsgReady(UniValue const& msg) {}
-
-void Miner::HandleTimelord_MsgCalcReply(UniValue const& msg) {
-    bool calculating = msg["calculating"].get_bool();
-    uint256 challenge = uint256S(msg["challenge"].get_str());
-    if (!calculating) {
-        PLOGD << "timelord reports that the challenge " << challenge.GetHex() << " won't be calculated";
-    }
-    if (msg.exists("y")) {
-        // we got proof immediately
-        ProofDetail detail;
-        detail.y = chiapos::BytesFromHex(msg["y"].get_str());
-        detail.proof = chiapos::BytesFromHex(msg["proof"].get_str());
-        detail.witness_type = msg["witness_type"].get_int();
-        detail.iters = msg["iters"].get_int64();
-        detail.duration = msg["duration"].get_int();
-        SaveProof(challenge, detail);
-    }
-}
+void Miner::HandleTimelord_Proof(uint256 const& challenge, ProofDetail const& detail) { SaveProof(challenge, detail); }
 
 }  // namespace miner

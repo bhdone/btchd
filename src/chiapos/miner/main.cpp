@@ -171,6 +171,7 @@ int HandleCommand_Mining() {
                        miner::g_config.GetRewardDest(), miner::g_args.difficulty_constant_factor_bits);
     // do we have timelord service
     if (miner::g_args.timelord) {
+        PLOGI << "start timelord " << miner::g_args.timelord_addr << ":" << miner::g_args.timelord_port;
         miner.StartTimelord(miner::g_args.timelord_addr, miner::g_args.timelord_port);
     }
     return miner.Run();
