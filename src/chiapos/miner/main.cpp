@@ -453,7 +453,7 @@ int main(int argc, char** argv) {
             ("timelord-addr", "The address to connect to the timelord service",
              cxxopts::value<std::string>()->default_value("127.0.0.1"))  // --timelord-addr
             ("timelord-port", "Timelord service listen to this port",
-             cxxopts::value<unsigned short>()->default_value("29292"))  // --timelord-port
+             cxxopts::value<unsigned short>()->default_value("19191"))  // --timelord-port
             ("command", std::string("Command") + miner::GetCommandsList(),
              cxxopts::value<std::string>())  // --command
             ;
