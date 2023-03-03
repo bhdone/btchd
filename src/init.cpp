@@ -92,6 +92,8 @@
 #include <plog/Formatters/TxtFormatter.h>
 #include <plog/Appenders/ColorConsoleAppender.h>
 
+#include <chiapos/newblock_watcher.hpp>
+
 static bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
@@ -208,6 +210,7 @@ void Shutdown(InitInterfaces& interfaces)
         LogPrintf("%s: shutdown timelord...\n", __func__);
         chiapos::WaitTimelord();
     }
+    chiapos::StopBlockWatcher();
     StopPOC();
     StopHTTPRPC();
     StopREST();

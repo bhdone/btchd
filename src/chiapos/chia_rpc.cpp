@@ -19,6 +19,8 @@
 #include "logging.h"
 #include "post.h"
 
+#include "newblock_watcher.hpp"
+
 #include "poc/poc.h"
 
 namespace chiapos {
@@ -111,49 +113,12 @@ CVdfProof ParseVdfProof(UniValue const& val) {
     return proof;
 }
 
-static UniValue submitProof(JSONRPCRequest const& request) {
-    // TODO check the validity of request parameters
-
-    uint256 hashPrevBlock = ParseHashV(request.params[0], "prev_block_hash");
-    int nHeightOfPrevBlock = request.params[1].get_int();
-    uint256 initialChallenge = ParseHashV(request.params[2], "challenge");
-    UniValue posVal = request.params[3];
-    if (!posVal.isObject()) {
-        throw std::runtime_error("pos is not an object");
-    }
-    // PoS proof
-    CPosProof posProof;
-    posProof.challenge = ParseHashV(posVal["challenge"], "challenge");
-    posProof.nPlotK = posVal["k"].get_int();
-    posProof.vchPoolPkOrHash = ParseHexV(posVal["pool_pk_or_hash"], "pool_pk_or_hash");
-    posProof.vchLocalPk = ParseHexV(posVal["local_pk"], "local_pk");
-    posProof.nPlotType = posVal["plot_type"].get_int();
-    posProof.vchProof = ParseHexV(posVal["proof"], "proof");
-    // Farmer secure-key
-    Bytes vchFarmerSk = ParseHexV(request.params[4], "farmer_sk");
-    // Generate Farmer public-key
+void GenerateChiaBlock(uint256 hashPrevBlock, int nHeightOfPrevBlock, CTxDestination rewardDest, uint256 initialChallenge,
+        chiapos::Bytes vchFarmerSk, uint64_t nQuality, CPosProof posProof, CVdfProof vdfProof, std::vector<CVdfProof> vVoidBlock)
+{
     CKey farmerSk(MakeArray<SK_LEN>(vchFarmerSk));
-    posProof.vchFarmerPk = MakeBytes(farmerSk.GetPubkey());
-    // VDF proof
-    CVdfProof vdfProof = ParseVdfProof(request.params[5]);
-    // Void blocks
-    std::vector<CVdfProof> vVoidBlock;
-    for (UniValue const& val : request.params[6].getValues()) {
-        CVdfProof vdf = ParseVdfProof(val);
-        vVoidBlock.push_back(std::move(vdf));
-    }
-    // Reward address
-    std::string strRewardDest = request.params[7].get_str();
-    CTxDestination rewardDest = DecodeDestination(strRewardDest);
-    if (!IsValidDestination(rewardDest)) {
-        throw std::runtime_error("The reward destination is invalid");
-    }
-    // Quality for the PoS
-    uint64_t nQuality = request.params[8].get_int64();
-
-    CChainParams const& params = Params();
+    auto params = Params();
     std::shared_ptr<CBlock> pblock;
-
     {
         LOCK(cs_main);
 
@@ -221,6 +186,65 @@ static UniValue submitProof(JSONRPCRequest const& request) {
 
     LogPrintf("%s: Initial challenge: %s, generated new block and now is releasing...\n", __func__,
               initialChallenge.GetHex());
+
+}
+
+static UniValue submitProof(JSONRPCRequest const& request) {
+    // TODO check the validity of request parameters
+
+    uint256 hashPrevBlock = ParseHashV(request.params[0], "prev_block_hash");
+    int nHeightOfPrevBlock = request.params[1].get_int();
+    uint256 initialChallenge = ParseHashV(request.params[2], "challenge");
+    UniValue posVal = request.params[3];
+    if (!posVal.isObject()) {
+        throw std::runtime_error("pos is not an object");
+    }
+    // PoS proof
+    CPosProof posProof;
+    posProof.challenge = ParseHashV(posVal["challenge"], "challenge");
+    posProof.nPlotK = posVal["k"].get_int();
+    posProof.vchPoolPkOrHash = ParseHexV(posVal["pool_pk_or_hash"], "pool_pk_or_hash");
+    posProof.vchLocalPk = ParseHexV(posVal["local_pk"], "local_pk");
+    posProof.nPlotType = posVal["plot_type"].get_int();
+    posProof.vchProof = ParseHexV(posVal["proof"], "proof");
+    // Farmer secure-key
+    Bytes vchFarmerSk = ParseHexV(request.params[4], "farmer_sk");
+    // Generate Farmer public-key
+    CKey farmerSk(MakeArray<SK_LEN>(vchFarmerSk));
+    posProof.vchFarmerPk = MakeBytes(farmerSk.GetPubkey());
+    // VDF proof
+    CVdfProof vdfProof = ParseVdfProof(request.params[5]);
+    // Void blocks
+    std::vector<CVdfProof> vVoidBlock;
+    for (UniValue const& val : request.params[6].getValues()) {
+        CVdfProof vdf = ParseVdfProof(val);
+        vVoidBlock.push_back(std::move(vdf));
+    }
+    // Reward address
+    std::string strRewardDest = request.params[7].get_str();
+    CTxDestination rewardDest = DecodeDestination(strRewardDest);
+    if (!IsValidDestination(rewardDest)) {
+        throw std::runtime_error("The reward destination is invalid");
+    }
+    // Quality for the PoS
+    uint64_t nQuality = request.params[8].get_int64();
+
+    if (IsTheBestPos(posProof)) {
+        // We should put it to the chain immediately
+        GenerateChiaBlock(hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge, vchFarmerSk, nQuality, posProof, vdfProof, vVoidBlock);
+    } else {
+        if (!IsBlockWatcherRunning()) {
+            StartBlockWatcher();
+        }
+        GetBlockWatcher().WaitForBlock(10,
+                std::bind(GenerateChiaBlock, hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge, vchFarmerSk, nQuality, posProof, vdfProof, vVoidBlock),
+                [hashPrevBlock]() -> bool {
+                    LOCK(cs_main);
+                    CBlockIndex* pindex = ::ChainActive().Tip();
+                    return pindex && pindex->GetBlockHash() != hashPrevBlock;
+                }
+        );
+    }
 
     return true;
 }
@@ -331,6 +355,44 @@ static UniValue submitVdf(JSONRPCRequest const& request) {
     return true;
 }
 
+static UniValue submitPos(JSONRPCRequest const& request) {
+    RPCHelpMan("submitpos", "Submit a found pos to p2p network",
+        {
+            {"challenge", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the challenge for the proof"},
+            {"pkhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the public key or hash depends the plot type"},
+            {"localpk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the local public key from plot file"},
+            {"farmerpk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the farmer public key generated from chia mnemonic"},
+            {"plottype", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the plot file"},
+            {"plotk", RPCArg::Type::NUM, RPCArg::Optional::NO, "the size `k` of the plot file"},
+            {"proof", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the pos proof"},
+        },
+        RPCResult("\"succ\" (bool) True means the pos is accepted and will be published"),
+        RPCExamples(HelpExampleCli("submitpos", "xxx"))
+    ).Check(request);
+
+    CPosProof pos;
+    pos.challenge = ParseHashV(request.params[0], "challenge");
+    pos.vchPoolPkOrHash = ParseHexV(request.params[1], "public-key or hash");
+    pos.vchLocalPk = ParseHexV(request.params[2], "local public-key");
+    pos.vchFarmerPk = ParseHexV(request.params[3], "farmer public-key");
+    pos.nPlotType = request.params[4].get_int();
+    pos.nPlotK = request.params[5].get_int();
+    pos.vchProof = ParseHexV(request.params[6], "proof of space");
+
+    LOCK(cs_main);
+    int nTargetHeight = ::ChainActive().Height() + 1;
+    CValidationState state;
+    auto params = Params().GetConsensus();
+    if (!chiapos::CheckPosProof(pos, state, params, nTargetHeight)) {
+        throw std::runtime_error("invalid proof");
+    }
+
+    SavePosQuality(pos);
+    SendPosPreviewOverP2PNetwork(g_connman.get(), pos);
+
+    return true;
+}
+
 static UniValue generateBurstBlocks(JSONRPCRequest const& request) {
     RPCHelpMan("generateburstblocks", "Submit burst blocks to chain",
                {{"count", RPCArg::Type::NUM, RPCArg::Optional::NO, "how many blocks want to generate"}},
@@ -363,6 +425,7 @@ static CRPCCommand const commands[] = {
         {"chia", "requirevdf", &requireVdf, {}},
         {"chia", "queryvdf", &queryVdf, {}},
         {"chia", "querynetspace", &queryNetspace, {}},
+        {"chia", "submitpos", &submitPos, {}},
         {"chia",
          "submitproof",
          &submitProof,

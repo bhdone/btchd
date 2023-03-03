@@ -23,6 +23,8 @@ struct CBlockTemplate;
 
 namespace chiapos {
 
+class NewBlockWatcher;
+
 uint256 MakeChallenge(CBlockIndex* pindex, Consensus::Params const& params);
 
 bool CheckPosProof(CPosProof const& proof, CValidationState& state, Consensus::Params const& params, int nTargetHeight);
@@ -47,6 +49,12 @@ struct NodeIsAlwaysGood {
 
 using SentHandler = std::function<void(CNode* pnode)>;
 
+void SendPosPreviewOverP2PNetwork(CConnman* connman, CPosProof const& pos, CNode* pfrom = nullptr, NodeChecker checker = NodeIsAlwaysGood());
+
+bool IsTheBestPos(CPosProof const& pos, uint64_t quality = 0);
+
+void SavePosQuality(CPosProof const& pos, uint64_t quality = 0);
+
 void SendVdfProofOverP2PNetwork(CConnman* connman, CVdfProof const& vdf, CNode* pfrom = nullptr,
                                 NodeChecker checker = NodeIsAlwaysGood());
 
@@ -68,6 +76,14 @@ bool StopTimelord();
 void WaitTimelord();
 
 void UpdateChallengeToTimelord(uint256 challenge, uint64_t iters);
+
+bool IsBlockWatcherRunning();
+
+void StartBlockWatcher();
+
+NewBlockWatcher& GetBlockWatcher();
+
+void StopBlockWatcher();
 
 }  // namespace chiapos
 

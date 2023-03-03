@@ -140,11 +140,16 @@ int Miner::Run() {
             void_block_vec.clear();
             // Query challenge
             queried_challenge = m_client.QueryChallenge();
-            current_challenge = queried_challenge.challenge;
-            PLOG_INFO << "challenge is ready: " << current_challenge.GetHex()
-                      << ", target height: " << queried_challenge.target_height
-                      << ", filter_bits: " << queried_challenge.filter_bits;
-            m_state = State::FindPoS;
+            if (m_submit_history.find(queried_challenge.challenge) != std::end(m_submit_history)) {
+                PLOG_INFO << "proof is already submitted, waiting for next challenge...";
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            } else {
+                current_challenge = queried_challenge.challenge;
+                PLOG_INFO << "challenge is ready: " << current_challenge.GetHex()
+                          << ", target height: " << queried_challenge.target_height
+                          << ", filter_bits: " << queried_challenge.filter_bits;
+                m_state = State::FindPoS;
+            }
         } else if (m_state == State::FindPoS) {
             PLOG_INFO << "finding PoS for challenge: " << current_challenge.GetHex()
                       << ", dcf_bits: " << m_difficulty_constant_factor_bits
@@ -159,11 +164,15 @@ int Miner::Run() {
                     PLOG_ERROR << "!!! Invalid mnemonic! Please check and fix your configure file!";
                     return 1;
                 }
+                PLOG_INFO << "submit pos to chain";
+                if (!m_client.SubmitPos(*pos, m_farmer_sk)) {
+                    PLOGE << "submit pos failed!!!";
+                }
                 // Get the iters from PoS
-                PLOG_INFO << "PoS has been found, quality: " << chiapos::FormatNumberStr(std::to_string(pos->quality));
+                PLOG_INFO << "ready to calculate iters, quality: " << chiapos::FormatNumberStr(std::to_string(pos->quality));
                 iters = chiapos::CalculateIterationsQuality(pos->mixed_quality_string, queried_challenge.difficulty,
                                                             m_difficulty_constant_factor_bits);
-                PLOG_INFO << "iters=" << chiapos::FormatNumberStr(std::to_string(iters))
+                PLOG_INFO << "calculated, iters=" << chiapos::FormatNumberStr(std::to_string(iters))
                           << ", with k=" << static_cast<int>(pos->k) << ", difficulty=" << queried_challenge.difficulty
                           << ", dcf_bits=" << m_difficulty_constant_factor_bits;
             } else {
@@ -210,6 +219,7 @@ int Miner::Run() {
             pp.reward_dest = m_reward_dest;
             try {
                 m_client.SubmitProof(pp);
+                m_submit_history.insert(queried_challenge.challenge);
                 PLOG_INFO << "$$$$$ Proofs have been submitted $$$$$";
             } catch (std::exception const& e) {
                 PLOG_ERROR << "SubmitProof throws an exception: " << e.what();

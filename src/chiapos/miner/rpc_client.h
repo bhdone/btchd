@@ -142,6 +142,8 @@ public:
 
     bool SubmitVdf(VdfProof const& vdf);
 
+    bool SubmitPos(PosProof const& pos, chiapos::SecreKey const& farmer_sk);
+
     void SubmitProof(ProofPack const& proof_pack);
 
     chiapos::Bytes BindPlotter(std::string const& address, chiapos::SecreKey const& farmerSk);

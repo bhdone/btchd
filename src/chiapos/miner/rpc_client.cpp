@@ -117,6 +117,15 @@ bool RPCClient::SubmitVdf(VdfProof const& vdf) {
     return res.result.getBool();
 }
 
+bool RPCClient::SubmitPos(PosProof const& pos, chiapos::SecreKey const& farmer_sk) {
+    chiapos::CKey key(farmer_sk);
+    chiapos::Bytes pkhash = chiapos::ToBytes(pos.pool_pk_or_hash);
+    chiapos::Bytes farmer_pk = chiapos::MakeBytes(key.GetPubkey());
+    Result res = SendMethod(m_no_proxy, "submitpos", pos.challenge, chiapos::BytesToHex(pkhash), pos.local_pk,
+            chiapos::BytesToHex(farmer_pk), (int)(chiapos::GetType(pos.pool_pk_or_hash)), (int)pos.k, pos.proof);
+    return res.result.getBool();
+}
+
 void RPCClient::SubmitProof(ProofPack const& proof_pack) {
     SendMethod(m_no_proxy, "submitproof", proof_pack.prev_block_hash, proof_pack.prev_block_height,
                proof_pack.pos.challenge, proof_pack.pos, proof_pack.farmer_sk, proof_pack.vdf,

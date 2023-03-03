@@ -21,6 +21,8 @@
 #include <cstdint>
 #include <memory>
 
+#include "newblock_watcher.hpp"
+
 namespace net = boost::asio;
 
 namespace chiapos {
@@ -351,6 +353,56 @@ optional<CVdfProof> QueryReceivedVdfProofPacket(uint256 const& challenge) {
     return i->second;
 }
 
+struct PosQuality {
+    CPosProof pos;
+    uint64_t quality;
+};
+static std::map<uint256, std::vector<PosQuality>> g_posquality;
+
+bool IsTheBestPos(CPosProof const& pos, uint64_t quality)
+{
+    auto it = g_posquality.find(pos.challenge);
+    if (it == std::end(g_posquality)) {
+        return true;
+    }
+    if (quality == 0) {
+        quality = CalculateQuality(pos);
+    }
+    for (auto const& pq : it->second) {
+        if (pq.quality > quality) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void SavePosQuality(CPosProof const& pos, uint64_t quality)
+{
+    // Calculate the quality
+    if (quality == 0) {
+        quality = CalculateQuality(pos);
+    }
+    auto it = g_posquality.find(pos.challenge);
+    if (it == std::end(g_posquality)) {
+        g_posquality.insert(std::make_pair(pos.challenge, std::vector<PosQuality> { { pos, quality } }));
+    } else {
+        it->second.push_back({ pos, quality });
+    }
+}
+
+void SendPosPreviewOverP2PNetwork(CConnman* connman, CPosProof const& pos, CNode* pfrom, NodeChecker checker) {
+    connman->ForEachNode([connman, &pos, pfrom, &checker](CNode* pnode) {
+        if (pfrom && pfrom->GetId() == pnode->GetId()) {
+            // Same node, exit
+            return;
+        }
+        if (!checker(pnode)) {
+            return;
+        }
+        connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::POSPREVIEW, pos));
+    });
+}
+
 void SendVdfProofOverP2PNetwork(CConnman* connman, CVdfProof const& vdf, CNode* pfrom, NodeChecker checker) {
     // Dispatching the message
     connman->ForEachNode([connman, &vdf, pfrom, checker](CNode* pnode) {
@@ -491,5 +543,24 @@ void UpdateChallengeToTimelord(uint256 challenge, uint64_t iters) {
         g_timelord->CalcIters(challenge, iters);
     }
 }
+
+static NewBlockWatcher g_watcher;
+
+bool IsBlockWatcherRunning() {
+    return g_watcher.IsRunning();
+}
+
+void StartBlockWatcher() {
+    g_watcher.Start();
+}
+
+NewBlockWatcher& GetBlockWatcher() {
+    return g_watcher;
+}
+
+void StopBlockWatcher() {
+    g_watcher.Exit();
+}
+
 
 }  // namespace chiapos
