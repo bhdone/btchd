@@ -126,7 +126,7 @@ struct Arguments {
     std::string datadir;                  // The root path of the data directory
     std::string cookie_path;              // The file stores the connecting information of current btchd server
     bool timelord;
-    std::string timelord_addr;
+    std::string timelord_host;
     unsigned short timelord_port;
 } g_args;
 
@@ -171,8 +171,8 @@ int HandleCommand_Mining() {
                        miner::g_config.GetRewardDest(), miner::g_args.difficulty_constant_factor_bits);
     // do we have timelord service
     if (miner::g_args.timelord) {
-        PLOGI << "start timelord " << miner::g_args.timelord_addr << ":" << miner::g_args.timelord_port;
-        miner.StartTimelord(miner::g_args.timelord_addr, miner::g_args.timelord_port);
+        PLOGI << "start timelord " << miner::g_args.timelord_host << ":" << miner::g_args.timelord_port;
+        miner.StartTimelord(miner::g_args.timelord_host, miner::g_args.timelord_port);
     }
     return miner.Run();
 }
@@ -450,7 +450,7 @@ int main(int argc, char** argv) {
             ("cookie", "Full path to `.cookie` from btchd datadir",
              cxxopts::value<std::string>())                            // --cookie
             ("timelord", "Establish connnection to timelord service")  // --timelord
-            ("timelord-addr", "The address to connect to the timelord service",
+            ("timelord-host", "The address to connect to the timelord service",
              cxxopts::value<std::string>()->default_value("127.0.0.1"))  // --timelord-addr
             ("timelord-port", "Timelord service listen to this port",
              cxxopts::value<unsigned short>()->default_value("19191"))  // --timelord-port
@@ -532,7 +532,7 @@ int main(int argc, char** argv) {
     }
 
     miner::g_args.timelord = result.count("timelord") > 0;
-    miner::g_args.timelord_addr = result["timelord-addr"].as<std::string>();
+    miner::g_args.timelord_host = result["timelord-host"].as<std::string>();
     miner::g_args.timelord_port = result["timelord-port"].as<unsigned short>();
 
     miner::g_args.difficulty_constant_factor_bits = result["dcf-bits"].as<int>();
