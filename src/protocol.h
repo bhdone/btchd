@@ -251,6 +251,14 @@ extern const char *VDF;
  * @since chia-pos protocol
  */
 extern const char *REQVDF;
+
+/**
+ * When a pos has been found, the proof should be post to P2P network
+ * immediately, the proof is provided for comparing to the miner's proof
+ * and reduce fork
+ * @since chia-pos protocol
+ */
+extern const char *POSPREVIEW;
 };
 
 /* Get a vector of all valid message types (see above) */
