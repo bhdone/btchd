@@ -53,10 +53,7 @@ static UniValue checkChiapos(JSONRPCRequest const& request) {
     CBlockIndex const* pindexPrev = ChainActive().Tip();
     Consensus::Params const& params = Params().GetConsensus();
 
-    bool ready = IsTheChainReadyForChiapos(pindexPrev, params);
-    LogPrintf("%s: query `checkchiapos` returns %s\n", __func__, (ready ? "true" : "false"));
-
-    return ready;
+    return IsTheChainReadyForChiapos(pindexPrev, params);
 }
 
 static UniValue queryChallenge(JSONRPCRequest const& request) {

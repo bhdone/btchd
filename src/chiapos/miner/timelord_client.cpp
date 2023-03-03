@@ -243,7 +243,7 @@ void TimelordClient::HandleMessage_CalcReply(UniValue const& msg) {
             proof_receiver_(challenge, detail);
         }
     } else if (!calculating) {
-        PLOGE << "timelord reports that the challenge " << challenge.GetHex() << " won't be calculated";
+        PLOGE << "timelord reports that the challenge " << challenge.GetHex() << " is invalid";
     }
 }
 

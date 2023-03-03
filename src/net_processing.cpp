@@ -3365,6 +3365,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // Update vdf proof tip
         if (!pstateFrom->FindProofTip(vdf.challenge, vdf.nVdfIters)) {
             pstateFrom->SaveProofTip(vdf.challenge, vdf.nVdfIters);
+            LogPrintf("%s: Saving vdf for challenge %s, iters=%lld from peer=%s\n", __func__,
+                    vdf.challenge.GetHex(), vdf.nVdfIters, pfrom->GetId());
         }
 
         // Dispatch Vdf proof to P2P network
