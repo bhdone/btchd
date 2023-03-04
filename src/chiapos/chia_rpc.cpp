@@ -228,8 +228,10 @@ static UniValue submitProof(JSONRPCRequest const& request) {
 
     if (IsTheBestPos(posProof)) {
         // We should put it to the chain immediately
+        LogPrintf("%s: The best proof (quality=%s) we have, now commit it to the chain.\n", __func__, chiapos::FormatNumberStr(std::to_string(nQuality)));
         GenerateChiaBlock(hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge, vchFarmerSk, nQuality, posProof, vdfProof, vVoidBlock);
     } else {
+        LogPrintf("%s: Our proof (quality=%s) isn't good enough, delaying the commit.\n", __func__, chiapos::FormatNumberStr(std::to_string(nQuality)));
         if (!IsBlockWatcherRunning()) {
             StartBlockWatcher();
         }
