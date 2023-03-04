@@ -537,14 +537,14 @@ CBindPlotterInfo CCoinsViewCache::GetLastBindPlotterInfo(const CPlotterBindData 
     CBindPlotterInfo lastBindInfo;
     for (const auto& pair : GetBindPlotterEntries(bindData)) {
         assert(pair.second.bindData == bindData);
-        LogPrintf("%s: queried bind-data valid(%s) height(%d) account(%s) id(%s)\n",
+        LogPrint(BCLog::COINDB, "%s: queried bind-data valid(%s) height(%d) account(%s) id(%s)\n",
                 __func__, (pair.second.valid ? "true" : "false"), pair.second.nHeight,
                 EncodeDestination(ScriptHash(pair.second.accountID)), pair.second.bindData.ToString());
         if (lastBindInfo.outpoint.IsNull() ||
                 (lastBindInfo.nHeight < pair.second.nHeight) ||
                 (lastBindInfo.nHeight == pair.second.nHeight && lastBindInfo.outpoint < pair.first)) {
             lastBindInfo = CBindPlotterInfo(pair);
-            LogPrintf("%s: accept height(%d) account(%s) id(%s)\n", __func__, pair.second.nHeight,
+            LogPrint(BCLog::COINDB, "%s: accept height(%d) account(%s) id(%s)\n", __func__, pair.second.nHeight,
                     EncodeDestination(ScriptHash(pair.second.accountID)), pair.second.bindData.ToString());
         }
     }

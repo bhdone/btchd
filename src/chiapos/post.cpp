@@ -228,6 +228,9 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
                              "the value of current difficulty is zero");
     }
     if (nDifficulty != fields.nDifficulty) {
+        LogPrintf("%s: incorrect difficulty, expect: %s, actual: %s, difficulty-prev: %s, duration: %lld\n", __func__,
+                chiapos::FormatNumberStr(std::to_string(nDifficulty)), chiapos::FormatNumberStr(std::to_string(fields.nDifficulty)),
+                chiapos::FormatNumberStr(std::to_string(nDifficultyPrev)), fields.GetTotalDuration());
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
                              "incorrect difficulty");
     }
