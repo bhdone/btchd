@@ -110,9 +110,9 @@ CVdfProof ParseVdfProof(UniValue const& val) {
     return proof;
 }
 
-void GenerateChiaBlock(uint256 hashPrevBlock, int nHeightOfPrevBlock, CTxDestination rewardDest, uint256 initialChallenge,
-        chiapos::Bytes vchFarmerSk, uint64_t nQuality, CPosProof posProof, CVdfProof vdfProof, std::vector<CVdfProof> vVoidBlock)
-{
+void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTxDestination const& rewardDest,
+                       uint256 const& initialChallenge, chiapos::Bytes const& vchFarmerSk, uint64_t nQuality, CPosProof const& posProof,
+                       CVdfProof const& vdfProof, std::vector<CVdfProof> const& vVoidBlock) {
     CKey farmerSk(MakeArray<SK_LEN>(vchFarmerSk));
     auto params = Params();
     std::shared_ptr<CBlock> pblock;
