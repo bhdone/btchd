@@ -3324,6 +3324,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 g_banman->Ban(pfrom->addr, BanReason::BanReasonNodeMisbehaving);
             }
             g_connman->DisconnectNode(pfrom->addr);
+            LogPrintf("%s: pos proof is invalid, disconnected from addr %s and ban.\n", pfrom->addr.ToString());
             return true;
         }
 
