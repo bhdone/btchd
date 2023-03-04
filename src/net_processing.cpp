@@ -3331,7 +3331,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         CNodeState* pstateFrom = State(pfrom->GetId());
 
         if (pstateFrom->SavePosPreview(pos.vchProof)) {
-            LogPrintf("%s: Saving proof for challenge %s from peer=%d (farmerpk=%s)\n", __func__,
+            LogPrint(BCLog::NET, "%s: Saved proof for challenge %s from peer=%d (farmerpk=%s)\n", __func__,
                     pos.challenge.GetHex(), pfrom->GetId(), chiapos::BytesToHex(pos.vchFarmerPk));
         }
 
@@ -3366,7 +3366,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         // Update vdf proof tip
         if (!pstateFrom->FindProofTip(vdf.challenge, vdf.nVdfIters)) {
             pstateFrom->SaveProofTip(vdf.challenge, vdf.nVdfIters);
-            LogPrintf("%s: Saving vdf for challenge %s, iters=%lld from peer=%s\n", __func__,
+            LogPrint(BCLog::NET, "%s: Saved vdf for challenge %s, iters=%lld from peer=%s\n", __func__,
                     vdf.challenge.GetHex(), vdf.nVdfIters, pfrom->GetId());
         }
 
