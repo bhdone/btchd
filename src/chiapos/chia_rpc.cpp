@@ -151,7 +151,7 @@ void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTx
             uint64_t quality_chain = CalculateQuality(pindexCurr->chiaposFields.posProof);
             if (quality < quality_chain) {
                 // The quality is too low, and it will not be accepted by the chain
-                LogPrintf("%s(drop proofs): the quality is too low\n", __func__);
+                LogPrintf("%s(drop proofs): the quality is lower than the existing block, skip our block\n", __func__);
                 throw std::runtime_error("the quality is too low, the new block will not be accepted by the chain");
             }
 
