@@ -64,7 +64,11 @@ private:
                 time_t secs_passed = now - entry.start_time;
                 if (secs_passed >= entry.secs_to_wait || entry.detector()) {
                     entry.del = true;
-                    entry.timeout_handler();
+                    try {
+                        entry.timeout_handler();
+                    } catch (std::exception const& e) {
+                        LogPrintf("%s: %s\n", __func__, e.what());
+                    }
                 }
             }
             auto it = std::remove_if(std::begin(wait_entries_), std::end(wait_entries_),
