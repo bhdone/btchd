@@ -5,30 +5,11 @@
 
 #include <algorithm>
 
+#include "tinyformat.h"
+
 #include "keyman.h"
 
 namespace miner {
-
-bool Config::Valid() const {
-    if (m_plot_path_list.empty()) {
-        return false;
-    }
-    bool contains_empty_str = std::count_if(std::begin(m_plot_path_list), std::end(m_plot_path_list),
-                                            [](std::string const& path_str) { return path_str.empty(); });
-    if (contains_empty_str) {
-        return false;
-    }
-    if (m_reward_dest.empty()) {
-        return false;
-    }
-    if (m_seed.empty()) {
-        return false;
-    }
-    if (m_rpc.url.empty()) {
-        return false;
-    }
-    return true;
-}
 
 std::string Config::ToJsonString() const {
     UniValue root(UniValue::VOBJ);
@@ -53,10 +34,13 @@ std::string Config::ToJsonString() const {
 }
 
 void Config::ParseFromJsonString(std::string const& json_str) {
-    std::string s(json_str), errs;
+    std::string s(json_str);
 
     UniValue root;
-    root.read(json_str);
+    bool succ = root.read(json_str);
+    if (!succ) {
+        throw std::runtime_error("cannot parse json string, check the json syntax");
+    }
 
     std::vector<std::string> root_keys = root.getKeys();
     if (root.exists("rpc") && root["rpc"].isObject()) {
@@ -72,20 +56,40 @@ void Config::ParseFromJsonString(std::string const& json_str) {
         }
     }
 
+    if (m_rpc.url.empty()) {
+        throw std::runtime_error("field `rpc.url` is empty");
+    }
+
     if (root.exists("reward") && root["reward"].isStr()) {
         m_reward_dest = root["reward"].get_str();
+    }
+
+    if (m_reward_dest.empty()) {
+        throw std::runtime_error("field `reward_dest` is empty");
     }
 
     if (root.exists("plotPath") && root["plotPath"].isArray()) {
         m_plot_path_list.clear();
         auto plot_path_list = root["plotPath"].getValues();
         for (UniValue const& val : plot_path_list) {
-            m_plot_path_list.push_back(val.get_str());
+            std::string path_str = val.get_str();
+            if (!fs::exists(path_str) || !fs::is_directory(path_str)) {
+                throw std::runtime_error(tinyformat::format("plot path %s doesn't exist, please check it before mining", path_str));
+            }
+            m_plot_path_list.push_back(std::move(path_str));
         }
+    }
+
+    if (m_plot_path_list.empty()) {
+        throw std::runtime_error("field `plotPath` is empty");
     }
 
     if (root.exists("seed") && root["seed"].isStr()) {
         m_seed = root["seed"].get_str();
+    }
+
+    if (m_seed.empty()) {
+        throw std::runtime_error("field `seed` is empty");
     }
 
     if (root.exists("testnet") && root["testnet"].isBool()) {

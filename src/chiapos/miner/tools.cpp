@@ -27,9 +27,6 @@ miner::Config ParseConfig(std::string const& config_path) {
     miner::Config config;
     config.ParseFromJsonString(json_str);
 
-    if (!config.Valid()) {
-        throw std::runtime_error("config is invalid, please fix it before mining");
-    }
     return config;
 }
 

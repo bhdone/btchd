@@ -18,8 +18,6 @@ public:
         std::string passwd;
     };
 
-    bool Valid() const;
-
     std::string ToJsonString() const;
 
     void ParseFromJsonString(std::string const& json_str);

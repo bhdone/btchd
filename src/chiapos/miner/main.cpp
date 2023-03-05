@@ -288,6 +288,7 @@ std::string TimeToDate(time_t t) {
 }
 
 int HandleCommand_BlockSubsidy() {
+    LOCK(cs_main);
     int const TOTAL_YEARS = 25;
     int const SECS_YEAR = 60 * 60 * 24 * 365;
     auto const& params = miner::GetChainParams().GetConsensus();
@@ -360,6 +361,7 @@ int HandleCommand_BlockSubsidy() {
 }
 
 int HandleCommand_Supplied() {
+    LOCK(cs_main);
     std::unique_ptr<miner::RPCClient> pclient = tools::CreateRPCClient(miner::g_config, miner::g_args.cookie_path);
     auto challenge = pclient->QueryChallenge();
     auto netspace = pclient->QueryNetspace();
@@ -486,18 +488,25 @@ int main(int argc, char** argv) {
     if (result.count("command")) {
         miner::g_args.command = result["command"].as<std::string>();
     } else {
-        throw std::runtime_error("no command, please use --help to read how to use the program.");
+        PLOGE << "no command, please use --help to read how to use the program.";
+        return 1;
     }
 
     auto config_path = result["config"].as<std::string>();
     if (config_path.empty()) {
-        throw std::runtime_error("no config path, please use `--config` to set the path to your config");
+        PLOGE << "cannot find config file, please use `--config` to set one";
+        return 1;
     }
 
     // we need to generate config before parsing it
     auto cmd = miner::ParseCommandFromString(miner::g_args.command);
     if (cmd == miner::CommandType::GEN_CONFIG) {
-        return HandleCommand_GenConfig(config_path);
+        try {
+            return HandleCommand_GenConfig(config_path);
+        } catch (std::exception const& e) {
+            PLOGE << "error occurs when generating config: " << e.what();
+            return 1;
+        }
     }
 
     miner::g_args.check = result["check"].as<bool>();
@@ -512,7 +521,12 @@ int main(int argc, char** argv) {
         miner::g_args.address = result["address"].as<std::string>();
     }
 
-    miner::g_config = tools::ParseConfig(config_path);
+    try {
+        miner::g_config = tools::ParseConfig(config_path);
+    } catch (std::exception const& e) {
+        PLOGE << "parse config error: " << e.what();
+        return 1;
+    }
 
     if (result.count("datadir")) {
         // Customized datadir
