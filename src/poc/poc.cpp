@@ -830,6 +830,7 @@ int GetHeightForCurrentCalcWindow(int nMiningHeight, Consensus::Params const& pa
 }
 
 PledgeParams CalculatePledgeParams(int nMiningHeight, Consensus::Params const& params) {
+    AssertLockHeld(cs_main);
     if (nMiningHeight < params.BHDIP009Height) {
         throw std::runtime_error("Invalid nHeight for calculating the pledge params!");
     }
