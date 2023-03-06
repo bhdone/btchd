@@ -21,21 +21,23 @@ using MatchFunc = std::function<bool(std::string const&)>;
 
 #ifdef _WIN32
 
-std::vector<std::string> EnumFilesFromDir(std::string const& dir, MatchFunc accept_func) {
+std::tuple<std::vector<std::string>, uint64_t> EnumFilesFromDir(std::string const& dir, MatchFunc accept_func) {
     std::vector<std::string> res;
     std::string dir_mask = dir + "\\*.*";
+    uint64_t total_size{0};
 
     WIN32_FIND_DATA wfd;
 
     HANDLE hFind = FindFirstFile(dir_mask.c_str(), &wfd);
     if (hFind == INVALID_HANDLE_VALUE) {
-        return res;
+        return std::make_tuple(res, 0);
     }
 
     do {
         if (((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) && accept_func(wfd.cFileName)) {
             // Not a directory
             res.push_back(dir + "\\" + wfd.cFileName);
+            total_size += wfd.nFileSizeLow + static_cast<uint64_t>(wfd.nFileSizeHigh) << 32;
         }
     } while (FindNextFile(hFind, &wfd) != 0);
 
@@ -50,15 +52,17 @@ std::vector<std::string> EnumFilesFromDir(std::string const& dir, MatchFunc acce
 
 #else
 
-std::vector<std::string> EnumFilesFromDir(std::string const& dir, MatchFunc accept_func) {
+std::tuple<std::vector<std::string>, uint64_t> EnumFilesFromDir(std::string const& dir, MatchFunc accept_func) {
     std::vector<std::string> res;
+    uint64_t total_size{0};
     fs::directory_iterator i(fs::path(dir.c_str())), end;
     for (auto const& dir_entry : fs::directory_iterator(fs::path(dir))) {
         if (!fs::is_directory(dir_entry.path()) && accept_func(dir_entry.path().string())) {
             res.push_back(dir_entry.path().string());
+            total_size += fs::file_size(dir_entry.path());
         }
     }
-    return res;
+    return std::make_tuple(res, total_size);
 }
 
 #endif
@@ -73,7 +77,7 @@ bool ExtractExtName(std::string const& filename, std::string& out_ext_name) {
     return false;
 }
 
-std::vector<std::string> EnumPlotsFromDir(std::string const& dir) {
+std::tuple<std::vector<std::string>, uint64_t> EnumPlotsFromDir(std::string const& dir) {
     return EnumFilesFromDir(dir, [](std::string const& filename) -> bool {
         // Extract ext name
         std::string ext_name;
@@ -95,12 +99,16 @@ std::vector<Path> StrListToPathList(std::vector<std::string> const& str_list) {
 
 Prover::Prover(std::vector<Path> const& path_list) {
     for (auto const& path : path_list) {
-        auto files = EnumPlotsFromDir(path.string());
+        std::vector<std::string> files;
+        uint64_t total_size;
+        std::tie(files, total_size) = EnumPlotsFromDir(path.string());
+        m_total_size += total_size;
         for (auto const& file : files) {
             chiapos::CPlotFile plotFile(file);
             if (plotFile.IsReady()) {
                 m_plotter_files.push_back(std::move(plotFile));
             } else {
+                m_total_size -= fs::file_size(file);
                 PLOG_ERROR << "bad plot: " << file;
             }
         }

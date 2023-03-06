@@ -20,6 +20,8 @@ class Prover {
 public:
     explicit Prover(std::vector<Path> const& path_list);
 
+    uint64_t GetTotalSize() const { return m_total_size; }
+
     std::vector<chiapos::QualityStringPack> GetQualityStrings(uint256 const& challenge, int bits_of_filter) const;
 
     static bool QueryFullProof(Path const& plot_path, uint256 const& challenge, int index, chiapos::Bytes& out);
@@ -30,9 +32,10 @@ public:
 
     static bool VerifyProof(chiapos::Bytes const& plot_id, uint8_t k, uint256 const& challenge,
                             chiapos::Bytes const& proof);
-};
 
-std::vector<std::string> EnumPlotsFromDir(std::string const& dir);
+private:
+    uint64_t m_total_size{0};
+};
 
 }  // namespace miner
 
