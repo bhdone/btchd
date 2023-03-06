@@ -38,12 +38,18 @@ DepositTerm DepositTermFromString(std::string const& str) {
 }
 
 RPCClient::RPCClient(bool no_proxy, std::string url, std::string const& cookie_path_str)
-        : m_no_proxy(no_proxy), m_url(std::move(url)) {
+        : m_no_proxy(no_proxy), m_cookie_path_str(cookie_path_str), m_url(std::move(url)) {
     if (cookie_path_str.empty()) {
         throw std::runtime_error("cookie is empty, cannot connect to btchd core");
     }
+    LoadCookie();
+}
 
-    fs::path cookie_path(cookie_path_str);
+RPCClient::RPCClient(bool no_proxy, std::string url, std::string user, std::string passwd)
+        : m_no_proxy(no_proxy), m_url(std::move(url)), m_user(std::move(user)), m_passwd(std::move(passwd)) {}
+
+void RPCClient::LoadCookie() {
+    fs::path cookie_path(m_cookie_path_str);
     std::ifstream cookie_reader(cookie_path.string());
     if (!cookie_reader.is_open()) {
         std::stringstream ss;
@@ -62,8 +68,10 @@ RPCClient::RPCClient(bool no_proxy, std::string url, std::string const& cookie_p
     m_passwd = std::move(passwd_str);
 }
 
-RPCClient::RPCClient(bool no_proxy, std::string url, std::string user, std::string passwd)
-        : m_no_proxy(no_proxy), m_url(std::move(url)), m_user(std::move(user)), m_passwd(std::move(passwd)) {}
+std::string const& RPCClient::GetCookiePath() const
+{
+    return m_cookie_path_str;
+}
 
 bool RPCClient::CheckChiapos() {
     auto res = SendMethod(m_no_proxy, "checkchiapos");

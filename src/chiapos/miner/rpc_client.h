@@ -130,6 +130,10 @@ public:
 
     RPCClient(bool no_proxy, std::string url, std::string user, std::string passwd);
 
+    void LoadCookie();
+
+    std::string const& GetCookiePath() const;
+
     bool CheckChiapos();
 
     Challenge QueryChallenge();
@@ -252,6 +256,7 @@ private:
 
 private:
     bool m_no_proxy;
+    std::string m_cookie_path_str;
     std::string m_url;
     std::string m_user;
     std::string m_passwd;

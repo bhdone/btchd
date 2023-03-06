@@ -119,6 +119,7 @@ void Miner::StartTimelord(std::string const& hostname, unsigned short port) {
 }
 
 int Miner::Run() {
+    int const ERROR_RECOVER_WAIT_SECONDS = 3;
     RPCClient::Challenge queried_challenge;
     uint256 current_challenge;
     chiapos::optional<RPCClient::PosProof> pos;
@@ -127,104 +128,127 @@ int Miner::Run() {
     std::vector<RPCClient::VdfProof> void_block_vec;
     uint64_t iters;
     while (1) {
-        std::this_thread::yield();
-        PLOG_INFO << "==== Status: " << ToString(m_state) << " ====";
-        if (m_state == State::RequireChallenge) {
-            if (!m_client.CheckChiapos()) {
-                continue;
-            }
-            PLOG_INFO << "chia pos is ready";
-            // Reset variables
-            pos.reset();
-            vdf.reset();
-            void_block_vec.clear();
-            // Query challenge
-            queried_challenge = m_client.QueryChallenge();
-            if (m_submit_history.find(queried_challenge.challenge) != std::end(m_submit_history)) {
-                PLOG_INFO << "proof is already submitted, waiting for next challenge...";
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-            } else {
-                current_challenge = queried_challenge.challenge;
-                PLOG_INFO << "challenge is ready: " << current_challenge.GetHex()
-                          << ", target height: " << queried_challenge.target_height
+        try {
+            std::this_thread::yield();
+            PLOG_INFO << "==== Status: " << ToString(m_state) << " ====";
+            if (m_state == State::RequireChallenge) {
+                if (!m_client.CheckChiapos()) {
+                    continue;
+                }
+                PLOG_INFO << "chia pos is ready";
+                // Reset variables
+                pos.reset();
+                vdf.reset();
+                void_block_vec.clear();
+                // Query challenge
+                queried_challenge = m_client.QueryChallenge();
+                if (m_submit_history.find(queried_challenge.challenge) != std::end(m_submit_history)) {
+                    PLOG_INFO << "proof is already submitted, waiting for next challenge...";
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                } else {
+                    current_challenge = queried_challenge.challenge;
+                    PLOG_INFO << "challenge is ready: " << current_challenge.GetHex()
+                              << ", target height: " << queried_challenge.target_height
+                              << ", filter_bits: " << queried_challenge.filter_bits;
+                    m_state = State::FindPoS;
+                }
+            } else if (m_state == State::FindPoS) {
+                PLOG_INFO << "finding PoS for challenge: " << current_challenge.GetHex()
+                          << ", dcf_bits: " << m_difficulty_constant_factor_bits
                           << ", filter_bits: " << queried_challenge.filter_bits;
-                m_state = State::FindPoS;
-            }
-        } else if (m_state == State::FindPoS) {
-            PLOG_INFO << "finding PoS for challenge: " << current_challenge.GetHex()
-                      << ", dcf_bits: " << m_difficulty_constant_factor_bits
-                      << ", filter_bits: " << queried_challenge.filter_bits;
-            pos = pos::QueryBestPosProof(m_prover, current_challenge, m_difficulty_constant_factor_bits,
-                                         queried_challenge.filter_bits);
-            if (pos.has_value()) {
-                // Check plot-id
-                chiapos::PlotId plot_id = chiapos::MakePlotId(pos->local_pk, m_farmer_pk, pos->pool_pk_or_hash);
-                if (plot_id != pos->plot_id) {
-                    // The provided mnemonic is invalid or it doesn't match to the farmer
-                    PLOG_ERROR << "!!! Invalid mnemonic! Please check and fix your configure file!";
-                    return 1;
+                pos = pos::QueryBestPosProof(m_prover, current_challenge, m_difficulty_constant_factor_bits,
+                                             queried_challenge.filter_bits);
+                if (pos.has_value()) {
+                    // Check plot-id
+                    chiapos::PlotId plot_id = chiapos::MakePlotId(pos->local_pk, m_farmer_pk, pos->pool_pk_or_hash);
+                    if (plot_id != pos->plot_id) {
+                        // The provided mnemonic is invalid or it doesn't match to the farmer
+                        PLOG_ERROR << "!!! Invalid mnemonic! Please check and fix your configure file!";
+                        return 1;
+                    }
+                    PLOG_INFO << "submit pos to chain";
+                    if (!m_client.SubmitPos(*pos, m_farmer_sk)) {
+                        PLOGE << "submit pos failed!!!";
+                    }
+                    // Get the iters from PoS
+                    PLOG_INFO << "ready to calculate iters, quality: "
+                              << chiapos::FormatNumberStr(std::to_string(pos->quality));
+                    iters = chiapos::CalculateIterationsQuality(pos->mixed_quality_string, queried_challenge.difficulty,
+                                                                m_difficulty_constant_factor_bits);
+                    PLOG_INFO << "calculated, iters=" << chiapos::FormatNumberStr(std::to_string(iters))
+                              << ", with k=" << static_cast<int>(pos->k)
+                              << ", difficulty=" << queried_challenge.difficulty
+                              << ", dcf_bits=" << m_difficulty_constant_factor_bits;
+                } else {
+                    // Get the iters for next void block
+                    PLOG_INFO << "PoS cannot be found";
+                    iters = queried_challenge.prev_vdf_iters / queried_challenge.prev_vdf_duration *
+                            queried_challenge.target_duration;
                 }
-                PLOG_INFO << "submit pos to chain";
-                if (!m_client.SubmitPos(*pos, m_farmer_sk)) {
-                    PLOGE << "submit pos failed!!!";
+                m_state = State::WaitVDF;
+            } else if (m_state == State::WaitVDF) {
+                PLOG_INFO << "request VDF proof for challenge: " << current_challenge.GetHex()
+                          << ", iters: " << chiapos::FormatNumberStr(std::to_string(iters));
+                m_client.RequireVdf(current_challenge, iters);
+                PLOG_INFO << "waiting for VDF proofs...";
+                std::atomic_bool running{true};
+                BreakReason reason =
+                        CheckAndBreak(running, queried_challenge.challenge, current_challenge, iters, vdf_mtx, vdf);
+                if (reason == BreakReason::ChallengeIsChanged) {
+                    PLOG_INFO << "!!!!! Challenge is changed !!!!!";
+                    m_state = State::RequireChallenge;
+                } else if (reason == BreakReason::VDFIsAcquired) {
+                    PLOG_INFO << "a VDF proof has been received";
+                    m_state = State::ProcessVDF;
+                } else {
+                    // The challenge monitor returns without a valid reason
+                    // the connection to the RPC service might has errors
+                    // So we reset the state to RequireChallenge and wait
+                    // until the service is recover
+                    m_state = State::RequireChallenge;
                 }
-                // Get the iters from PoS
-                PLOG_INFO << "ready to calculate iters, quality: " << chiapos::FormatNumberStr(std::to_string(pos->quality));
-                iters = chiapos::CalculateIterationsQuality(pos->mixed_quality_string, queried_challenge.difficulty,
-                                                            m_difficulty_constant_factor_bits);
-                PLOG_INFO << "calculated, iters=" << chiapos::FormatNumberStr(std::to_string(iters))
-                          << ", with k=" << static_cast<int>(pos->k) << ", difficulty=" << queried_challenge.difficulty
-                          << ", dcf_bits=" << m_difficulty_constant_factor_bits;
-            } else {
-                // Get the iters for next void block
-                PLOG_INFO << "PoS cannot be found";
-                iters = queried_challenge.prev_vdf_iters / queried_challenge.prev_vdf_duration *
-                        queried_challenge.target_duration;
-            }
-            m_state = State::WaitVDF;
-        } else if (m_state == State::WaitVDF) {
-            PLOG_INFO << "request VDF proof for challenge: " << current_challenge.GetHex()
-                      << ", iters: " << chiapos::FormatNumberStr(std::to_string(iters));
-            m_client.RequireVdf(current_challenge, iters);
-            PLOG_INFO << "waiting for VDF proofs...";
-            std::atomic_bool running{true};
-            BreakReason reason =
-                    CheckAndBreak(running, queried_challenge.challenge, current_challenge, iters, vdf_mtx, vdf);
-            if (reason == BreakReason::ChallengeIsChanged) {
-                PLOG_INFO << "!!!!! Challenge is changed !!!!!";
+            } else if (m_state == State::ProcessVDF) {
+                if (pos.has_value()) {
+                    PLOG_INFO << "all proofs are ready to submit";
+                    m_state = State::SubmitProofs;
+                } else {
+                    PLOG_INFO << "no valid PoS, trying to find another one";
+                    current_challenge = chiapos::MakeChallenge(current_challenge, vdf->proof);
+                    void_block_vec.push_back(*vdf);
+                    m_state = State::FindPoS;
+                }
+            } else if (m_state == State::SubmitProofs) {
+                PLOG_INFO << "preparing proofs";
+                RPCClient::ProofPack pp;
+                pp.prev_block_hash = queried_challenge.prev_block_hash;
+                pp.prev_block_height = queried_challenge.prev_block_height;
+                pp.pos = *pos;
+                pp.vdf = *vdf;
+                pp.void_block_vec = void_block_vec;
+                pp.farmer_sk = m_farmer_sk;
+                pp.reward_dest = m_reward_dest;
+                try {
+                    m_client.SubmitProof(pp);
+                    m_submit_history.insert(queried_challenge.challenge);
+                    PLOG_INFO << "$$$$$ Proofs have been submitted $$$$$";
+                } catch (std::exception const& e) {
+                    PLOG_ERROR << "SubmitProof throws an exception: " << e.what();
+                }
                 m_state = State::RequireChallenge;
-            } else if (reason == BreakReason::VDFIsAcquired) {
-                PLOG_INFO << "a VDF proof has been received";
-                m_state = State::ProcessVDF;
             }
-        } else if (m_state == State::ProcessVDF) {
-            if (pos.has_value()) {
-                PLOG_INFO << "all proofs are ready to submit";
-                m_state = State::SubmitProofs;
-            } else {
-                PLOG_INFO << "no valid PoS, trying to find another one";
-                current_challenge = chiapos::MakeChallenge(current_challenge, vdf->proof);
-                void_block_vec.push_back(*vdf);
-                m_state = State::FindPoS;
+        } catch (NetError const& e) {
+            // The network has errors, need to load cookie file if it is the way to verify login
+            PLOG_ERROR << "NetError: " << e.what();
+            if (fs::exists(m_client.GetCookiePath()) && fs::is_regular_file(m_client.GetCookiePath())) {
+                m_client.LoadCookie();
             }
-        } else if (m_state == State::SubmitProofs) {
-            PLOG_INFO << "preparing proofs";
-            RPCClient::ProofPack pp;
-            pp.prev_block_hash = queried_challenge.prev_block_hash;
-            pp.prev_block_height = queried_challenge.prev_block_height;
-            pp.pos = *pos;
-            pp.vdf = *vdf;
-            pp.void_block_vec = void_block_vec;
-            pp.farmer_sk = m_farmer_sk;
-            pp.reward_dest = m_reward_dest;
-            try {
-                m_client.SubmitProof(pp);
-                m_submit_history.insert(queried_challenge.challenge);
-                PLOG_INFO << "$$$$$ Proofs have been submitted $$$$$";
-            } catch (std::exception const& e) {
-                PLOG_ERROR << "SubmitProof throws an exception: " << e.what();
-            }
-            m_state = State::RequireChallenge;
+            std::this_thread::sleep_for(std::chrono::seconds(ERROR_RECOVER_WAIT_SECONDS));
+        } catch (RPCError const& e) {
+            PLOG_ERROR << "RPCError: " << e.what();
+            std::this_thread::sleep_for(std::chrono::seconds(ERROR_RECOVER_WAIT_SECONDS));
+        } catch (std::exception const& e) {
+            PLOG_ERROR << "Mining error: " << e.what();
+            std::this_thread::sleep_for(std::chrono::seconds(ERROR_RECOVER_WAIT_SECONDS));
         }
     }
     return 0;
@@ -273,9 +297,14 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, uint256 const
                 out_vdf = vdf;
             }
             return BreakReason::VDFIsAcquired;
-        } catch (std::exception const& e) {
-            // We cannot query the valid VDF
+        } catch (NetError const& e) {
+            PLOGE << "NetError: " << e.what();
+            return BreakReason::Custom;
+        } catch (RPCError const& e) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
+        } catch (std::exception const& e) {
+            PLOGE << "unknown error: " << e.what();
+            return BreakReason::Custom;
         }
     }
     return BreakReason::Custom;
