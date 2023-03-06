@@ -74,7 +74,7 @@ void Config::ParseFromJsonString(std::string const& json_str) {
         for (UniValue const& val : plot_path_list) {
             std::string path_str = val.get_str();
             if (!fs::exists(path_str) || !fs::is_directory(path_str)) {
-                throw std::runtime_error(tinyformat::format("plot path %s doesn't exist, please check it before mining", path_str));
+                continue;
             }
             m_plot_path_list.push_back(std::move(path_str));
         }
