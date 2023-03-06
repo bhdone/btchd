@@ -193,19 +193,21 @@ int Miner::Run() {
                 PLOG_INFO << "waiting for VDF proofs...";
                 std::atomic_bool running{true};
                 BreakReason reason =
-                        CheckAndBreak(running, queried_challenge.challenge, current_challenge, iters, vdf_mtx, vdf);
+                        CheckAndBreak(running, queried_challenge.target_duration * 1.5, queried_challenge.challenge, current_challenge, iters, vdf_mtx, vdf);
                 if (reason == BreakReason::ChallengeIsChanged) {
                     PLOG_INFO << "!!!!! Challenge is changed !!!!!";
                     m_state = State::RequireChallenge;
                 } else if (reason == BreakReason::VDFIsAcquired) {
                     PLOG_INFO << "a VDF proof has been received";
                     m_state = State::ProcessVDF;
-                } else {
+                } else if (reason == BreakReason::Error) {
                     // The challenge monitor returns without a valid reason
                     // the connection to the RPC service might has errors
                     // So we reset the state to RequireChallenge and wait
                     // until the service is recover
                     m_state = State::RequireChallenge;
+                } else if (reason == BreakReason::Timeout) {
+                    m_state = State::WaitVDF; // request vdf again
                 }
             } else if (m_state == State::ProcessVDF) {
                 if (pos.has_value()) {
@@ -254,7 +256,7 @@ int Miner::Run() {
     return 0;
 }
 
-Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, uint256 const& initial_challenge,
+Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_seconds, uint256 const& initial_challenge,
                                         uint256 const& current_challenge, uint64_t iters_limits,
                                         std::mutex& vdf_write_lock, chiapos::optional<RPCClient::VdfProof>& out_vdf) {
     // before we get in the loop, we need to send the request to timelord if it is running
@@ -262,7 +264,13 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, uint256 const
         PLOGD << "request proof from timelord";
         m_ptimelord_client->Calc(current_challenge, iters_limits);
     }
+    auto start_time = std::chrono::system_clock::now();
     while (running) {
+        auto curr_time = std::chrono::system_clock::now();
+        auto curr_seconds = std::chrono::duration_cast<std::chrono::seconds>(curr_time - start_time).count();
+        if (curr_seconds >= timeout_seconds) {
+            return BreakReason::Timeout;
+        }
         try {
             // Query current challenge, compare
             RPCClient::Challenge ch = m_client.QueryChallenge();
@@ -299,15 +307,15 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, uint256 const
             return BreakReason::VDFIsAcquired;
         } catch (NetError const& e) {
             PLOGE << "NetError: " << e.what();
-            return BreakReason::Custom;
+            return BreakReason::Error;
         } catch (RPCError const& e) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
         } catch (std::exception const& e) {
             PLOGE << "unknown error: " << e.what();
-            return BreakReason::Custom;
+            return BreakReason::Error;
         }
     }
-    return BreakReason::Custom;
+    return BreakReason::Error;
 }
 
 std::string Miner::ToString(State state) {

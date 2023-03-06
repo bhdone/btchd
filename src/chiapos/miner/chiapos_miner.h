@@ -39,10 +39,10 @@ public:
 private:
     enum class State { RequireChallenge, FindPoS, WaitVDF, ProcessVDF, SubmitProofs };
 
-    enum class BreakReason { Custom, ChallengeIsChanged, VDFIsAcquired };
+    enum class BreakReason { Error, Timeout, ChallengeIsChanged, VDFIsAcquired };
 
     /// A thread proc to check the challenge or the VDF from P2P network
-    BreakReason CheckAndBreak(std::atomic_bool& running, uint256 const& initial_challenge,
+    BreakReason CheckAndBreak(std::atomic_bool& running, int timeout_seconds, uint256 const& initial_challenge,
                               uint256 const& current_challenge, uint64_t iters_limits, std::mutex& vdf_write_lock,
                               chiapos::optional<RPCClient::VdfProof>& out_vdf);
 
