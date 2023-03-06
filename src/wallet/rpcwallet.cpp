@@ -5274,7 +5274,6 @@ static UniValue withdrawpledge(const JSONRPCRequest& request)
     uniformer::Result result;
 
     // Ensure the pledge is able to be withdrew
-    auto const& params = Params().GetConsensus();
     auto wtx = pwallet->GetWalletTx(txid);
     if (wtx == nullptr) {
         throw std::runtime_error("cannot find the tx from wallet");
