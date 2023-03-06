@@ -16,13 +16,14 @@ miner::Config ParseConfig(std::string const& config_path) {
         throw std::runtime_error("cannot open config file to read");
     }
 
-    // Find the file size
-    in.seekg(0, std::ios::end);
-    auto size = in.tellg();
-    in.seekg(0, std::ios::beg);
+    std::stringstream ss;
+    std::string line;
+    while (!in.eof()) {
+        std::getline(in, line);
+        ss << line << std::endl;
+    }
 
-    std::string json_str(size, 0);
-    in.read(&(*json_str.begin()), size);
+    std::string json_str = ss.str();
 
     miner::Config config;
     config.ParseFromJsonString(json_str);
