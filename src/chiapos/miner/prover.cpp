@@ -117,7 +117,7 @@ Prover::Prover(std::vector<Path> const& path_list) {
         }
     }
     generator.Finalize(m_group_hash.begin());
-    PLOG_INFO << "found total " << m_plotter_files.size() << " plots, group hash: " << m_group_hash.GetHex();
+    PLOG_INFO << "found total " << m_plotter_files.size() << " plots, group hash: " << m_group_hash.GetHex() << ", total size: " << chiapos::MakeNumberStr(m_total_size);
 }
 
 std::vector<chiapos::QualityStringPack> Prover::GetQualityStrings(uint256 const& challenge, int bits_of_filter) const {
