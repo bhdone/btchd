@@ -356,11 +356,30 @@ optional<CVdfProof> QueryReceivedVdfProofPacket(uint256 const& challenge) {
     return i->second;
 }
 
+static MinerGroups g_minergroups;
+
+void UpdateMinerGroup(Bytes const& farmerPk, uint256 const& groupHash, uint64_t size)
+{
+    MinerGroups::iterator it;
+    bool inserted;
+    std::tie(it, inserted) = g_minergroups.insert(std::make_pair(farmerPk, std::map<uint256, uint64_t> { { groupHash, size } }));
+    if (!inserted) {
+        std::map<uint256, uint64_t>::iterator it2;
+        std::tie(it2, inserted) = it->second.insert(std::make_pair(groupHash, size));
+        if (!inserted) {
+            it2->second = size;
+        }
+    }
+}
+
+MinerGroups const& QueryAllMinerGroups()
+{
+    return g_minergroups;
+}
+
 struct PosQuality {
     CPosProof pos;
     uint64_t quality;
-    uint256 groupHash;
-    uint64_t nTotalSize;
 };
 static std::map<uint256, std::vector<PosQuality>> g_posquality;
 
@@ -383,15 +402,17 @@ bool IsTheBestPos(CPosProof const& pos, uint64_t quality)
 
 void SavePosQuality(CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, uint64_t quality)
 {
+    UpdateMinerGroup(pos.vchFarmerPk, groupHash, nTotalSize);
+
     // Calculate the quality
     if (quality == 0) {
         quality = CalculateQuality(pos);
     }
     auto it = g_posquality.find(pos.challenge);
     if (it == std::end(g_posquality)) {
-        g_posquality.insert(std::make_pair(pos.challenge, std::vector<PosQuality> { { pos, quality, groupHash, nTotalSize } }));
+        g_posquality.insert(std::make_pair(pos.challenge, std::vector<PosQuality> { { pos, quality } }));
     } else {
-        it->second.push_back({ pos, quality, groupHash, nTotalSize });
+        it->second.push_back({ pos, quality });
     }
 }
 

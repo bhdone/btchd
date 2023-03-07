@@ -396,6 +396,37 @@ static UniValue submitPos(JSONRPCRequest const& request) {
     return true;
 }
 
+static UniValue queryMinerNetspace(JSONRPCRequest const& request) {
+    RPCHelpMan(
+            "queryminernetspace",
+            "Query the netspace those are reported from miner",
+            {},
+            RPCResult("\"{json}\" The netspace from miner in json format"),
+            RPCExamples(HelpExampleCli("queryminernetspace", ""))).Check(request);
+
+    uint64_t nNetSpace{0};
+    auto minerGroups = QueryAllMinerGroups();
+    UniValue res(UniValue::VOBJ);
+    for (auto const& entry : minerGroups) {
+        UniValue groupVal(UniValue::VOBJ);
+        uint64_t nTotalSize{0};
+        for (auto const& group : entry.second) {
+            nTotalSize += group.second;
+            groupVal.pushKV(group.first.GetHex(), group.second);
+        }
+        nNetSpace += nTotalSize;
+        groupVal.pushKV("size", nTotalSize);
+        uint64_t nTotalSizeTB = nTotalSize / 1024 / 1024 / 1024;
+        groupVal.pushKV("sizeTB", nTotalSizeTB);
+        res.pushKV(BytesToHex(entry.first), groupVal);
+    }
+    res.pushKV("netspace", nNetSpace);
+    uint64_t nNetspaceTB = nNetSpace / 1024 / 1024/ 1024;
+    res.pushKV("netspaceTB", nNetspaceTB);
+
+    return res;
+}
+
 static UniValue generateBurstBlocks(JSONRPCRequest const& request) {
     RPCHelpMan("generateburstblocks", "Submit burst blocks to chain",
                {{"count", RPCArg::Type::NUM, RPCArg::Optional::NO, "how many blocks want to generate"}},
@@ -428,6 +459,7 @@ static CRPCCommand const commands[] = {
         {"chia", "requirevdf", &requireVdf, {}},
         {"chia", "queryvdf", &queryVdf, {}},
         {"chia", "querynetspace", &queryNetspace, {}},
+        {"chia", "queryminernetspace", &queryMinerNetspace, {}},
         {"chia", "submitpos", &submitPos, {}},
         {"chia",
          "submitproof",
