@@ -118,6 +118,10 @@ Bytes MakeSHA256(T&&... params) {
 
 std::string FormatNumberStr(std::string const& num_str);
 
+uint64_t MakeNumberTB(uint64_t value);
+
+std::string MakeNumberStr(uint64_t value);
+
 }  // namespace chiapos
 
 #endif

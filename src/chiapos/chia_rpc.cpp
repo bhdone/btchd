@@ -417,14 +417,14 @@ static UniValue queryMinerNetspace(JSONRPCRequest const& request) {
             groupVal.pushKV(group.first.GetHex(), group.second);
         }
         nNetSpace += nTotalSize;
-        groupVal.pushKV("size", nTotalSize);
-        uint64_t nTotalSizeTB = nTotalSize / 1024 / 1024 / 1024;
-        groupVal.pushKV("sizeTB", nTotalSizeTB);
+        groupVal.pushKV("size", MakeNumberStr(nTotalSize));
+        uint64_t nTotalSizeTB = MakeNumberTB(nTotalSize);
+        groupVal.pushKV("sizeTB", MakeNumberStr(nTotalSizeTB));
         res.pushKV(BytesToHex(entry.first), groupVal);
     }
-    res.pushKV("netspace", nNetSpace);
-    uint64_t nNetspaceTB = nNetSpace / 1024 / 1024/ 1024;
-    res.pushKV("netspaceTB", nNetspaceTB);
+    res.pushKV("netspace", MakeNumberStr(nNetSpace));
+    uint64_t nNetspaceTB = MakeNumberTB(nNetSpace);
+    res.pushKV("netspaceTB", MakeNumberStr(nNetspaceTB));
 
     return res;
 }
