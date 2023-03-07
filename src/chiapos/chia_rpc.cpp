@@ -379,6 +379,9 @@ static UniValue submitPos(JSONRPCRequest const& request) {
     pos.nPlotK = request.params[5].get_int();
     pos.vchProof = ParseHexV(request.params[6], "proof of space");
 
+    uint256 groupHash = ParseHashV(request.params[7], "group hash");
+    uint64_t nTotalSize = request.params[8].get_int64();
+
     LOCK(cs_main);
     int nTargetHeight = ::ChainActive().Height() + 1;
     CValidationState state;
@@ -387,8 +390,8 @@ static UniValue submitPos(JSONRPCRequest const& request) {
         throw std::runtime_error("invalid proof");
     }
 
-    SavePosQuality(pos);
-    SendPosPreviewOverP2PNetwork(g_connman.get(), pos);
+    SavePosQuality(pos, groupHash, nTotalSize);
+    SendPosPreviewOverP2PNetwork(g_connman.get(), pos, groupHash, nTotalSize);
 
     return true;
 }

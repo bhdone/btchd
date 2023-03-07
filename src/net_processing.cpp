@@ -3313,7 +3313,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         LOCK(cs_main);
 
         chiapos::CPosProof pos;
+        uint256 groupHash;
+        uint64_t nTotalSize;
         vRecv >> pos;
+        vRecv >> groupHash;
+        vRecv >> nTotalSize;
 
         int nTargetHeight = ::ChainActive().Height() + 1;
         auto params = Params().GetConsensus();
@@ -3335,9 +3339,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     pos.challenge.GetHex(), pfrom->GetId(), chiapos::BytesToHex(pos.vchFarmerPk));
         }
 
-        SavePosQuality(pos);
+        SavePosQuality(pos, groupHash, nTotalSize);
 
-        chiapos::SendPosPreviewOverP2PNetwork(connman, pos, pfrom, [&pos](CNode* pnode) {
+        chiapos::SendPosPreviewOverP2PNetwork(connman, pos, groupHash, nTotalSize, pfrom, [&pos](CNode* pnode) {
             AssertLockHeld(cs_main);
             CNodeState* pstate = State(pnode->GetId());
             if (pstate != nullptr && (pstate->FindPosPreview(pos.vchProof))) {

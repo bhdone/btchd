@@ -22,6 +22,8 @@ public:
 
     uint64_t GetTotalSize() const { return m_total_size; }
 
+    uint256 GetGroupHash() const { return m_group_hash; }
+
     std::vector<chiapos::QualityStringPack> GetQualityStrings(uint256 const& challenge, int bits_of_filter) const;
 
     static bool QueryFullProof(Path const& plot_path, uint256 const& challenge, int index, chiapos::Bytes& out);
@@ -35,6 +37,7 @@ public:
 
 private:
     uint64_t m_total_size{0};
+    uint256 m_group_hash;
 };
 
 }  // namespace miner

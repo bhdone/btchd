@@ -68,10 +68,7 @@ void RPCClient::LoadCookie() {
     m_passwd = std::move(passwd_str);
 }
 
-std::string const& RPCClient::GetCookiePath() const
-{
-    return m_cookie_path_str;
-}
+std::string const& RPCClient::GetCookiePath() const { return m_cookie_path_str; }
 
 bool RPCClient::CheckChiapos() {
     auto res = SendMethod(m_no_proxy, "checkchiapos");
@@ -125,12 +122,14 @@ bool RPCClient::SubmitVdf(VdfProof const& vdf) {
     return res.result.getBool();
 }
 
-bool RPCClient::SubmitPos(PosProof const& pos, chiapos::SecreKey const& farmer_sk) {
+bool RPCClient::SubmitPos(PosProof const& pos, chiapos::SecreKey const& farmer_sk, uint256 const& group_hash,
+                          uint64_t total_size) {
     chiapos::CKey key(farmer_sk);
     chiapos::Bytes pkhash = chiapos::ToBytes(pos.pool_pk_or_hash);
     chiapos::Bytes farmer_pk = chiapos::MakeBytes(key.GetPubkey());
     Result res = SendMethod(m_no_proxy, "submitpos", pos.challenge, chiapos::BytesToHex(pkhash), pos.local_pk,
-            chiapos::BytesToHex(farmer_pk), (int)(chiapos::GetType(pos.pool_pk_or_hash)), (int)pos.k, pos.proof);
+                            chiapos::BytesToHex(farmer_pk), (int)(chiapos::GetType(pos.pool_pk_or_hash)), (int)pos.k,
+                            pos.proof, group_hash, total_size);
     return res.result.getBool();
 }
 
@@ -172,7 +171,8 @@ chiapos::Bytes RPCClient::Deposit(std::string const& address, int amount, Deposi
     return chiapos::BytesFromHex(res.result.get_str());
 }
 
-std::vector<RPCClient::PledgeRecord> RPCClient::ListDepositTxs(int count, int skip, bool include_watchonly, bool include_invalid) {
+std::vector<RPCClient::PledgeRecord> RPCClient::ListDepositTxs(int count, int skip, bool include_watchonly,
+                                                               bool include_invalid) {
     auto res = SendMethod(m_no_proxy, "listpledges", count, skip, include_watchonly, include_invalid);
     if (!res.result.isArray()) {
         throw std::runtime_error("non-array value is received from core");

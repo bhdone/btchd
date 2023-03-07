@@ -98,6 +98,7 @@ std::vector<Path> StrListToPathList(std::vector<std::string> const& str_list) {
 }
 
 Prover::Prover(std::vector<Path> const& path_list) {
+    CSHA256 generator;
     for (auto const& path : path_list) {
         std::vector<std::string> files;
         uint64_t total_size;
@@ -106,14 +107,18 @@ Prover::Prover(std::vector<Path> const& path_list) {
         for (auto const& file : files) {
             chiapos::CPlotFile plotFile(file);
             if (plotFile.IsReady()) {
+                auto plot_id = plotFile.GetPlotId();
+                generator.Write(plot_id.begin(), plot_id.size());
                 m_plotter_files.push_back(std::move(plotFile));
+                // also we generate the hash of the prover group
             } else {
                 m_total_size -= fs::file_size(file);
                 PLOG_ERROR << "bad plot: " << file;
             }
         }
     }
-    PLOG_INFO << "found total " << m_plotter_files.size() << " plots";
+    generator.Finalize(m_group_hash.begin());
+    PLOG_INFO << "found total " << m_plotter_files.size() << " plots, group hash: " << m_group_hash.GetHex();
 }
 
 std::vector<chiapos::QualityStringPack> Prover::GetQualityStrings(uint256 const& challenge, int bits_of_filter) const {

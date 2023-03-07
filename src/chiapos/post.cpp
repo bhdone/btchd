@@ -359,6 +359,8 @@ optional<CVdfProof> QueryReceivedVdfProofPacket(uint256 const& challenge) {
 struct PosQuality {
     CPosProof pos;
     uint64_t quality;
+    uint256 groupHash;
+    uint64_t nTotalSize;
 };
 static std::map<uint256, std::vector<PosQuality>> g_posquality;
 
@@ -379,7 +381,7 @@ bool IsTheBestPos(CPosProof const& pos, uint64_t quality)
     return true;
 }
 
-void SavePosQuality(CPosProof const& pos, uint64_t quality)
+void SavePosQuality(CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, uint64_t quality)
 {
     // Calculate the quality
     if (quality == 0) {
@@ -387,14 +389,14 @@ void SavePosQuality(CPosProof const& pos, uint64_t quality)
     }
     auto it = g_posquality.find(pos.challenge);
     if (it == std::end(g_posquality)) {
-        g_posquality.insert(std::make_pair(pos.challenge, std::vector<PosQuality> { { pos, quality } }));
+        g_posquality.insert(std::make_pair(pos.challenge, std::vector<PosQuality> { { pos, quality, groupHash, nTotalSize } }));
     } else {
-        it->second.push_back({ pos, quality });
+        it->second.push_back({ pos, quality, groupHash, nTotalSize });
     }
 }
 
-void SendPosPreviewOverP2PNetwork(CConnman* connman, CPosProof const& pos, CNode* pfrom, NodeChecker checker) {
-    connman->ForEachNode([connman, &pos, pfrom, &checker](CNode* pnode) {
+void SendPosPreviewOverP2PNetwork(CConnman* connman, CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, CNode* pfrom, NodeChecker checker) {
+    connman->ForEachNode([connman, &pos, pfrom, &checker, &groupHash, nTotalSize](CNode* pnode) {
         if (pfrom && pfrom->GetId() == pnode->GetId()) {
             // Same node, exit
             return;
@@ -402,7 +404,7 @@ void SendPosPreviewOverP2PNetwork(CConnman* connman, CPosProof const& pos, CNode
         if (!checker(pnode)) {
             return;
         }
-        connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::POSPREVIEW, pos));
+        connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::POSPREVIEW, pos, groupHash, nTotalSize));
     });
 }
 

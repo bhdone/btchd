@@ -49,11 +49,11 @@ struct NodeIsAlwaysGood {
 
 using SentHandler = std::function<void(CNode* pnode)>;
 
-void SendPosPreviewOverP2PNetwork(CConnman* connman, CPosProof const& pos, CNode* pfrom = nullptr, NodeChecker checker = NodeIsAlwaysGood());
+void SendPosPreviewOverP2PNetwork(CConnman* connman, CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, CNode* pfrom = nullptr, NodeChecker checker = NodeIsAlwaysGood());
 
 bool IsTheBestPos(CPosProof const& pos, uint64_t quality = 0);
 
-void SavePosQuality(CPosProof const& pos, uint64_t quality = 0);
+void SavePosQuality(CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, uint64_t quality = 0);
 
 void SendVdfProofOverP2PNetwork(CConnman* connman, CVdfProof const& vdf, CNode* pfrom = nullptr,
                                 NodeChecker checker = NodeIsAlwaysGood());
