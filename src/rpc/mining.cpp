@@ -137,7 +137,9 @@ static UniValue getmininginfo(const JSONRPCRequest& request)
     obj.pushKV("difficulty",       (double)GetDifficulty(::ChainActive().Tip()));
     obj.pushKV("pooledtx",         (uint64_t)mempool.size());
     obj.pushKV("basetarget",         (uint64_t)::ChainActive().Tip()->nBaseTarget);
-    obj.pushKV("netcapacity",        ValueFromCapacity(std::max(poc::GetBaseTarget(::ChainActive().Height(), params) / ::ChainActive().Tip()->nBaseTarget, (uint64_t) 1)));
+    if (::ChainActive().Height() < params.BHDIP009Height) {
+        obj.pushKV("netcapacity",        ValueFromCapacity(std::max(poc::GetBaseTarget(::ChainActive().Height(), params) / ::ChainActive().Tip()->nBaseTarget, (uint64_t) 1)));
+    }
     obj.pushKV("smoothbeginheight",  params.BHDIP007Height);
     obj.pushKV("smoothendheight",    params.BHDIP007SmoothEndHeight);
     obj.pushKV("stagebeginheight",   params.BHDIP007SmoothEndHeight + 1);
