@@ -1249,6 +1249,7 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 
 static CAmount GetBlockAccumulateSubsidy(const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams)
 {
+    AssertLockHeld(cs_main);
     CAmount accumulate = 0;
     for (const CBlockIndex* pindex = pindexPrev; (pindex != nullptr) && (pindex->nStatus & BLOCK_UNCONDITIONAL) && (pindex->nHeight >= consensusParams.BHDIP008Height); pindex = pindex->pprev) {
         if (pindex->nHeight < consensusParams.BHDIP009Height) {
