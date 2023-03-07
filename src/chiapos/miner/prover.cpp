@@ -37,7 +37,12 @@ std::tuple<std::vector<std::string>, uint64_t> EnumFilesFromDir(std::string cons
         if (((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) && accept_func(wfd.cFileName)) {
             // Not a directory
             res.push_back(dir + "\\" + wfd.cFileName);
-            total_size += wfd.nFileSizeLow + static_cast<uint64_t>(wfd.nFileSizeHigh) << 32;
+            total_size += wfd.nFileSizeLow;
+            uint64_t hi_size = wfd.nFileSizeHigh;
+            if (hi_size > 0) {
+                hi_size <<= 32;
+                total_size += hi_size;
+            }
         }
     } while (FindNextFile(hFind, &wfd) != 0);
 
