@@ -196,7 +196,7 @@ arith_uint256 CalcChiaBlockWork(chiapos::CBlockFields const& fields)
 {
     uint64_t nTotalIters = fields.GetTotalIters();
     if (nTotalIters > 0) {
-        return arith_uint256(WORK_FACTOR) * fields.nQuality / nTotalIters;
+        return arith_uint256(WORK_FACTOR) * fields.nQuality;
     }
     return 0;
 }
