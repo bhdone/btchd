@@ -47,7 +47,7 @@ std::tuple<std::vector<std::string>, uint64_t> EnumFilesFromDir(std::string cons
     }
 
     FindClose(hFind);
-    return res;
+    return std::make_tuple(res, total_size);
 }
 
 #else
