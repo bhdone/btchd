@@ -110,7 +110,6 @@ Prover::Prover(std::vector<Path> const& path_list) {
                 auto plot_id = plotFile.GetPlotId();
                 generator.Write(plot_id.begin(), plot_id.size());
                 m_plotter_files.push_back(std::move(plotFile));
-                // also we generate the hash of the prover group
             } else {
                 m_total_size -= fs::file_size(file);
                 PLOG_ERROR << "bad plot: " << file;
