@@ -365,6 +365,8 @@ static UniValue submitPos(JSONRPCRequest const& request) {
             {"plottype", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the plot file"},
             {"plotk", RPCArg::Type::NUM, RPCArg::Optional::NO, "the size `k` of the plot file"},
             {"proof", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the pos proof"},
+            {"groupHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Group hash"},
+            {"totalSize", RPCArg::Type::NUM, RPCArg::Optional::NO, "total size"},
         },
         RPCResult("\"succ\" (bool) True means the pos is accepted and will be published"),
         RPCExamples(HelpExampleCli("submitpos", "xxx"))
