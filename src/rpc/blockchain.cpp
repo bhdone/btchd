@@ -224,6 +224,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
         // PoS fields
         result.pushKV("chia_pos", GetPosFields(blockindex->chiaposFields.posProof));
         result.pushKV("chia_vdf", GetVdfFields(blockindex->chiaposFields.vdfProof));
+        result.pushKV("chia_vdfspeed", chiapos::MakeNumberStr(blockindex->chiaposFields.GetTotalIters() / blockindex->chiaposFields.GetTotalDuration()));
         UniValue voidBlocks(UniValue::VARR);
         for (auto const& vdf : blockindex->chiaposFields.vVoidBlockVdf) {
             voidBlocks.push_back(GetVdfFields(vdf));
