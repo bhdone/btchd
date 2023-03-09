@@ -52,6 +52,8 @@ using SentHandler = std::function<void(CNode* pnode)>;
 using MinerGroups = std::map<Bytes, std::map<uint256, uint64_t>>;
 MinerGroups const& QueryAllMinerGroups();
 
+void ClearAllMinerGroups();
+
 void SendPosPreviewOverP2PNetwork(CConnman* connman, CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, CNode* pfrom = nullptr, NodeChecker checker = NodeIsAlwaysGood());
 
 bool IsTheBestPos(CPosProof const& pos, uint64_t quality = 0);

@@ -357,9 +357,11 @@ optional<CVdfProof> QueryReceivedVdfProofPacket(uint256 const& challenge) {
 }
 
 static MinerGroups g_minergroups;
+std::mutex g_mtx_minergroups;
 
 void UpdateMinerGroup(Bytes const& farmerPk, uint256 const& groupHash, uint64_t size)
 {
+    std::lock_guard<std::mutex> lg(g_mtx_minergroups);
     MinerGroups::iterator it;
     bool inserted;
     std::tie(it, inserted) = g_minergroups.insert(std::make_pair(farmerPk, std::map<uint256, uint64_t> { { groupHash, size } }));
@@ -375,6 +377,12 @@ void UpdateMinerGroup(Bytes const& farmerPk, uint256 const& groupHash, uint64_t 
 MinerGroups const& QueryAllMinerGroups()
 {
     return g_minergroups;
+}
+
+void ClearAllMinerGroups()
+{
+    std::lock_guard<std::mutex> lg(g_mtx_minergroups);
+    g_minergroups.clear();
 }
 
 struct PosQuality {

@@ -111,8 +111,8 @@ CVdfProof ParseVdfProof(UniValue const& val) {
 }
 
 void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTxDestination const& rewardDest,
-                       uint256 const& initialChallenge, chiapos::Bytes const& vchFarmerSk, uint64_t nQuality, CPosProof const& posProof,
-                       CVdfProof const& vdfProof, std::vector<CVdfProof> const& vVoidBlock) {
+                       uint256 const& initialChallenge, chiapos::Bytes const& vchFarmerSk, uint64_t nQuality,
+                       CPosProof const& posProof, CVdfProof const& vdfProof, std::vector<CVdfProof> const& vVoidBlock) {
     CKey farmerSk(MakeArray<SK_LEN>(vchFarmerSk));
     auto params = Params();
     std::shared_ptr<CBlock> pblock;
@@ -151,8 +151,11 @@ void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTx
             uint64_t quality_chain = CalculateQuality(pindexCurr->chiaposFields.posProof);
             if (quality < quality_chain) {
                 // The quality is too low, and it will not be accepted by the chain
-                LogPrintf("%s(drop proofs): the quality is lower than the existing block(quality=%s), skip our(quality=%s) block\n", __func__,
-                        FormatNumberStr(std::to_string(quality_chain)), FormatNumberStr(std::to_string(quality)));
+                LogPrintf(
+                        "%s(drop proofs): the quality is lower than the existing block(quality=%s), skip "
+                        "our(quality=%s) block\n",
+                        __func__, FormatNumberStr(std::to_string(quality_chain)),
+                        FormatNumberStr(std::to_string(quality)));
                 throw std::runtime_error("the quality is too low, the new block will not be accepted by the chain");
             }
 
@@ -184,7 +187,6 @@ void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTx
 
     LogPrintf("%s: Initial challenge: %s, generated new block and now is releasing...\n", __func__,
               initialChallenge.GetHex());
-
 }
 
 static UniValue submitProof(JSONRPCRequest const& request) {
@@ -229,21 +231,25 @@ static UniValue submitProof(JSONRPCRequest const& request) {
 
     if (IsTheBestPos(posProof)) {
         // We should put it to the chain immediately
-        LogPrintf("%s: The best proof (quality=%s) we have, now commit it to the chain.\n", __func__, chiapos::FormatNumberStr(std::to_string(nQuality)));
-        GenerateChiaBlock(hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge, vchFarmerSk, nQuality, posProof, vdfProof, vVoidBlock);
+        LogPrintf("%s: The best proof (quality=%s) we have, now commit it to the chain.\n", __func__,
+                  chiapos::FormatNumberStr(std::to_string(nQuality)));
+        GenerateChiaBlock(hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge, vchFarmerSk, nQuality,
+                          posProof, vdfProof, vVoidBlock);
     } else {
-        LogPrintf("%s: Our proof (quality=%s) isn't good enough, delaying the commit.\n", __func__, chiapos::FormatNumberStr(std::to_string(nQuality)));
+        LogPrintf("%s: Our proof (quality=%s) isn't good enough, delaying the commit.\n", __func__,
+                  chiapos::FormatNumberStr(std::to_string(nQuality)));
         if (!IsBlockWatcherRunning()) {
             StartBlockWatcher();
         }
-        GetBlockWatcher().WaitForBlock(10,
-                std::bind(GenerateChiaBlock, hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge, vchFarmerSk, nQuality, posProof, vdfProof, vVoidBlock),
+        GetBlockWatcher().WaitForBlock(
+                10,
+                std::bind(GenerateChiaBlock, hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge,
+                          vchFarmerSk, nQuality, posProof, vdfProof, vVoidBlock),
                 [hashPrevBlock]() -> bool {
                     LOCK(cs_main);
                     CBlockIndex* pindex = ::ChainActive().Tip();
                     return pindex && pindex->GetBlockHash() != hashPrevBlock;
-                }
-        );
+                });
     }
 
     return true;
@@ -275,12 +281,9 @@ static UniValue queryVdf(JSONRPCRequest const& request) {
 }
 
 static UniValue queryNetspace(JSONRPCRequest const& request) {
-    RPCHelpMan(
-        "querynetspace", "Query current netspace",
-        {},
-        RPCResult{"\"result\" (uint64) The netspace in TB"},
-        RPCExamples{HelpExampleCli("querynetspace", "")})
-        .Check(request);
+    RPCHelpMan("querynetspace", "Query current netspace", {}, RPCResult{"\"result\" (uint64) The netspace in TB"},
+               RPCExamples{HelpExampleCli("querynetspace", "")})
+            .Check(request);
 
     LOCK(cs_main);
 
@@ -357,20 +360,22 @@ static UniValue submitVdf(JSONRPCRequest const& request) {
 
 static UniValue submitPos(JSONRPCRequest const& request) {
     RPCHelpMan("submitpos", "Submit a found pos to p2p network",
-        {
-            {"challenge", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the challenge for the proof"},
-            {"pkhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the public key or hash depends the plot type"},
-            {"localpk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the local public key from plot file"},
-            {"farmerpk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the farmer public key generated from chia mnemonic"},
-            {"plottype", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the plot file"},
-            {"plotk", RPCArg::Type::NUM, RPCArg::Optional::NO, "the size `k` of the plot file"},
-            {"proof", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the pos proof"},
-            {"groupHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Group hash"},
-            {"totalSize", RPCArg::Type::NUM, RPCArg::Optional::NO, "total size"},
-        },
-        RPCResult("\"succ\" (bool) True means the pos is accepted and will be published"),
-        RPCExamples(HelpExampleCli("submitpos", "xxx"))
-    ).Check(request);
+               {
+                       {"challenge", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the challenge for the proof"},
+                       {"pkhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
+                        "the public key or hash depends the plot type"},
+                       {"localpk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the local public key from plot file"},
+                       {"farmerpk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
+                        "the farmer public key generated from chia mnemonic"},
+                       {"plottype", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the plot file"},
+                       {"plotk", RPCArg::Type::NUM, RPCArg::Optional::NO, "the size `k` of the plot file"},
+                       {"proof", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the pos proof"},
+                       {"groupHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Group hash"},
+                       {"totalSize", RPCArg::Type::NUM, RPCArg::Optional::NO, "total size"},
+               },
+               RPCResult("\"succ\" (bool) True means the pos is accepted and will be published"),
+               RPCExamples(HelpExampleCli("submitpos", "xxx")))
+            .Check(request);
 
     CPosProof pos;
     pos.challenge = ParseHashV(request.params[0], "challenge");
@@ -399,12 +404,16 @@ static UniValue submitPos(JSONRPCRequest const& request) {
 }
 
 static UniValue queryMinerNetspace(JSONRPCRequest const& request) {
-    RPCHelpMan(
-            "queryminernetspace",
-            "Query the netspace those are reported from miner",
-            {},
-            RPCResult("\"{json}\" The netspace from miner in json format"),
-            RPCExamples(HelpExampleCli("queryminernetspace", ""))).Check(request);
+    RPCHelpMan("queryminernetspace", "Query the netspace those are reported from miner",
+               {{"clear", RPCArg::Type::BOOL, "false", "set to true will clear all in-memory netspace records"}},
+               RPCResult("\"{json}\" The netspace from miner in json format"),
+               RPCExamples(HelpExampleCli("queryminernetspace", "true")))
+            .Check(request);
+
+    if (request.params.size() > 0) {
+        ClearAllMinerGroups();
+        return true;
+    }
 
     LOCK(cs_main);
     auto const& view = ::ChainstateActive().CoinsDB();
@@ -479,7 +488,7 @@ static CRPCCommand const commands[] = {
         {"chia", "requirevdf", &requireVdf, {}},
         {"chia", "queryvdf", &queryVdf, {}},
         {"chia", "querynetspace", &queryNetspace, {}},
-        {"chia", "queryminernetspace", &queryMinerNetspace, {}},
+        {"chia", "queryminernetspace", &queryMinerNetspace, {"clear"}},
         {"chia", "submitpos", &submitPos, {}},
         {"chia",
          "submitproof",
