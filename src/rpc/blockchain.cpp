@@ -1398,6 +1398,11 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
     }
 
     const Consensus::Params& consensusParams = Params().GetConsensus();
+    if (tip->nHeight >= consensusParams.BHDIP009Height) {
+        uint64_t iters_per_sec = tip->chiaposFields.GetTotalIters() / tip->chiaposFields.GetTotalDuration();
+        obj.pushKV("vdf_speed", chiapos::MakeNumberStr(iters_per_sec));
+    }
+
     UniValue softforks(UniValue::VOBJ);
     BuriedForkDescPushBack(softforks, "bip34", consensusParams.BIP34Height);
     BuriedForkDescPushBack(softforks, "bip66", consensusParams.BIP66Height);
