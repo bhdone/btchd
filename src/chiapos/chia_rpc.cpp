@@ -410,17 +410,23 @@ static UniValue queryMinerNetspace(JSONRPCRequest const& request) {
     auto minerGroups = QueryAllMinerGroups();
     UniValue res(UniValue::VOBJ);
     for (auto const& entry : minerGroups) {
+        bool bGroupValid{true};
         UniValue groupVal(UniValue::VOBJ);
         uint64_t nTotalSize{0};
         for (auto const& group : entry.second) {
             nTotalSize += group.second;
-            groupVal.pushKV(group.first.GetHex(), group.second);
+            groupVal.pushKV(group.first.GetHex(), MakeNumberStr(MakeNumberTB(group.second)));
         }
-        nNetSpace += nTotalSize;
-        groupVal.pushKV("size", MakeNumberStr(nTotalSize));
         uint64_t nTotalSizeTB = MakeNumberTB(nTotalSize);
-        groupVal.pushKV("sizeTB", MakeNumberStr(nTotalSizeTB));
-        res.pushKV(BytesToHex(entry.first), groupVal);
+        if (nTotalSizeTB / 1024 > 100) {
+            // The size is too large so the group is invalid
+            bGroupValid = false;
+        }
+        if (bGroupValid) {
+            nNetSpace += nTotalSize;
+            groupVal.pushKV("sizeTB", MakeNumberStr(nTotalSizeTB));
+            res.pushKV(BytesToHex(entry.first), groupVal);
+        }
     }
     res.pushKV("netspace", MakeNumberStr(nNetSpace));
     uint64_t nNetspaceTB = MakeNumberTB(nNetSpace);
