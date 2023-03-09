@@ -124,7 +124,7 @@ std::string FormatNumberStr(std::string const& num_str) {
 
 uint64_t MakeNumberTB(uint64_t value)
 {
-    return value / 1024 / 1024 / 1024 / 1024;
+    return value / 1000 / 1000 / 1000 / 1000;
 }
 
 std::string MakeNumberStr(uint64_t value)

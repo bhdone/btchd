@@ -406,27 +406,39 @@ static UniValue queryMinerNetspace(JSONRPCRequest const& request) {
             RPCResult("\"{json}\" The netspace from miner in json format"),
             RPCExamples(HelpExampleCli("queryminernetspace", ""))).Check(request);
 
+    LOCK(cs_main);
+    auto const& view = ::ChainstateActive().CoinsDB();
     uint64_t nNetSpace{0};
     auto minerGroups = QueryAllMinerGroups();
     UniValue res(UniValue::VOBJ);
     for (auto const& entry : minerGroups) {
-        bool bGroupValid{true};
         UniValue groupVal(UniValue::VOBJ);
+        CPlotterBindData bindData(CChiaFarmerPk(entry.first));
+        auto entries = view.GetBindPlotterEntries(bindData);
+        // accounts
+        UniValue accountsVal(UniValue::VARR);
+        for (auto const& entry : entries) {
+            std::string address_str = EncodeDestination((ScriptHash)entry.second.accountID);
+            accountsVal.push_back(address_str);
+        }
+        groupVal.pushKV("accounts", accountsVal);
+        // devices
+        UniValue devicesVal(UniValue::VARR);
         uint64_t nTotalSize{0};
         for (auto const& group : entry.second) {
-            nTotalSize += group.second;
-            groupVal.pushKV(group.first.GetHex(), MakeNumberStr(MakeNumberTB(group.second)));
+            if (MakeNumberTB(group.second) / 1000 < 100) {
+                UniValue deviceEntryVal(UniValue::VOBJ);
+                deviceEntryVal.pushKV("device", group.first.GetHex());
+                deviceEntryVal.pushKV("sizeTB", MakeNumberStr(MakeNumberTB(group.second)));
+                devicesVal.push_back(deviceEntryVal);
+                nTotalSize += group.second;
+            }
         }
         uint64_t nTotalSizeTB = MakeNumberTB(nTotalSize);
-        if (nTotalSizeTB / 1024 > 100) {
-            // The size is too large so the group is invalid
-            bGroupValid = false;
-        }
-        if (bGroupValid) {
-            nNetSpace += nTotalSize;
-            groupVal.pushKV("sizeTB", MakeNumberStr(nTotalSizeTB));
-            res.pushKV(BytesToHex(entry.first), groupVal);
-        }
+        nNetSpace += nTotalSize;
+        groupVal.pushKV("sizeTB", MakeNumberStr(nTotalSizeTB));
+        groupVal.pushKV("devices", devicesVal);
+        res.pushKV(BytesToHex(entry.first), groupVal);
     }
     res.pushKV("netspace", MakeNumberStr(nNetSpace));
     uint64_t nNetspaceTB = MakeNumberTB(nNetSpace);
