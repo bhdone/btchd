@@ -1,4 +1,4 @@
-packages:=mpir boost openssl libevent bls_signatures bhd_vdf curl bip3x toolbox utf8proc cxxopts plog timelord
+packages:=mpir boost openssl libevent bls_signatures bhd_vdf curl bip3x toolbox utf8proc cxxopts plog
 
 protobuf_native_packages = native_protobuf
 protobuf_packages = protobuf
