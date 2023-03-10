@@ -448,6 +448,52 @@ static UniValue queryMinerNetspace(JSONRPCRequest const& request) {
     return res;
 }
 
+static UniValue queryChainVdfInfo(JSONRPCRequest const& request) {
+    RPCHelpMan(
+        "querychainvdfinfo",
+        "Query vdf speed and etc from current block chain",
+        {
+            { "height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The summary information will be calculated from this height" }
+        },
+        RPCResult("\"{json}\" the basic information of the vdf from block chain"),
+        RPCExamples(HelpExampleCli("querychainvdfinfo", "200000"))
+    ).Check(request);
+
+    LOCK(cs_main);
+    auto pindex = ::ChainActive().Tip();
+
+    auto params = Params().GetConsensus();
+    int nHeight = atoi(request.params[0].get_str());
+    if (nHeight < params.BHDIP009Height) {
+        throw std::runtime_error("The height is out of the BHDIP009 range");
+    }
+
+    uint64_t vdf_best{0}, vdf_worst{999999}, vdf_total{0}, vdf_count{0};
+    while (pindex->nHeight >= nHeight) {
+        uint64_t vdf_curr = pindex->chiaposFields.GetTotalIters() / pindex->chiaposFields.GetTotalDuration();
+        if (vdf_best < vdf_curr) {
+            vdf_best = vdf_curr;
+        }
+        if (vdf_worst > vdf_curr) {
+            vdf_worst = vdf_curr;
+        }
+        vdf_total += vdf_curr;
+        ++vdf_count;
+        // next
+        pindex = pindex->pprev;
+    }
+
+    uint64_t vdf_average = vdf_total / vdf_count;
+    UniValue res(UniValue::VOBJ);
+    res.pushKV("best", MakeNumberStr(vdf_best));
+    res.pushKV("worst", MakeNumberStr(vdf_worst));
+    res.pushKV("average", MakeNumberStr(vdf_average));
+    res.pushKV("from", nHeight);
+    res.pushKV("count", vdf_count);
+
+    return res;
+}
+
 static UniValue generateBurstBlocks(JSONRPCRequest const& request) {
     RPCHelpMan("generateburstblocks", "Submit burst blocks to chain",
                {{"count", RPCArg::Type::NUM, RPCArg::Optional::NO, "how many blocks want to generate"}},
@@ -481,6 +527,7 @@ static CRPCCommand const commands[] = {
         {"chia", "queryvdf", &queryVdf, {}},
         {"chia", "querynetspace", &queryNetspace, {}},
         {"chia", "queryminernetspace", &queryMinerNetspace, {"clear"}},
+        {"chia", "querychainvdfinfo", &queryChainVdfInfo, {"height"}},
         {"chia", "submitpos", &submitPos, {}},
         {"chia",
          "submitproof",
