@@ -220,6 +220,17 @@ chiapos::Bytes RPCClient::RetargetPledge(chiapos::Bytes const& tx_id, std::strin
     return chiapos::BytesFromHex(res.result.get_str());
 }
 
+RPCClient::MiningRequirement RPCClient::QueryMiningRequirement(const std::string &address, const chiapos::PubKey &farmer_pk) {
+    auto res = SendMethod(m_no_proxy, "queryminingrequirement", address, farmer_pk);
+    MiningRequirement mining_requirement;
+    mining_requirement.req = res.result["require"].get_int64();
+    mining_requirement.mined_count = res.result["mined"].get_int();
+    mining_requirement.total_count = res.result["count"].get_int();
+    mining_requirement.supplied = res.result["supplied"].get_int64();
+    mining_requirement.height = res.result["height"].get_int();
+    return mining_requirement;
+}
+
 void RPCClient::BuildRPCJson(UniValue& params, std::string const& val) { params.push_back(val); }
 
 void RPCClient::BuildRPCJson(UniValue& params, chiapos::Bytes const& val) {

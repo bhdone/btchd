@@ -113,6 +113,14 @@ public:
         uint64_t supplied;
     };
 
+    struct MiningRequirement {
+        CAmount req;
+        int mined_count;
+        int total_count;
+        CAmount supplied;
+        int height;
+    };
+
     struct PledgeRecord {
         chiapos::Bytes tx_id;
         int height{0};
@@ -166,6 +174,8 @@ public:
     bool GenerateBurstBlocks(int count);
 
     chiapos::Bytes RetargetPledge(chiapos::Bytes const& tx_id, std::string const& address);
+
+    MiningRequirement QueryMiningRequirement(std::string const& address, chiapos::PubKey const& farmer_pk);
 
 private:
     void BuildRPCJson(UniValue& params, std::string const& val);

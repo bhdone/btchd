@@ -869,7 +869,7 @@ PledgeParams CalculatePledgeParams(int nMiningHeight, Consensus::Params const& p
     return result;
 }
 
-CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlotterBindData& bindData, int nMiningHeight, const CCoinsViewCache& view, int64_t* pMinerCapacity, CAmount* pOldMiningRequireBalance, CAmount nBurned, const Consensus::Params& params)
+CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlotterBindData& bindData, int nMiningHeight, const CCoinsViewCache& view, int64_t* pMinerCapacity, CAmount* pOldMiningRequireBalance, CAmount nBurned, const Consensus::Params& params, int* pnMinedBlocks, int* pnTotalBlocks)
 {
     AssertLockHeld(cs_main);
 
@@ -944,8 +944,15 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
         // Remove sugar
         if (nMinedCount < nBlockCount) nMinedCount++;
     }
-    if (nMinedCount == 0 || nBlockCount == 0)
+    if (nMinedCount == 0 || nBlockCount == 0) {
         return 0;
+    }
+    if (pnMinedBlocks) {
+        *pnMinedBlocks = nMinedCount;
+    }
+    if (pnTotalBlocks) {
+        *pnTotalBlocks = nBlockCount;
+    }
 
     if (nMiningHeight >= params.BHDIP009Height) {
         CBlockIndex* pindex = ::ChainActive().Tip();

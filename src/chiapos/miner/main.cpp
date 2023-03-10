@@ -56,6 +56,7 @@ enum class CommandType : int {
     WITHDRAW,
     BLOCK_SUBSIDY,
     SUPPLIED,
+    MINING_REQ,
     MAX
 };
 
@@ -71,14 +72,16 @@ std::string ConvertCommandToString(CommandType type) {
             return "bind";
         case CommandType::DEPOSIT:
             return "deposit";
+        case CommandType::REGARGET:
+            return "retarget";
         case CommandType::WITHDRAW:
             return "withdraw";
         case CommandType::BLOCK_SUBSIDY:
             return "block_subsidy";
         case CommandType::SUPPLIED:
             return "supplied";
-        case CommandType::REGARGET:
-            return "retarget";
+        case CommandType::MINING_REQ:
+            return "mining-req";
         case CommandType::MAX:
             return "(max)";
     }
@@ -269,6 +272,15 @@ int HandleCommand_Withdraw() {
     std::unique_ptr<miner::RPCClient> pclient = tools::CreateRPCClient(miner::g_config, miner::g_args.cookie_path);
     chiapos::Bytes tx_id = pclient->Withdraw(miner::g_args.tx_id);
     PLOG_INFO << "tx id: " << chiapos::BytesToHex(tx_id);
+    return 0;
+}
+
+int HandleCommand_MiningRequirement() {
+    std::unique_ptr<miner::RPCClient> pclient = tools::CreateRPCClient(miner::g_config, miner::g_args.cookie_path);
+    auto req = pclient->QueryMiningRequirement(miner::g_config.GetRewardDest(), miner::g_config.GetFarmerPk());
+    PLOGI << "require: " << chiapos::MakeNumberStr(req.req / COIN) << " BHD";
+    PLOGI << "mined: " << req.mined_count << "/" << req.total_count;
+    PLOGI << "supplied: " << chiapos::MakeNumberStr(req.supplied / COIN) << " BHD";
     return 0;
 }
 
@@ -571,6 +583,8 @@ int main(int argc, char** argv) {
                 return HandleCommand_Supplied();
             case miner::CommandType::REGARGET:
                 return HandleCommand_Retarget();
+            case miner::CommandType::MINING_REQ:
+                return HandleCommand_MiningRequirement();
             case miner::CommandType::GEN_CONFIG:
             case miner::CommandType::UNKNOWN:
             case miner::CommandType::MAX:

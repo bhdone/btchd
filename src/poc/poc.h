@@ -200,7 +200,7 @@ CAmount GetCapacityRequireBalance(int64_t nCapacityTB, CAmount miningRatio);
  *
  * @return Required balance
  */
-CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlotterBindData& bindData, int nMiningHeight, const CCoinsViewCache& view, int64_t* pMinerCapacityTB, CAmount* pOldMiningRequireBalance, CAmount nBurned, const Consensus::Params& params);
+CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlotterBindData& bindData, int nMiningHeight, const CCoinsViewCache& view, int64_t* pMinerCapacityTB, CAmount* pOldMiningRequireBalance, CAmount nBurned, const Consensus::Params& params, int* pnMinedBlocks = nullptr, int* pnTotalBlocks = nullptr);
 
 /**
  * Check block work

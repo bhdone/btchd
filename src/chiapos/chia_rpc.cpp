@@ -448,6 +448,48 @@ static UniValue queryMinerNetspace(JSONRPCRequest const& request) {
     return res;
 }
 
+static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
+    RPCHelpMan(
+        "queryminerpledgeinfo",
+        "Query the pledge requirement for the miner",
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The miner address"},
+            {"farmer-pk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The farmer public-key"},
+        },
+        RPCResult("\"{json}\" the requirement for the miner"),
+        RPCExamples(HelpExampleCli("queryminerpledgeinfo", "xxxxxx xxxxxx"))
+    ).Check(request);
+
+    LOCK(cs_main);
+    CBlockIndex* pindex = ::ChainActive().Tip();
+    auto params = Params().GetConsensus();
+    if (pindex->nHeight < params.BHDIP009Height) {
+        throw std::runtime_error("BHDIP009 is required");
+    }
+
+    std::string address = request.params[0].get_str();
+    Bytes vchFarmerPk = ParseHexV(request.params[1], "farmer-pk");
+
+    CAccountID accountID = ExtractAccountID(DecodeDestination(address));
+    CChiaFarmerPk farmerPk(vchFarmerPk);
+    CPlotterBindData bindData(farmerPk);
+
+    CCoinsViewCache const& view = ::ChainstateActive().CoinsTip();
+    CAmount nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &params.BHDIP009PledgeTerms);
+    int nMinedCount, nTotalCount, nTargetHeight = pindex->nHeight + 1;
+    CAmount nReq = poc::GetMiningRequireBalance(accountID, bindData, nTargetHeight, view, nullptr, nullptr, nBurned, params, &nMinedCount, &nTotalCount);
+    auto pledgeParams = poc::CalculatePledgeParams(nTargetHeight, params);
+
+    UniValue res(UniValue::VOBJ);
+    res.pushKV("require", nReq);
+    res.pushKV("mined", nMinedCount);
+    res.pushKV("count", nTotalCount);
+    res.pushKV("supplied", pledgeParams.supplied);
+    res.pushKV("height", nTargetHeight);
+
+    return res;
+}
+
 static UniValue queryChainVdfInfo(JSONRPCRequest const& request) {
     RPCHelpMan(
         "querychainvdfinfo",
@@ -528,6 +570,7 @@ static CRPCCommand const commands[] = {
         {"chia", "querynetspace", &queryNetspace, {}},
         {"chia", "queryminernetspace", &queryMinerNetspace, {"clear"}},
         {"chia", "querychainvdfinfo", &queryChainVdfInfo, {"height"}},
+        {"chia", "queryminingrequirement", &queryMiningRequirement, {"address", "farmer-pk"}},
         {"chia", "submitpos", &submitPos, {}},
         {"chia",
          "submitproof",
