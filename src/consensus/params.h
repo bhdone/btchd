@@ -121,6 +121,7 @@ struct Params {
     int BHDIP009TotalAmountUpgradeMultiply;
     int BHDIP009PledgeCalcWindow;
     int BHDIP009PledgeRetargetMinHeights;
+    int BHDIP009VdfMinPerSec;
 
     std::array<PledgeTerm, 4> BHDIP009PledgeTerms;
 

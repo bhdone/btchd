@@ -210,6 +210,11 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
         currentChallenge = MakeChallenge(currentChallenge, vdf.vchProof);
     }
 
+    int nVdfPerSec = fields.GetTotalIters() / fields.GetTotalDuration();
+    if (nVdfPerSec < params.BHDIP009VdfMinPerSec) {
+        return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT, "vdf speed is too low");
+    }
+
     // Difficulty is important
     LogPrint(BCLog::POC, "%s: checking difficulty\n", __func__);
     uint64_t nDifficultyPrev;
