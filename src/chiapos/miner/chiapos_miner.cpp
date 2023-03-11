@@ -6,11 +6,13 @@
 #include <uint256.h>
 #include <vdf_computer.h>
 
+#include <chiapos/bhd_types.h>
+
 #include <chiapos/kernel/calc_diff.h>
 #include <chiapos/kernel/pos.h>
 #include <chiapos/kernel/utils.h>
 #include <chiapos/kernel/vdf.h>
-#include <chiapos/miner/bhd_types.h>
+
 #include <chiapos/miner/rpc_client.h>
 
 #include <atomic>

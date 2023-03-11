@@ -6,7 +6,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "bhd_types.h"
+#include <chiapos/bhd_types.h>
 
 namespace miner {
 

@@ -31,7 +31,8 @@
 
 #include <subsidy_utils.h>
 
-#include "bhd_types.h"
+#include <chiapos/bhd_types.h>
+
 #include "chiapos_miner.h"
 #include "config.h"
 #include "keyman.h"
