@@ -25,8 +25,8 @@
 #include <tuple>
 #include <vector>
 
-#include "msg_ids.h"
-#include "timelord_client.h"
+#include <chiapos/timelord_cli/msg_ids.h>
+#include <chiapos/timelord_cli/timelord_client.h>
 
 using std::placeholders::_1;
 using std::placeholders::_2;

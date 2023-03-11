@@ -58,14 +58,14 @@ CHIAPOS_H = \
   chiapos/post.h \
   chiapos/plotter_id.h \
   chiapos/block_fields.h \
-  chiapos/timelord.h \
+  chiapos/timelord_cli/timelord_client.h \
   $(CHIAPOS_KERNEL_INCLUDES)
 
 CHIAPOS_CPPS = \
   chiapos/post.cpp \
   chiapos/plotter_id.cpp \
   chiapos/block_fields.cpp \
-  chiapos/timelord.cpp \
+  chiapos/timelord_cli/timelord_client.cpp \
   chiapos/chia_rpc.cpp \
   $(CHIAPOS_KERNEL_CPPS)
 
@@ -712,7 +712,6 @@ btchd_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_
 # bitcoin-miner binary #
 CHIAPOS_MINER_H = \
   chiapos/plotter_id.h \
-  chiapos/timelord.h \
   chiapos/bhd_types.h \
   chiapos/miner/config.h \
   chiapos/miner/prover.h \
@@ -724,7 +723,6 @@ CHIAPOS_MINER_H = \
 
 CHIAPOS_MINER_CPPS = \
   chiapos/plotter_id.cpp \
-  chiapos/timelord.cpp \
   chiapos/miner/config.cpp \
   chiapos/miner/prover.cpp \
   chiapos/miner/rpc_client.cpp \

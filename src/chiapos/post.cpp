@@ -3,7 +3,8 @@
 #include <chainparams.h>
 #include <chiapos/block_fields.h>
 #include <chiapos/kernel/bls_key.h>
-#include <chiapos/timelord.h>
+#include <chiapos/timelord_cli/timelord_client.h>
+
 #include <consensus/validation.h>
 #include <logging.h>
 #include <net.h>
@@ -471,81 +472,95 @@ void SendRequireVdfOverP2PNetwork(CConnman* connman, uint256 const& challenge, u
     });
 }
 
-static std::thread g_timelordThread;
-static std::unique_ptr<CTimeLord> g_timelord;
-static std::mutex g_mtxCalcIters;
+static asio::io_context g_iocTimelord;
+
+static std::unique_ptr<std::thread> g_pTimelordThread;
+static std::vector<std::shared_ptr<TimelordClient>> g_timelordVec;
+
 static std::atomic_int g_nProofCallbackIdx{0};
 static std::map<int, TimelordProofCallback> g_vProofCallback;
 
 int RegisterTimelordProofHandler(TimelordProofCallback callback) {
-    g_vProofCallback.insert(std::make_pair(++g_nProofCallbackIdx, std::move(callback)));
-    return g_nProofCallbackIdx;
+	++g_nProofCallbackIdx;
+	int idx = g_nProofCallbackIdx;
+	asio::post(g_iocTimelord, [idx, callback]() {
+		g_vProofCallback.insert(std::make_pair(idx, std::move(callback)));
+	});
+    return idx;
 }
 
 void UnregisterTimelordProofHandler(int nIndex) {
-    auto i = g_vProofCallback.find(nIndex);
-    if (i != std::end(g_vProofCallback)) {
-        g_vProofCallback.erase(i);
-    }
+	asio::post(g_iocTimelord, [nIndex]() {
+		auto i = g_vProofCallback.find(nIndex);
+		if (i != std::end(g_vProofCallback)) {
+			g_vProofCallback.erase(i);
+		}
+	});
 }
 
-bool IsTimelordRunning() { return g_timelord != nullptr; }
+bool IsTimelordRunning() { return g_pTimelordThread != nullptr; }
 
-void HandleProofProc(Proof const& proof, uint64_t iters, uint64_t d, uint256 challenge) {
-    if (g_vProofCallback.empty()) {
-        return;
-    }
-    CVdfProof vdfProof;
-    vdfProof.vchY = proof.y;
-    vdfProof.vchProof = proof.proof;
-    vdfProof.nWitnessType = proof.witness_type;
-    vdfProof.nVdfIters = std::max<uint64_t>(1, iters);
-    vdfProof.nVdfDuration = std::max<uint64_t>(1, d);
-    vdfProof.challenge = challenge;
-    for (auto const& p : g_vProofCallback) {
-        p.second(vdfProof);
-    }
-}
-
-bool StartTimelord() {
-    if (g_timelord) {
-        LogPrintf("%s: timelord is already running", __func__);
-        return false;
-    }
-
-    std::string strVdfClientPath = gArgs.GetArg("-timelord-vdf_client", "");
-    std::string strBindAddress = gArgs.GetArg("-timelord-bind", "127.0.0.1");
-    uint16_t port = gArgs.GetArg("-timelord-port", 9999);
-
-    if (!fs::exists(strVdfClientPath) || !fs::is_regular_file(strVdfClientPath)) {
-        LogPrintf("%s: cannot find a valid path for `vdf_client`, provided path %s\n", __func__, strVdfClientPath);
-        return false;
-    }
-
-    LogPrintf("%s: start timelord on %s:%d, vdf_client=%s\n", __func__, strBindAddress, port, strVdfClientPath);
-    g_timelordThread = std::thread([strVdfClientPath, strBindAddress, port]() {
-        net::io_context ioc;
-        g_timelord = std::unique_ptr<CTimeLord>(new CTimeLord(ioc, strVdfClientPath, strBindAddress, port));
-        g_timelord->Start(HandleProofProc);
-        ioc.run();
-    });
+bool StartTimelord(std::string const& hosts_str) {
+	if (g_pTimelordThread != nullptr) {
+		// the core thread is already running
+		return false;
+	}
+	auto hosts = ParseHostsStr(hosts_str, 19191);
+	if (hosts.empty()) {
+		// there is no host can be parsed from the string
+		return false;
+	}
+	// query the address for each hostname
+	for (auto const& host_entry : hosts) {
+		auto pTimelordClient = std::make_shared<TimelordClient>(g_iocTimelord);
+		asio::post(g_iocTimelord, [pTimelordClient]() {
+			g_timelordVec.push_back(pTimelordClient);
+		});
+		auto pweak = std::weak_ptr<TimelordClient>(pTimelordClient);
+		pTimelordClient->SetErrorHandler([pweak](FrontEndClient::ErrorType type, std::string const& errs) {
+			// the timelord client should be released
+			auto pTimelordClient = pweak.lock();
+			auto it = std::remove(std::begin(g_timelordVec), std::end(g_timelordVec), pTimelordClient);
+			g_timelordVec.erase(it, std::end(g_timelordVec));
+		});
+		pTimelordClient->SetProofReceiver([](uint256 const& challenge, ProofDetail const& detail) {
+			if (g_vProofCallback.empty()) {
+				return;
+			}
+			CVdfProof vdfProof;
+			vdfProof.vchY = detail.y;
+			vdfProof.vchProof = detail.proof;
+			vdfProof.nWitnessType = detail.witness_type;
+			vdfProof.nVdfIters = std::max<uint64_t>(1, detail.iters);
+			vdfProof.nVdfDuration = std::max<uint64_t>(1, detail.duration);
+			vdfProof.challenge = challenge;
+			for (auto const& p : g_vProofCallback) {
+				p.second(vdfProof);
+			}
+		});
+	}
+	g_pTimelordThread.reset(new std::thread([]() {
+		g_iocTimelord.run();
+	}));
 
     return true;
 }
 
 bool StopTimelord() {
-    if (g_timelord == nullptr) {
-        return false;
-    }
-    g_timelord->Stop();
-    return true;
-}
-
-void WaitTimelord() {
-    if (g_timelord == nullptr) {
-        return;
-    }
-    g_timelord->Wait();
+	if (g_pTimelordThread == nullptr) {
+		return false;
+	}
+	asio::post(g_iocTimelord, []() {
+		for (auto pTimelordClient : g_timelordVec) {
+			pTimelordClient->Exit();
+		}
+		g_timelordVec.clear();
+	});
+	if (g_pTimelordThread->joinable()) {
+		g_pTimelordThread->join();
+		g_pTimelordThread.reset();
+	}
+	return true;
 }
 
 using ChallengePair = std::pair<uint256, uint64_t>;
@@ -555,32 +570,12 @@ void UpdateChallengeToTimelord(uint256 challenge, uint64_t iters) {
     if (g_queried_challenges.find(std::make_pair(challenge, iters)) != std::end(g_queried_challenges)) {
         return;
     }
-    g_queried_challenges.insert(std::make_pair(challenge, iters));
-    // first we query the proof from cache
-    CTimeLord::ProofRecord proof_record;
-    bool found = g_timelord->QueryIters(challenge, iters, proof_record);
-    if (found) {
-        LogPrintf("%s: got a proof from cache, challenge: %s, iters=%s\n", __func__, challenge.GetHex(), chiapos::FormatNumberStr(std::to_string(iters)));
-        // Handle it here and exit
-        HandleProofProc(proof_record.proof, proof_record.iters, proof_record.duration, proof_record.challenge);
-        return;
-    }
-    // trying to invoke method from the timelord
-    if (g_timelord->GetCurrentChallenge() != challenge) {
-        LogPrintf("%s: start a new timelord calculation for challenge=%s, iters=%s\n", __func__, challenge.GetHex(),
-                  chiapos::FormatNumberStr(std::to_string(iters)));
-        // We should start a new challenge instead of current one
-        g_timelord->GoChallenge(std::move(challenge), TimeType::N, [iters](CTimeSessionPtr psession) {
-            std::lock_guard<std::mutex> lg(g_mtxCalcIters);
-            psession->CalcIters(iters);
-        });
-    } else {
-        LogPrint(BCLog::NET, "%s: timelord for challenge %s is already running, send request of iters=%s\n", __func__, challenge.GetHex(),
-                  chiapos::FormatNumberStr(std::to_string(iters)));
-        // The challenge is good
-        std::lock_guard<std::mutex> lg(g_mtxCalcIters);
-        g_timelord->CalcIters(challenge, iters);
-    }
+    asio::post(g_iocTimelord, [challenge, iters]() {
+        // deliver the iters to every timelord clients
+        for (auto pTimelordClient : g_timelordVec) {
+            pTimelordClient->Calc(challenge, iters);
+        }
+    });
 }
 
 static NewBlockWatcher g_watcher;
@@ -600,6 +595,5 @@ NewBlockWatcher& GetBlockWatcher() {
 void StopBlockWatcher() {
     g_watcher.Exit();
 }
-
 
 }  // namespace chiapos

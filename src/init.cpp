@@ -206,10 +206,10 @@ void Shutdown(InitInterfaces& interfaces)
     util::ThreadRename("shutoff");
     mempool.AddTransactionsUpdated(1);
 
-    if (chiapos::StopTimelord()) {
-        LogPrintf("%s: shutdown timelord...\n", __func__);
-        chiapos::WaitTimelord();
-    }
+	LogPrintf("%s: shutdown timelord...\n", __func__);
+    if (!chiapos::StopTimelord()) {
+		LogPrintf("%s: no way to shutdown timelord", __func__);
+	}
     chiapos::StopBlockWatcher();
     StopPOC();
     StopHTTPRPC();
@@ -2044,13 +2044,9 @@ bool AppInitMain(InitInterfaces& interfaces)
         return false;
 
     if (gArgs.GetBoolArg("-timelord", false)) {
-        if (gArgs.GetBoolArg("-debug", false)) {
-            plog::init(plog::debug, &g_consoleAppender);
-        } else {
-            plog::init(plog::info, &g_consoleAppender);
-        }
+		std::string hosts = gArgs.GetArg("-timelord-hosts", "");
 
-        if (!chiapos::StartTimelord()) {
+        if (!chiapos::StartTimelord(hosts)) {
             return false;
         }
         // Install callback
