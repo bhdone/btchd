@@ -93,13 +93,9 @@ Bytes SubBytes(Bytes const& bytes, int start, int count = 0);
 
 inline void MakeSHA256Impl(CSHA256& sha256) {}
 
-inline void MakeSHA256_WriteData(CSHA256& sha256, Bytes const& data) {
-    sha256.Write(data.data(), data.size());
-}
+inline void MakeSHA256_WriteData(CSHA256& sha256, Bytes const& data) { sha256.Write(data.data(), data.size()); }
 
-inline void MakeSHA256_WriteData(CSHA256& sha256, uint256 const& data) {
-    sha256.Write(data.begin(), data.size());
-}
+inline void MakeSHA256_WriteData(CSHA256& sha256, uint256 const& data) { sha256.Write(data.begin(), data.size()); }
 
 template <typename T, typename... TS>
 void MakeSHA256Impl(CSHA256& sha256, T&& data, TS&&... params) {
@@ -121,6 +117,9 @@ std::string FormatNumberStr(std::string const& num_str);
 uint64_t MakeNumberTB(uint64_t value);
 
 std::string MakeNumberStr(uint64_t value);
+
+using HostEntry = std::pair<std::string, uint16_t>;
+std::vector<HostEntry> ParseHostsStr(std::string const& hosts, uint16_t default_port);
 
 }  // namespace chiapos
 
