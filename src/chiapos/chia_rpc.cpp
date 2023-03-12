@@ -484,6 +484,7 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
     res.pushKV("require", nReq);
     res.pushKV("mined", nMinedCount);
     res.pushKV("count", nTotalCount);
+    res.pushKV("burned", nBurned);
     res.pushKV("supplied", pledgeParams.supplied);
     res.pushKV("height", nTargetHeight);
 

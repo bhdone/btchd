@@ -117,6 +117,7 @@ public:
         CAmount req;
         int mined_count;
         int total_count;
+        CAmount burned;
         CAmount supplied;
         int height;
     };

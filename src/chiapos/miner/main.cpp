@@ -281,6 +281,7 @@ int HandleCommand_MiningRequirement() {
     auto req = pclient->QueryMiningRequirement(miner::g_config.GetRewardDest(), miner::g_config.GetFarmerPk());
     PLOGI << "require: " << chiapos::MakeNumberStr(req.req / COIN) << " BHD";
     PLOGI << "mined: " << req.mined_count << "/" << req.total_count;
+    PLOGI << "burned: " << chiapos::MakeNumberStr(req.burned / COIN) << " BHD";
     PLOGI << "supplied: " << chiapos::MakeNumberStr(req.supplied / COIN) << " BHD";
     return 0;
 }
