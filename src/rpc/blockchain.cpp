@@ -1011,7 +1011,20 @@ UniValue countblockowners(JSONRPCRequest const& request)
 
     LOCK(cs_main);
 
-    int nStartHeight = atoi(request.params[0].get_str());
+    UniValue res(UniValue::VOBJ);
+
+    int nCurrHeight = ::ChainActive().Height();
+    int nStartHeight;
+    if (request.params[0].get_str()[0] == '+') {
+        nStartHeight = nCurrHeight - atoi(request.params[0].get_str().substr(1));
+    } else {
+        nStartHeight = atoi(request.params[0].get_str());
+    }
+
+    res.pushKV("begin", nStartHeight);
+    res.pushKV("end", nCurrHeight);
+    res.pushKV("count", nCurrHeight - nStartHeight + 1);
+
     if (nStartHeight >= ::ChainActive().Height()) {
         throw std::runtime_error("the number of height is out of range");
     }
@@ -1032,7 +1045,6 @@ UniValue countblockowners(JSONRPCRequest const& request)
         pindex = pindex->pprev;
     }
 
-    UniValue res(UniValue::VOBJ);
     for (auto const& entry : summary) {
         res.pushKV(entry.first, entry.second);
     }
