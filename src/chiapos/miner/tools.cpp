@@ -5,7 +5,7 @@
 
 #include <fstream>
 
-#include "bhd_types.h"
+#include <chiapos/bhd_types.h>
 
 namespace tools {
 

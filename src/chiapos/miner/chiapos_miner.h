@@ -9,13 +9,10 @@
 #include <string>
 #include <optional>
 
-// #include <boost/asio.hpp>
-// namespace asio = boost::asio;
-
 #include "prover.h"
 #include "rpc_client.h"
 
-#include "timelord_client.h"
+#include <chiapos/timelord_cli/timelord_client.h>
 
 namespace miner {
 namespace pos {

@@ -74,11 +74,9 @@ void UnregisterTimelordProofHandler(int nIndex);
 
 bool IsTimelordRunning();
 
-bool StartTimelord();
+bool StartTimelord(std::string const& hosts);
 
 bool StopTimelord();
-
-void WaitTimelord();
 
 void UpdateChallengeToTimelord(uint256 challenge, uint64_t iters);
 

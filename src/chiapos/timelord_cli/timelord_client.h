@@ -15,7 +15,7 @@ using error_code = boost::system::error_code;
 
 #include <uint256.h>
 
-#include "bhd_types.h"
+#include <chiapos/bhd_types.h>
 
 class UniValue;
 

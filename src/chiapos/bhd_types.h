@@ -4,6 +4,7 @@
 #include <array>
 #include <cstdint>
 #include <vector>
+#include <string>
 
 using Bytes = std::vector<uint8_t>;
 using Bytes32 = std::array<uint8_t, 32>;

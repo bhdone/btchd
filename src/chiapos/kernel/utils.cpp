@@ -122,14 +122,51 @@ std::string FormatNumberStr(std::string const& num_str) {
     return res;
 }
 
-uint64_t MakeNumberTB(uint64_t value)
-{
-    return value / 1000 / 1000 / 1000 / 1000;
+uint64_t MakeNumberTB(uint64_t value) { return value / 1000 / 1000 / 1000 / 1000; }
+
+std::string MakeNumberStr(uint64_t value) { return FormatNumberStr(std::to_string(value)); }
+
+std::tuple<HostEntry, bool> ParseHostEntryStr(std::string const& entry_str, uint16_t default_port) {
+    if (entry_str.empty()) {
+        return std::make_tuple(std::make_pair("", default_port), false);
+    }
+    auto c_pos = entry_str.find_first_of(':');
+    if (c_pos != std::string::npos) {
+        std::string host = entry_str.substr(0, c_pos);
+        std::string port_str = entry_str.substr(c_pos + 1);
+        int port = std::atoi(port_str.c_str());
+        if (port != 0) {
+            return std::make_tuple(std::make_pair(host, port), true);
+        }
+    }
+    return std::make_tuple(std::make_pair(entry_str, default_port), true);
 }
 
-std::string MakeNumberStr(uint64_t value)
-{
-    return FormatNumberStr(std::to_string(value));
+std::vector<HostEntry> ParseHostsStr(std::string const& hosts, uint16_t default_port) {
+    std::vector<HostEntry> res;
+    HostEntry entry;
+    bool succ;
+
+    auto pos = 0;
+    auto last_pos = hosts.find_first_of(',');
+    while (last_pos != std::string::npos) {
+        std::string entry_str = hosts.substr(pos, last_pos - pos);
+        // analyze entry_str with ':' separated
+        auto c_pos = entry_str.find_first_of(':');
+        if (c_pos != std::string::npos) {
+            std::tie(entry, succ) = ParseHostEntryStr(entry_str, default_port);
+            if (succ) {
+                res.push_back(std::move(entry));
+            }
+        }
+        pos = last_pos + 1;
+        last_pos = hosts.find_first_of(',', pos);
+    }
+    std::tie(entry, succ) = ParseHostEntryStr(hosts.substr(pos), default_port);
+    if (succ) {
+        res.push_back(std::move(entry));
+    }
+    return res;
 }
 
 }  // namespace chiapos

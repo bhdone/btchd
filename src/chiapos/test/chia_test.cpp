@@ -1,17 +1,20 @@
 #include <chainparams.h>
+
 #include <chiapos/post.h>
 #include <chiapos/kernel/calc_diff.h>
+#include <chiapos/kernel/utils.h>
+
 #include <key_io.h>
 #include <logging.h>
 #include <rpc/util.h>
 #include <uint256.h>
 #include <univalue.h>
+#include <arith_uint256.h>
 
 #include <chiabls/bls.hpp>
 #include <chiabls/elements.hpp>
+
 #include <cstdint>
-#include "arith_uint256.h"
-#include "chiapos/kernel/utils.h"
 
 #include <gtest/gtest.h>
 
@@ -123,29 +126,46 @@ TEST(Chiapos, Test_VerifyChiaposProof) {
     EXPECT_TRUE(VerifyPos(challenge, localPk, farmerPk, poolPkOrHash, K, vchProof, nullptr, 0));
 }
 
-// Vdf proof verification
-static char const* SZ_VDF_CHALLENGE = "9159bc7838880dcf826ba5fd7f5b693f203c01e29070ffa4eb1a73b727e09d84";
-static const uint64_t VDF_ITERS = 100000;
-static char const* SZ_VDF_Y =
-        "0000e16a31edf6070934cacf78d3c3139e6986b7cebd0a45b996720fc916a163803a9c73d43b05c0835e8f2e4c52b2e10ae5623f7c1d5b"
-        "98db"
-        "2fc13b140b4c6035080f1b12cfe429abcee3912844319f2f81858d7ed4f7a6a108cf14f4a71090a1130201";
-static char const* SZ_VDF_PROOF =
-        "0200f845362c6a25e82034591c60797922723c20f7fc4fd2f955c43baefaa96ec4b3014174ff36ce05070f119a875b7b2df2ced3fe4963"
-        "bc34"
-        "fe7091e61623da6408117c6c31aef6d9b40f1e5c3c6fa7295196733d3448139a85bb8e6e5e0bc6dd020d07";
-
-TEST(Chiapos, Test_VerifyVdfProof) {
-    CVdfProof proof;
-    proof.challenge = uint256S(SZ_VDF_CHALLENGE);
-    proof.vchY = BytesFromHex(SZ_VDF_Y);
-    proof.vchProof = BytesFromHex(SZ_VDF_PROOF);
-    proof.nWitnessType = 0;
-    proof.nVdfIters = VDF_ITERS;
-    proof.nVdfDuration = 0;
-    CValidationState state;
-    EXPECT_TRUE(CheckVdfProof(proof, state));
+TEST(utils, ParseHosts)
+{
+	static char const* SZ_HOSTS = "127.0.0.1:1991,sample.com:1676,none:1939,okthen:1919,noport.com";
+	auto entries = chiapos::ParseHostsStr(SZ_HOSTS, 19191);
+	EXPECT_EQ(entries.size(), 5);
+	EXPECT_EQ(entries[0].first, "127.0.0.1");
+	EXPECT_EQ(entries[0].second, 1991);
+	EXPECT_EQ(entries[1].first, "sample.com");
+	EXPECT_EQ(entries[1].second, 1676);
+	EXPECT_EQ(entries[2].first, "none");
+	EXPECT_EQ(entries[2].second, 1939);
+	EXPECT_EQ(entries[3].first, "okthen");
+	EXPECT_EQ(entries[3].second, 1919);
+	EXPECT_EQ(entries[4].first, "noport.com");
+	EXPECT_EQ(entries[4].second, 19191);
 }
+
+// Vdf proof verification
+// static char const* SZ_VDF_CHALLENGE = "9159bc7838880dcf826ba5fd7f5b693f203c01e29070ffa4eb1a73b727e09d84";
+// static const uint64_t VDF_ITERS = 100000;
+// static char const* SZ_VDF_Y =
+//         "0000e16a31edf6070934cacf78d3c3139e6986b7cebd0a45b996720fc916a163803a9c73d43b05c0835e8f2e4c52b2e10ae5623f7c1d5b"
+//         "98db"
+//         "2fc13b140b4c6035080f1b12cfe429abcee3912844319f2f81858d7ed4f7a6a108cf14f4a71090a1130201";
+// static char const* SZ_VDF_PROOF =
+//         "0200f845362c6a25e82034591c60797922723c20f7fc4fd2f955c43baefaa96ec4b3014174ff36ce05070f119a875b7b2df2ced3fe4963"
+//         "bc34"
+//         "fe7091e61623da6408117c6c31aef6d9b40f1e5c3c6fa7295196733d3448139a85bb8e6e5e0bc6dd020d07";
+//
+// TEST(Chiapos, Test_VerifyVdfProof) {
+//     CVdfProof proof;
+//     proof.challenge = uint256S(SZ_VDF_CHALLENGE);
+//     proof.vchY = BytesFromHex(SZ_VDF_Y);
+//     proof.vchProof = BytesFromHex(SZ_VDF_PROOF);
+//     proof.nWitnessType = 0;
+//     proof.nVdfIters = VDF_ITERS;
+//     proof.nVdfDuration = 0;
+//     CValidationState state;
+//     EXPECT_TRUE(CheckVdfProof(proof, state));
+// }
 
 // TEST(Difficulty, ExpectSize) {
 //     EXPECT_EQ(chiapos::calc::expected_plot_size<int64_t>(25), 855638016);

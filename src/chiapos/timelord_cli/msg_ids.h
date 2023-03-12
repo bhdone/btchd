@@ -1,6 +1,8 @@
 #ifndef TL_MSG_IDS_H
 #define TL_MSG_IDS_H
 
+#include <stdexcept>
+
 #include <string>
 
 // messages send from FrontEnd
@@ -25,6 +27,7 @@ inline std::string TimelordMsgIdToString(TimelordMsgs msg_id) {
         case TimelordMsgs::CALC_REPLY:
             return "CALC_REPLY";
     }
+    throw std::runtime_error("wrong timelord message string");
 }
 
 // messages send from Bhd

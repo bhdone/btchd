@@ -2,7 +2,7 @@
 #include <chainparamsbase.h>
 #include <chiapos/kernel/utils.h>
 #include <chiapos/kernel/vdf.h>
-#include <chiapos/timelord.h>
+// #include <chiapos/timelord.h>
 #include <gtest/gtest.h>
 #include <plog/Appenders/ConsoleAppender.h>
 #include <plog/Appenders/RollingFileAppender.h>
@@ -31,7 +31,8 @@
 
 #include <subsidy_utils.h>
 
-#include "bhd_types.h"
+#include <chiapos/bhd_types.h>
+
 #include "chiapos_miner.h"
 #include "config.h"
 #include "keyman.h"
@@ -40,7 +41,7 @@
 #include "test1.h"
 #include "tools.h"
 
-#include "timelord_client.h"
+#include <chiapos/timelord_cli/timelord_client.h>
 
 const std::function<std::string(char const*)> G_TRANSLATION_FUN = nullptr;
 

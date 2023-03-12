@@ -6,11 +6,13 @@
 #include <uint256.h>
 #include <vdf_computer.h>
 
+#include <chiapos/bhd_types.h>
+
 #include <chiapos/kernel/calc_diff.h>
 #include <chiapos/kernel/pos.h>
 #include <chiapos/kernel/utils.h>
 #include <chiapos/kernel/vdf.h>
-#include <chiapos/miner/bhd_types.h>
+
 #include <chiapos/miner/rpc_client.h>
 
 #include <atomic>
@@ -23,8 +25,8 @@
 #include <tuple>
 #include <vector>
 
-#include "msg_ids.h"
-#include "timelord_client.h"
+#include <chiapos/timelord_cli/msg_ids.h>
+#include <chiapos/timelord_cli/timelord_client.h>
 
 using std::placeholders::_1;
 using std::placeholders::_2;
