@@ -277,6 +277,7 @@ BlockReward GetFullMortgageBlockReward(int nHeight, const Consensus::Params& con
 BlockReward GetLowMortgageBlockReward(int nHeight, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 int GetFullMortgageFundRoyaltyRatio(int nHeight, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 int GetLowMortgageFundRoyaltyRatio(int nHeight, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+CAmount GetBlockAccumulateSubsidy(const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pindex);

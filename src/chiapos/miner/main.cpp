@@ -279,10 +279,12 @@ int HandleCommand_Withdraw() {
 int HandleCommand_MiningRequirement() {
     std::unique_ptr<miner::RPCClient> pclient = tools::CreateRPCClient(miner::g_config, miner::g_args.cookie_path);
     auto req = pclient->QueryMiningRequirement(miner::g_config.GetRewardDest(), miner::g_config.GetFarmerPk());
-    PLOGI << "require: " << chiapos::MakeNumberStr(req.req / COIN) << " BHD";
-    PLOGI << "mined: " << req.mined_count << "/" << req.total_count;
-    PLOGI << "burned: " << chiapos::MakeNumberStr(req.burned / COIN) << " BHD";
-    PLOGI << "supplied: " << chiapos::MakeNumberStr(req.supplied / COIN) << " BHD";
+    int const PREFIX_WIDTH = 14;
+    std::cout << std::setw(PREFIX_WIDTH) << "mined: " << std::setw(15) << tinyformat::format("%d/%d", req.mined_count, req.total_count) << " BLK" << std::endl;
+    std::cout << std::setw(PREFIX_WIDTH) << "supplied: " << std::setw(15) << chiapos::MakeNumberStr(req.supplied / COIN) << " BHD" << std::endl;
+    std::cout << std::setw(PREFIX_WIDTH) << "burned: " << std::setw(15) << chiapos::MakeNumberStr(req.burned / COIN) << " BHD" << std::endl;
+    std::cout << std::setw(PREFIX_WIDTH) << "accumulate: " << std::setw(15) << chiapos::MakeNumberStr(req.accumulate / COIN) << " BHD" << std::endl;
+    std::cout << std::setw(PREFIX_WIDTH) << "require: " << std::setw(15) << chiapos::MakeNumberStr(req.req / COIN) << " BHD" << std::endl;
     return 0;
 }
 

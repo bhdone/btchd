@@ -119,6 +119,7 @@ public:
         int total_count;
         CAmount burned;
         CAmount supplied;
+        CAmount accumulate;
         int height;
     };
 

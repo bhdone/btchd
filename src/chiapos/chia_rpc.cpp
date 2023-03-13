@@ -479,12 +479,14 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
     int nMinedCount, nTotalCount, nTargetHeight = pindex->nHeight + 1;
     CAmount nReq = poc::GetMiningRequireBalance(accountID, bindData, nTargetHeight, view, nullptr, nullptr, nBurned, params, &nMinedCount, &nTotalCount);
     auto pledgeParams = poc::CalculatePledgeParams(nTargetHeight, params);
+    CAmount nAccumulate = GetBlockAccumulateSubsidy(pindex, params);
 
     UniValue res(UniValue::VOBJ);
     res.pushKV("require", nReq);
     res.pushKV("mined", nMinedCount);
     res.pushKV("count", nTotalCount);
     res.pushKV("burned", nBurned);
+    res.pushKV("accumulate", nAccumulate);
     res.pushKV("supplied", pledgeParams.supplied);
     res.pushKV("height", nTargetHeight);
 
