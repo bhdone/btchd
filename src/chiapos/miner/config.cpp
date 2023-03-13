@@ -80,10 +80,6 @@ void Config::ParseFromJsonString(std::string const& json_str) {
         }
     }
 
-    if (m_plot_path_list.empty()) {
-        throw std::runtime_error("field `plotPath` is empty");
-    }
-
     if (root.exists("seed") && root["seed"].isStr()) {
         m_seed = root["seed"].get_str();
     }
