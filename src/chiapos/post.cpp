@@ -483,9 +483,7 @@ static std::map<int, TimelordProofCallback> g_vProofCallback;
 int RegisterTimelordProofHandler(TimelordProofCallback callback) {
 	++g_nProofCallbackIdx;
 	int idx = g_nProofCallbackIdx;
-	asio::post(g_iocTimelord, [idx, callback]() {
-		g_vProofCallback.insert(std::make_pair(idx, std::move(callback)));
-	});
+    g_vProofCallback.insert(std::make_pair(idx, std::move(callback)));
     return idx;
 }
 
@@ -538,6 +536,7 @@ bool StartTimelord(std::string const& hosts_str) {
 				p.second(vdfProof);
 			}
 		});
+        pTimelordClient->Connect(host_entry.first, host_entry.second);
 	}
 	g_pTimelordThread.reset(new std::thread([]() {
 		g_iocTimelord.run();
@@ -573,7 +572,11 @@ void UpdateChallengeToTimelord(uint256 challenge, uint64_t iters) {
     asio::post(g_iocTimelord, [challenge, iters]() {
         // deliver the iters to every timelord clients
         for (auto pTimelordClient : g_timelordVec) {
-            pTimelordClient->Calc(challenge, iters);
+            try {
+                pTimelordClient->Calc(challenge, iters);
+            } catch (std::exception const& e) {
+                // the status of timelord client might be `connecting`
+            }
         }
     });
 }

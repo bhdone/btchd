@@ -584,9 +584,7 @@ void SetupServerArgs()
 
     gArgs.AddArg("-chiatest", "Run chia test before start the server", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
     gArgs.AddArg("-timelord", "Run timelord", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
-    gArgs.AddArg("-timelord-vdf_client", "Run timelord with a valid vdf_client executable path", ArgsManager::ALLOW_STRING, OptionsCategory::POC);
-    gArgs.AddArg("-timelord-bind", "Run timelord and bind ip address", ArgsManager::ALLOW_STRING, OptionsCategory::POC);
-    gArgs.AddArg("-timelord-port", "Run timelord and bind port", ArgsManager::ALLOW_INT, OptionsCategory::POC);
+    gArgs.AddArg("-timelord-hosts", "The timelord service hosts", ArgsManager::ALLOW_STRING , OptionsCategory::POC);
     gArgs.AddArg("-skip-ibd", "Skip the checking procedure for `Initial block download`", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
 
 #ifdef ENABLE_OMNICORE
@@ -2045,8 +2043,9 @@ bool AppInitMain(InitInterfaces& interfaces)
 
     if (gArgs.GetBoolArg("-timelord", false)) {
 		std::string hosts = gArgs.GetArg("-timelord-hosts", "");
-
+        plog::init(plog::Severity::debug, &g_consoleAppender);
         if (!chiapos::StartTimelord(hosts)) {
+            LogPrintf("%s: cannot start timelord\n", __func__);
             return false;
         }
         // Install callback
