@@ -23,6 +23,8 @@
 
 #include "newblock_watcher.hpp"
 
+bool ShutdownRequested();
+
 namespace chiapos {
 
 uint256 MakeChallenge(CBlockIndex* pindex, Consensus::Params const& params) {
@@ -495,6 +497,48 @@ void UnregisterTimelordProofHandler(int nIndex) {
 
 bool IsTimelordRunning() { return g_pTimelordThread != nullptr; }
 
+void PrepareTimelord(HostEntry const& host_entry)
+{
+    auto pTimelordClient = std::make_shared<TimelordClient>(g_iocTimelord);
+    asio::post(g_iocTimelord, [pTimelordClient]() {
+        g_timelordVec.push_back(pTimelordClient);
+    });
+    auto pweak = std::weak_ptr<TimelordClient>(pTimelordClient);
+    pTimelordClient->SetErrorHandler([pweak, host_entry](FrontEndClient::ErrorType type, std::string const& errs) {
+        // the timelord client should be released
+        auto pTimelordClient = pweak.lock();
+        auto it = std::remove(std::begin(g_timelordVec), std::end(g_timelordVec), pTimelordClient);
+        g_timelordVec.erase(it, std::end(g_timelordVec));
+        // re-connect?
+        if (!ShutdownRequested()) {
+            auto ptimer = std::make_shared<asio::steady_timer>(g_iocTimelord);
+            ptimer->expires_after(std::chrono::seconds(3));
+            ptimer->async_wait([ptimer, host_entry](std::error_code const& ec) {
+                if (ec) {
+                    return;
+                }
+                PrepareTimelord(host_entry);
+            });
+        }
+    });
+    pTimelordClient->SetProofReceiver([](uint256 const& challenge, ProofDetail const& detail) {
+        if (g_vProofCallback.empty()) {
+            return;
+        }
+        CVdfProof vdfProof;
+        vdfProof.vchY = detail.y;
+        vdfProof.vchProof = detail.proof;
+        vdfProof.nWitnessType = detail.witness_type;
+        vdfProof.nVdfIters = std::max<uint64_t>(1, detail.iters);
+        vdfProof.nVdfDuration = std::max<uint64_t>(1, detail.duration);
+        vdfProof.challenge = challenge;
+        for (auto const& p : g_vProofCallback) {
+            p.second(vdfProof);
+        }
+    });
+    pTimelordClient->Connect(host_entry.first, host_entry.second);
+}
+
 bool StartTimelord(std::string const& hosts_str) {
 	if (g_pTimelordThread != nullptr) {
 		// the core thread is already running
@@ -507,33 +551,7 @@ bool StartTimelord(std::string const& hosts_str) {
 	}
 	// query the address for each hostname
 	for (auto const& host_entry : hosts) {
-		auto pTimelordClient = std::make_shared<TimelordClient>(g_iocTimelord);
-		asio::post(g_iocTimelord, [pTimelordClient]() {
-			g_timelordVec.push_back(pTimelordClient);
-		});
-		auto pweak = std::weak_ptr<TimelordClient>(pTimelordClient);
-		pTimelordClient->SetErrorHandler([pweak](FrontEndClient::ErrorType type, std::string const& errs) {
-			// the timelord client should be released
-			auto pTimelordClient = pweak.lock();
-			auto it = std::remove(std::begin(g_timelordVec), std::end(g_timelordVec), pTimelordClient);
-			g_timelordVec.erase(it, std::end(g_timelordVec));
-		});
-		pTimelordClient->SetProofReceiver([](uint256 const& challenge, ProofDetail const& detail) {
-			if (g_vProofCallback.empty()) {
-				return;
-			}
-			CVdfProof vdfProof;
-			vdfProof.vchY = detail.y;
-			vdfProof.vchProof = detail.proof;
-			vdfProof.nWitnessType = detail.witness_type;
-			vdfProof.nVdfIters = std::max<uint64_t>(1, detail.iters);
-			vdfProof.nVdfDuration = std::max<uint64_t>(1, detail.duration);
-			vdfProof.challenge = challenge;
-			for (auto const& p : g_vProofCallback) {
-				p.second(vdfProof);
-			}
-		});
-        pTimelordClient->Connect(host_entry.first, host_entry.second);
+        PrepareTimelord(host_entry);
 	}
 	g_pTimelordThread.reset(new std::thread([]() {
 		g_iocTimelord.run();
