@@ -2,7 +2,6 @@
 #include <chainparamsbase.h>
 #include <chiapos/kernel/utils.h>
 #include <chiapos/kernel/vdf.h>
-// #include <chiapos/timelord.h>
 #include <gtest/gtest.h>
 #include <plog/Appenders/ConsoleAppender.h>
 #include <plog/Appenders/RollingFileAppender.h>
