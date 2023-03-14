@@ -550,7 +550,6 @@ bool StopTimelord() {
 		for (auto pTimelordClient : g_timelordVec) {
 			pTimelordClient->Exit();
 		}
-		g_timelordVec.clear();
 	});
 	if (g_pTimelordThread->joinable()) {
 		g_pTimelordThread->join();
