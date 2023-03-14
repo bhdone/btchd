@@ -3,7 +3,6 @@
 #include <chiapos/kernel/pos.h>
 #include <crypto/sha256.h>
 #include <logging.h>
-#include <plog/Log.h>
 
 #include <chiapos/lib/include/picosha2.hpp>
 #include <chiapos/src/prover_disk.hpp>
@@ -57,10 +56,8 @@ struct PlotFileImpl {
 CPlotFile::CPlotFile(std::string filePath) : m_path(std::move(filePath)) {
     try {
         m_impl.reset(new PlotFileImpl{std::make_shared<DiskProver>(m_path)});
-        PLOG_DEBUG << "plotId from file " << m_path << ": " << BytesToHex(m_impl->diskProver->GetId());
     } catch (std::exception const& e) {
         m_impl.reset();
-        PLOG_DEBUG << "cannot open plot file to read: " << m_path;
     }
 }
 
@@ -96,7 +93,7 @@ bool CPlotFile::ReadMemo(PlotMemo& outMemo) {
         outMemo = plot_memo;
         return true;
     } catch (std::exception const& e) {
-        PLOGE << "cannot read memo from plot: " << m_path;
+        std::cerr << __func__ << ": " << e.what();
     }
     return false;
 }
@@ -121,7 +118,7 @@ bool CPlotFile::GetQualityString(uint256 const& challenge, std::vector<QualitySt
         out = qs_pack_vec;
         return true;
     } catch (std::exception const& e) {
-        PLOGE << "cannot get quality string from plot: " << m_path;
+        LogPrintf("%s: cannot get quality string from plot=%s\n", __func__, m_path);
     }
     return false;
 }
@@ -138,7 +135,7 @@ bool CPlotFile::GetFullProof(uint256 const& challenge, int index, Bytes& out) co
         out = proof_data;
         return true;
     } catch (std::exception const& e) {
-        PLOGE << "cannot read full proof from plot: " << m_path;
+        LogPrintf("%s: cannot read full proof from plot=%s\n", __func__, m_path);
     }
     return false;
 }

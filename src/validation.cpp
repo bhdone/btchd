@@ -1350,14 +1350,14 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
             nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &consensusParams.BHDIP009PledgeTerms);
         }
         CAmount miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, nullptr, nBurned, consensusParams); // Netspace fixed
-        LogPrintf("%s: miningRequireBalance=%s BHD, accountBalance=%s BHD, balancePointSent=%s BHD, balancePointReceived=%s BHD\n", __func__,
+        LogPrint(BCLog::POC, "%s: miningRequireBalance=%s BHD, accountBalance=%s BHD, balancePointSent=%s BHD, balancePointReceived=%s BHD\n", __func__,
                 chiapos::FormatNumberStr(std::to_string(miningRequireBalance / COIN)),
                 chiapos::FormatNumberStr(std::to_string(accountBalance / COIN)),
                 chiapos::FormatNumberStr(std::to_string(balancePointSent / COIN)),
                 chiapos::FormatNumberStr(std::to_string(balancePointReceived / COIN)));
         fFullMortgage = (nHeight >= consensusParams.BHDIP009Height) ? (balancePointReceived >= miningRequireBalance) : (accountBalance - balancePointSent + balancePointReceived) >= miningRequireBalance;
         if (fFullMortgage) {
-            LogPrintf("%s: full mortgage for account %s\n", __func__, strGeneratorAddr);
+            LogPrint(BCLog::POC, "%s: full mortgage for account %s\n", __func__, strGeneratorAddr);
             // Full mortgage
             if (nHeight < consensusParams.BHDIP009Height) {
                 reward.fund = (nSubsidy * consensusParams.BHDIP001FundRoyaltyForFullMortgage) / 1000;
@@ -1366,7 +1366,7 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
             }
             reward.accumulate = GetBlockAccumulateSubsidy(pindexPrev, consensusParams);
         } else {
-            LogPrintf("%s: low mortgage for account %s\n", __func__, strGeneratorAddr);
+            LogPrint(BCLog::POC, "%s: low mortgage for account %s\n", __func__, strGeneratorAddr);
             reward.fUnconditional = true;
             // Low mortgage
             if (nHeight < consensusParams.BHDIP009Height) {
@@ -1390,7 +1390,7 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
         reward.fund009 = GetTotalSupplyBeforeBHDIP009(consensusParams) * (consensusParams.BHDIP009TotalAmountUpgradeMultiply - 1);
     }
     assert(reward.miner + reward.accumulate >= 0);
-    LogPrintf("%s: subsidy=%ld (%s BHD) { miner=%ld, miner0=%ld, fund=%ld, accumulate=%ld, fund009=%ld, fUnconditional=%s }, height=%ld\n", __func__, nSubsidy, chiapos::FormatNumberStr(std::to_string(nSubsidy / COIN)), reward.miner / COIN, reward.miner0 / COIN, reward.fund / COIN, reward.accumulate / COIN, reward.fund009 / COIN, reward.fUnconditional ? "true" : "false", nHeight);
+    LogPrint(BCLog::POC, "%s: subsidy=%ld (%s BHD) { miner=%ld, miner0=%ld, fund=%ld, accumulate=%ld, fund009=%ld, fUnconditional=%s }, height=%ld\n", __func__, nSubsidy, chiapos::FormatNumberStr(std::to_string(nSubsidy / COIN)), reward.miner / COIN, reward.miner0 / COIN, reward.fund / COIN, reward.accumulate / COIN, reward.fund009 / COIN, reward.fUnconditional ? "true" : "false", nHeight);
     return reward;
 }
 

@@ -2,8 +2,8 @@
 
 #include <chiapos/kernel/utils.h>
 
-#include <plog/Log.h>
 #include <univalue.h>
+#include <logging.h>
 
 #include <memory>
 
@@ -29,20 +29,21 @@ void FrontEndClient::Connect(std::string const& host, unsigned short port) {
     // solve the address
     tcp::resolver r(ioc_);
     try {
-        PLOGD << "resolving ip from " << host << "...";
         tcp::resolver::query q(std::string(host), std::to_string(port));
         auto it_result = r.resolve(q);
         if (it_result == std::end(tcp::resolver::results_type())) {
             // cannot resolve the ip from host name
-            throw std::runtime_error("cannot resolve hostname");
+            asio::post(ioc_, [this, host]() {
+                LogPrintf("Failed to resolve host=%s\n", host);
+                err_handler_(FrontEndClient::ErrorType::CONN, "cannot resolve host");
+            });
+            return;
         }
         // retrieve the first result and start the connection
-        PLOGD << "connecting...";
         ps_.reset(new tcp::socket(ioc_));
         ps_->async_connect(*it_result, [this](error_code const& ec) {
-            PLOGD << "connected";
             if (ec) {
-                PLOGE << ec.message();
+                LogPrintf("Error on connect: %s\n", ec.message());
                 err_handler_(FrontEndClient::ErrorType::CONN, ec.message());
                 return;
             }
@@ -50,19 +51,20 @@ void FrontEndClient::Connect(std::string const& host, unsigned short port) {
             conn_handler_();
         });
     } catch (std::exception const& e) {
-        PLOGE << e.what();
+        LogPrintf("%s: error on connecting, %s\n", __func__, e.what());
     }
 }
 
-void FrontEndClient::SendMessage(UniValue const& msg) {
+bool FrontEndClient::SendMessage(UniValue const& msg) {
     if (ps_ == nullptr) {
-        throw std::runtime_error("please connect to server before sending message");
+        return false;
     }
     bool do_send = sending_msgs_.empty();
     sending_msgs_.push_back(msg.write());
     if (do_send) {
         DoSendNext();
     }
+    return true;
 }
 
 void FrontEndClient::SendShutdown() {
@@ -78,7 +80,6 @@ void FrontEndClient::Exit() {
         error_code ignored_ec;
         ps_->shutdown(tcp::socket::shutdown_both, ignored_ec);
         ps_->close(ignored_ec);
-        ps_.reset();
         // callback
         close_handler_();
     }
@@ -87,8 +88,8 @@ void FrontEndClient::Exit() {
 void FrontEndClient::DoReadNext() {
     asio::async_read_until(*ps_, read_buf_, '\0', [this](error_code const& ec, std::size_t bytes) {
         if (ec) {
-            if (ec != asio::error::eof) {
-                PLOGE << ec.message();
+            if (ec != asio::error::operation_aborted) {
+                LogPrintf("%s: read error, %s\n", __func__, ec.message());
                 err_handler_(FrontEndClient::ErrorType::READ, ec.message());
             }
             Exit();
@@ -101,8 +102,7 @@ void FrontEndClient::DoReadNext() {
             msg.read(result);
             msg_handler_(msg);
         } catch (std::exception const& e) {
-            PLOGE << "READ: " << e.what();
-            PLOGE << "DATA total=" << bytes << ": " << result;
+            LogPrintf("%s: read error, %s, total read=%d bytes\n", __func__, e.what(), bytes);
             err_handler_(FrontEndClient::ErrorType::READ, ec.message());
         }
         DoReadNext();
@@ -143,12 +143,12 @@ void TimelordClient::SetErrorHandler(ErrorHandler err_handler) { err_handler_ = 
 
 void TimelordClient::SetProofReceiver(ProofReceiver proof_receiver) { proof_receiver_ = std::move(proof_receiver); }
 
-void TimelordClient::Calc(uint256 const& challenge, uint64_t iters) {
+bool TimelordClient::Calc(uint256 const& challenge, uint64_t iters) {
     UniValue msg(UniValue::VOBJ);
     msg.pushKV("id", static_cast<int>(TimelordClientMsgs::CALC));
     msg.pushKV("challenge", challenge.GetHex());
     msg.pushKV("iters", iters);
-    client_.SendMessage(msg);
+    return client_.SendMessage(msg);
 }
 
 void TimelordClient::RequestServiceShutdown() { client_.SendShutdown(); }
@@ -175,9 +175,10 @@ void TimelordClient::DoWriteNextPing() {
         }
         UniValue msg(UniValue::VOBJ);
         msg.pushKV("id", static_cast<int>(TimelordClientMsgs::PING));
-        client_.SendMessage(msg);
-        DoWaitPong();
-        DoWriteNextPing();
+        if (client_.SendMessage(msg)) {
+            DoWaitPong();
+            DoWriteNextPing();
+        }
     });
 }
 
@@ -187,7 +188,7 @@ void TimelordClient::DoWaitPong() {
     ptimer_waitpong_->async_wait([this](error_code const& ec) {
         if (!ec) {
             // timeout, report error
-            PLOGE << "PONG timeout, the connection might be dead";
+            LogPrintf("%s: PONG timeout, the connection might be dead\n", __func__);
         }
         ptimer_waitpong_.reset();
     });
@@ -202,7 +203,7 @@ void TimelordClient::HandleConnect() {
 
 void TimelordClient::HandleMessage(UniValue const& msg) {
     auto msg_id = msg["id"].get_int();
-    PLOGI << "msgid: " << TimelordMsgIdToString(static_cast<TimelordMsgs>(msg_id));
+    LogPrint(BCLog::NET, "%s(timelord): msgid=%s\n", __func__, TimelordMsgIdToString(static_cast<TimelordMsgs>(msg_id)));
     auto it = msg_handlers_.find(msg_id);
     if (it != std::end(msg_handlers_)) {
         it->second(msg);
@@ -244,7 +245,7 @@ void TimelordClient::HandleMessage_CalcReply(UniValue const& msg) {
             proof_receiver_(challenge, detail);
         }
     } else if (!calculating) {
-        PLOGE << "timelord reports that the challenge " << challenge.GetHex() << " is invalid";
+        LogPrint(BCLog::NET, "%s: delay challenge=%s\n", __func__, challenge.GetHex());
     }
 }
 
@@ -254,4 +255,8 @@ void TimelordClient::HandleError(FrontEndClient::ErrorType type, std::string con
     }
 }
 
-void TimelordClient::HandleClose() {}
+void TimelordClient::HandleClose() {
+    if (err_handler_) {
+        err_handler_(FrontEndClient::ErrorType::CLOSE, "close");
+    }
+}

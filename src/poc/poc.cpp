@@ -814,7 +814,7 @@ arith_uint256 CalculateAverageNetworkSpace(CBlockIndex *pindexCurr, Consensus::P
         pindex = pindex->pprev;
         --nCount;
     }
-    LogPrintf("%s: average netspace for total %ld block(s)\n", __func__, nActual);
+    LogPrint(BCLog::POC, "%s: average netspace for total %ld block(s)\n", __func__, nActual);
     if (nActual == 0) {
         return 0;
     }
@@ -958,7 +958,7 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
         CBlockIndex* pindex = ::ChainActive().Tip();
         PledgeParams pledgeParams = CalculatePledgeParams(nMiningHeight, params);
         pledgeParams.supplied -= nBurned;
-        LogPrintf("%s: Average network space %1.6f(Tib) from height: %ld, total supplied: %s BHD (burned: %s BHD), params(difficulty=%ld, iters=%ld, DCF(bits)=%ld, Filter(bits)=%ld)\n", __func__,
+        LogPrint(BCLog::POC, "%s: Average network space %1.6f(Tib) from height: %ld, total supplied: %s BHD (burned: %s BHD), params(difficulty=%ld, iters=%ld, DCF(bits)=%ld, Filter(bits)=%ld)\n", __func__,
                 chiapos::FormatNumberStr(std::to_string(pledgeParams.nNetCapacityTB)),
                 pledgeParams.nCalcHeight,
                 chiapos::FormatNumberStr(std::to_string(pledgeParams.supplied / COIN)),
@@ -980,7 +980,7 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
         }
         if (pMinerCapacity != nullptr) *pMinerCapacity = nMinerCapacityTB;
         CAmount nMiningRequireBalance = pledgeParams.supplied * nMinerCapacityTB / nNetCapacityTB;
-        LogPrintf("%s: mining require balance=%ld (%s BHD), miner capacity=%s TB, mined=%ld/%ld, isFoundationAddr=%s\n", __func__, nMiningRequireBalance, chiapos::FormatNumberStr(std::to_string(nMiningRequireBalance / COIN)), chiapos::FormatNumberStr(std::to_string(nMinerCapacityTB)), nMinedCount, nBlockCount, (isFoundationAddr ? "yes" : "no"));
+        LogPrint(BCLog::POC, "%s: mining require balance=%ld (%s BHD), miner capacity=%s TB, mined=%ld/%ld, isFoundationAddr=%s\n", __func__, nMiningRequireBalance, chiapos::FormatNumberStr(std::to_string(nMiningRequireBalance / COIN)), chiapos::FormatNumberStr(std::to_string(nMinerCapacityTB)), nMinedCount, nBlockCount, (isFoundationAddr ? "yes" : "no"));
         return nMiningRequireBalance;
     } else {
         int64_t nMinerCapacityTB = std::max((nNetCapacityTB * nMinedCount) / nBlockCount, (int64_t) 1);

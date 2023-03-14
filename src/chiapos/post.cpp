@@ -179,7 +179,7 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
     int64_t nAbsDuration = nDuration - nDurationVDF;
     if (nAbsDuration > 30) {
         // should we mark this issue as a failure?
-        LogPrintf("%s (warning): duration mismatch block duration: %ld, vdf duration %ld, abs=%ld\n", __func__,
+        LogPrintf("%s (warning): duration mismatch block duration: %ld secs, vdf duration %ld secs, distance=%ld secs\n", __func__,
                   nDuration, nDurationVDF, nAbsDuration);
     }
 
@@ -499,20 +499,27 @@ bool IsTimelordRunning() { return g_pTimelordThread != nullptr; }
 
 void PrepareTimelord(HostEntry const& host_entry)
 {
+    LogPrintf("%s: preparing new connection to %s:%d\n", __func__, host_entry.first, host_entry.second);
     auto pTimelordClient = std::make_shared<TimelordClient>(g_iocTimelord);
     asio::post(g_iocTimelord, [pTimelordClient]() {
         g_timelordVec.push_back(pTimelordClient);
     });
     auto pweak = std::weak_ptr<TimelordClient>(pTimelordClient);
+    pTimelordClient->SetConnectionHandler([host_entry]() {
+        LogPrintf("connected to timelord %s:%d\n", host_entry.first, host_entry.second);
+    });
     pTimelordClient->SetErrorHandler([pweak, host_entry](FrontEndClient::ErrorType type, std::string const& errs) {
+        LogPrintf("connection to timelord %s:%d error: %s\n", host_entry.first, host_entry.second, errs);
         // the timelord client should be released
         auto pTimelordClient = pweak.lock();
         auto it = std::remove(std::begin(g_timelordVec), std::end(g_timelordVec), pTimelordClient);
         g_timelordVec.erase(it, std::end(g_timelordVec));
         // re-connect?
         if (!ShutdownRequested()) {
+            int const RECONNECT_AFTER_SECONDS = 3;
+            LogPrintf("reconnect to timelord %s:%d after %d seconds\n", host_entry.first, host_entry.second, RECONNECT_AFTER_SECONDS);
             auto ptimer = std::make_shared<asio::steady_timer>(g_iocTimelord);
-            ptimer->expires_after(std::chrono::seconds(3));
+            ptimer->expires_after(std::chrono::seconds(RECONNECT_AFTER_SECONDS));
             ptimer->async_wait([ptimer, host_entry](std::error_code const& ec) {
                 if (ec) {
                     return;
@@ -584,13 +591,10 @@ void UpdateChallengeToTimelord(uint256 challenge, uint64_t iters) {
         return;
     }
     asio::post(g_iocTimelord, [challenge, iters]() {
+        LogPrintf("Update challenge(iters=%s)%s to %d timelord(s)\n", MakeNumberStr(iters), challenge.GetHex(), g_timelordVec.size());
         // deliver the iters to every timelord clients
         for (auto pTimelordClient : g_timelordVec) {
-            try {
-                pTimelordClient->Calc(challenge, iters);
-            } catch (std::exception const& e) {
-                // the status of timelord client might be `connecting`
-            }
+            pTimelordClient->Calc(challenge, iters);
         }
     });
 }

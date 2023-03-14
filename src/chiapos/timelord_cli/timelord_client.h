@@ -40,7 +40,7 @@ public:
 
     void Connect(std::string const& host, unsigned short port);
 
-    void SendMessage(UniValue const& msg);
+    bool SendMessage(UniValue const& msg);
 
     void SendShutdown();
 
@@ -87,7 +87,7 @@ public:
 
     void SetProofReceiver(ProofReceiver proof_receiver);
 
-    void Calc(uint256 const& challenge, uint64_t iters);
+    bool Calc(uint256 const& challenge, uint64_t iters);
 
     void Connect(std::string const& host, unsigned short port);
 
