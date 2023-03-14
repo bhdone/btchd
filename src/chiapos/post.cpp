@@ -18,13 +18,10 @@
 #include <vdf_computer.h>
 
 #include <atomic>
-#include <boost/asio.hpp>
 #include <cstdint>
 #include <memory>
 
 #include "newblock_watcher.hpp"
-
-namespace net = boost::asio;
 
 namespace chiapos {
 
