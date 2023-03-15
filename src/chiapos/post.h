@@ -25,7 +25,7 @@ namespace chiapos {
 
 class NewBlockWatcher;
 
-uint256 MakeChallenge(CBlockIndex* pindex, Consensus::Params const& params);
+uint256 MakeChallenge(CBlockIndex const* pindex, Consensus::Params const& params);
 
 bool CheckPosProof(CPosProof const& proof, CValidationState& state, Consensus::Params const& params, int nTargetHeight);
 

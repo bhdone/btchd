@@ -27,7 +27,7 @@ bool ShutdownRequested();
 
 namespace chiapos {
 
-uint256 MakeChallenge(CBlockIndex* pindex, Consensus::Params const& params) {
+uint256 MakeChallenge(CBlockIndex const* pindex, Consensus::Params const& params) {
     assert(pindex);
     int nTargetHeight = pindex->nHeight + 1;
     if (nTargetHeight == params.BHDIP009Height) {
