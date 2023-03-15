@@ -592,7 +592,7 @@ void UpdateChallengeToTimelord(uint256 challenge, uint64_t iters) {
     }
     g_queried_challenges.emplace(challenge, iters);
     asio::post(g_iocTimelord, [challenge, iters]() {
-        LogPrintf("Update challenge(iters=%s)%s to %d timelord(s)\n", MakeNumberStr(iters), challenge.GetHex(), g_timelordVec.size());
+        LogPrint(BCLog::POC, "Update challenge(iters=%s)%s to %d timelord(s)\n", MakeNumberStr(iters), challenge.GetHex(), g_timelordVec.size());
         // deliver the iters to every timelord clients
         for (auto pTimelordClient : g_timelordVec) {
             pTimelordClient->Calc(challenge, iters);

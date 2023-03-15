@@ -2050,7 +2050,7 @@ bool AppInitMain(InitInterfaces& interfaces)
         }
         // Install callback
         chiapos::RegisterTimelordProofHandler([](chiapos::CVdfProof const& vdf) {
-            LogPrintf("Received proof for challenge (iters=%s)%s\n",
+            LogPrint(BCLog::POC, "Received proof for challenge (iters=%s)%s\n",
                 chiapos::FormatNumberStr(std::to_string(vdf.nVdfIters)), vdf.challenge.GetHex());
             chiapos::SendVdfProofOverP2PNetwork(g_connman.get(), vdf);
             chiapos::SubmitVdfProofPacket(vdf);
