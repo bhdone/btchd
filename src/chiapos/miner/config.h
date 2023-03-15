@@ -18,6 +18,8 @@ public:
         std::string passwd;
     };
 
+    Config();
+
     std::string ToJsonString() const;
 
     void ParseFromJsonString(std::string const& json_str);
@@ -40,6 +42,8 @@ public:
 
     chiapos::PubKey GetFarmerPk() const;
 
+    std::vector<std::string> GetTimelordEndpoints() const;
+
 private:
     RPC m_rpc;
     std::string m_reward_dest;
@@ -47,6 +51,7 @@ private:
     std::string m_seed;
     bool m_testnet{true};
     bool m_no_proxy{true};
+    std::vector<std::string> m_timelord_endpoints;
 };
 
 }  // namespace miner

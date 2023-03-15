@@ -128,9 +128,9 @@ struct Arguments {
     int difficulty_constant_factor_bits;  // dcf bits (chain parameter)
     std::string datadir;                  // The root path of the data directory
     std::string cookie_path;              // The file stores the connecting information of current btchd server
-    bool timelord;
-    std::string timelord_host;
-    unsigned short timelord_port;
+    // bool timelord;
+    // std::string timelord_host;
+    // unsigned short timelord_port;
 } g_args;
 
 miner::Config g_config;
@@ -173,10 +173,8 @@ int HandleCommand_Mining() {
     miner::Miner miner(*pclient, prover, miner::g_config.GetFarmerSk(), miner::g_config.GetFarmerPk(),
                        miner::g_config.GetRewardDest(), miner::g_args.difficulty_constant_factor_bits);
     // do we have timelord service
-    if (miner::g_args.timelord) {
-        PLOGI << "start timelord " << miner::g_args.timelord_host << ":" << miner::g_args.timelord_port;
-        miner.StartTimelord(miner::g_args.timelord_host, miner::g_args.timelord_port);
-    }
+    auto timelord_endpoints = miner::g_config.GetTimelordEndpoints();
+    miner.StartTimelord(timelord_endpoints, 19191);
     return miner.Run();
 }
 
@@ -466,11 +464,6 @@ int main(int argc, char** argv) {
              cxxopts::value<std::string>())  // --datadir, -d
             ("cookie", "Full path to `.cookie` from btchd datadir",
              cxxopts::value<std::string>())                            // --cookie
-            ("timelord", "Establish connnection to timelord service")  // --timelord
-            ("timelord-host", "The address to connect to the timelord service",
-             cxxopts::value<std::string>()->default_value("127.0.0.1"))  // --timelord-addr
-            ("timelord-port", "Timelord service listen to this port",
-             cxxopts::value<unsigned short>()->default_value("19191"))  // --timelord-port
             ("command", std::string("Command") + miner::GetCommandsList(),
              cxxopts::value<std::string>())  // --command
             ;
@@ -559,10 +552,6 @@ int main(int argc, char** argv) {
             miner::g_args.cookie_path = cookie_path.string();
         }
     }
-
-    miner::g_args.timelord = result.count("timelord") > 0;
-    miner::g_args.timelord_host = result["timelord-host"].as<std::string>();
-    miner::g_args.timelord_port = result["timelord-port"].as<unsigned short>();
 
     miner::g_args.difficulty_constant_factor_bits = result["dcf-bits"].as<int>();
 

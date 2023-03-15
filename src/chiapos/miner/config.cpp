@@ -11,6 +11,8 @@
 
 namespace miner {
 
+Config::Config() { m_timelord_endpoints.push_back("timelord.bhd.one:19191"); }
+
 std::string Config::ToJsonString() const {
     UniValue root(UniValue::VOBJ);
     root.pushKV("reward", m_reward_dest);
@@ -30,6 +32,12 @@ std::string Config::ToJsonString() const {
     rpc.pushKV("password", m_rpc.passwd);
 
     root.pushKV("rpc", rpc);
+
+    UniValue timelord_endpoints(UniValue::VARR);
+    for (auto const& endpoint : m_timelord_endpoints) {
+        timelord_endpoints.push_back(UniValue(endpoint));
+    }
+    root.pushKV("timelords", timelord_endpoints);
     return root.write(4);
 }
 
@@ -80,6 +88,14 @@ void Config::ParseFromJsonString(std::string const& json_str) {
         }
     }
 
+    if (root.exists("timelords") && root["timelords"].isArray()) {
+        m_timelord_endpoints.clear();
+        for (UniValue const& val : root["timelords"].getValues()) {
+            std::string endpoint = val.get_str();
+            m_timelord_endpoints.push_back(std::move(endpoint));
+        }
+    }
+
     if (root.exists("seed") && root["seed"].isStr()) {
         m_seed = root["seed"].get_str();
     }
@@ -109,7 +125,6 @@ bool Config::Testnet() const { return m_testnet; }
 
 bool Config::NoProxy() const { return m_no_proxy; }
 
-
 void Config::SetSeed(std::string seed) { m_seed = std::move(seed); }
 
 chiapos::SecreKey Config::GetFarmerSk() const {
@@ -123,5 +138,7 @@ chiapos::PubKey Config::GetFarmerPk() const {
     keyman::Key key = wallet.GetFarmerKey(0);
     return chiapos::MakeArray<chiapos::PK_LEN>(chiapos::MakeBytes(key.GetPublicKey()));
 }
+
+std::vector<std::string> Config::GetTimelordEndpoints() const { return m_timelord_endpoints; }
 
 }  // namespace miner

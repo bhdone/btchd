@@ -102,15 +102,28 @@ Miner::~Miner() {
     if (m_pthread_timelord) {
         PLOGI << "exiting timelord client...";
         m_shutting_down = true;
-        assert(m_ptimelord_client != nullptr);
-        m_ptimelord_client->Exit();
+        for (auto ptr : m_timelord_vec) {
+            ptr->Exit();
+        }
         m_pthread_timelord->join();
     }
 }
 
-void Miner::StartTimelord(std::string const& hostname, unsigned short port) {
+void Miner::StartTimelord(std::vector<std::string> const& endpoints, uint16_t default_port) {
     PLOGI << "starting timelord client...";
-    PrepareTimelordClient(hostname, port);
+    for (auto const& endpoint : endpoints) {
+        auto p = endpoint.find_first_of(':');
+        std::string hostname;
+        uint16_t port{default_port};
+        if (p != std::string::npos) {
+            hostname = endpoint.substr(0, p);
+            std::string port_str = endpoint.substr(p + 1);
+            port = std::atoi(port_str.c_str());
+        } else {
+            hostname = endpoint;
+        }
+        m_timelord_vec.push_back(PrepareTimelordClient(hostname, port));
+    }
     m_pthread_timelord.reset(new std::thread(std::bind(&Miner::TimelordProc, this)));
 }
 
@@ -254,34 +267,34 @@ int Miner::Run() {
     return 0;
 }
 
-void Miner::PrepareTimelordClient(std::string const& hostname, unsigned short port) {
+TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsigned short port) {
     PLOGI << "Establishing connection to timelord " << hostname << ":" << port;
-    m_ptimelord_client.reset(new TimelordClient(m_ioc));
-    m_ptimelord_client->SetConnectionHandler([]() { PLOGI << "Connected to timelord"; });
-    m_ptimelord_client->SetErrorHandler(
-            [this, hostname, port](FrontEndClient::ErrorType type, std::string const& errs) {
-                PLOGE << "Timelord client " << hostname << ":" << port
-                      << ", reports error: type=" << static_cast<int>(type) << ", errs: " << errs;
-                // TODO We need to re-try to connect to timelord server here
-                if (!m_shutting_down) {
-                    // prepare to reconnect
-                    // wait 3 seconds
-                    int const RECONNECT_WAIT_SECONDS = 3;
-                    PLOGI << "Establish connection to timelord after " << RECONNECT_WAIT_SECONDS << " seconds";
-                    auto ptimer = std::make_shared<asio::steady_timer>(m_ioc);
-                    ptimer->expires_after(std::chrono::seconds(RECONNECT_WAIT_SECONDS));
-                    ptimer->async_wait([this, hostname, port, ptimer](std::error_code const& ec) {
-                        if (ec) {
-                            return;
-                        }
-                        // ready to connect
-                        PrepareTimelordClient(hostname, port);
-                    });
+    auto ptimelord_client = std::make_shared<TimelordClient>(m_ioc);
+    ptimelord_client->SetConnectionHandler([]() { PLOGI << "Connected to timelord"; });
+    ptimelord_client->SetErrorHandler([this, hostname, port](FrontEndClient::ErrorType type, std::string const& errs) {
+        PLOGE << "Timelord client " << hostname << ":" << port << ", reports error: type=" << static_cast<int>(type)
+              << ", errs: " << errs;
+        // TODO We need to re-try to connect to timelord server here
+        if (!m_shutting_down) {
+            // prepare to reconnect
+            // wait 3 seconds
+            int const RECONNECT_WAIT_SECONDS = 3;
+            PLOGI << "Establish connection to timelord after " << RECONNECT_WAIT_SECONDS << " seconds";
+            auto ptimer = std::make_shared<asio::steady_timer>(m_ioc);
+            ptimer->expires_after(std::chrono::seconds(RECONNECT_WAIT_SECONDS));
+            ptimer->async_wait([this, hostname, port, ptimer](std::error_code const& ec) {
+                if (ec) {
+                    return;
                 }
+                // ready to connect
+                PrepareTimelordClient(hostname, port);
             });
-    m_ptimelord_client->SetProofReceiver(
+        }
+    });
+    ptimelord_client->SetProofReceiver(
             [this](uint256 const& challenge, ProofDetail const& detail) { SaveProof(challenge, detail); });
-    m_ptimelord_client->Connect(hostname, port);
+    ptimelord_client->Connect(hostname, port);
+    return ptimelord_client;
 }
 
 Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_seconds,
@@ -291,7 +304,9 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
     // before we get in the loop, we need to send the request to timelord if it is running
     if (m_pthread_timelord) {
         PLOGD << "request proof from timelord";
-        m_ptimelord_client->Calc(current_challenge, iters_limits);
+        for (auto ptr : m_timelord_vec) {
+            ptr->Calc(current_challenge, iters_limits);
+        }
     }
     auto start_time = std::chrono::system_clock::now();
     while (running) {

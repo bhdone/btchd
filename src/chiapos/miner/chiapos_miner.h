@@ -21,6 +21,8 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
                                                          std::string* out_plot_path = nullptr);
 }
 
+using TimelordClientPtr = std::shared_ptr<TimelordClient>;
+
 /// Miner is a state machine
 class Miner {
 public:
@@ -29,7 +31,7 @@ public:
 
     ~Miner();
 
-    void StartTimelord(std::string const& hostname, unsigned short port);
+    void StartTimelord(std::vector<std::string> const& endpoints, uint16_t default_port);
 
     int Run();
 
@@ -38,7 +40,7 @@ private:
 
     enum class BreakReason { Error, Timeout, ChallengeIsChanged, VDFIsAcquired };
 
-    void PrepareTimelordClient(std::string const& hostname, unsigned short port);
+    TimelordClientPtr PrepareTimelordClient(std::string const& hostname, unsigned short port);
 
     /// A thread proc to check the challenge or the VDF from P2P network
     BreakReason CheckAndBreak(std::atomic_bool& running, int timeout_seconds, uint256 const& initial_challenge,
@@ -66,7 +68,7 @@ private:
     // thread and timelord
     asio::io_context m_ioc;
     std::unique_ptr<std::thread> m_pthread_timelord;
-    std::unique_ptr<TimelordClient> m_ptimelord_client;
+    std::vector<TimelordClientPtr> m_timelord_vec;
     mutable std::mutex m_mtx_proofs;
     std::map<uint256, std::vector<ProofDetail>> m_proofs;
     std::set<uint256> m_submit_history;
