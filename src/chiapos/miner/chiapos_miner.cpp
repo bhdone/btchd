@@ -28,9 +28,6 @@
 #include <chiapos/timelord_cli/msg_ids.h>
 #include <chiapos/timelord_cli/timelord_client.h>
 
-using std::placeholders::_1;
-using std::placeholders::_2;
-
 namespace miner {
 namespace pos {
 
@@ -104,6 +101,7 @@ Miner::Miner(RPCClient& client, Prover& prover, chiapos::SecreKey farmer_sk, chi
 Miner::~Miner() {
     if (m_pthread_timelord) {
         PLOGI << "exiting timelord client...";
+        m_shutting_down = true;
         assert(m_ptimelord_client != nullptr);
         m_ptimelord_client->Exit();
         m_pthread_timelord->join();
@@ -112,11 +110,7 @@ Miner::~Miner() {
 
 void Miner::StartTimelord(std::string const& hostname, unsigned short port) {
     PLOGI << "starting timelord client...";
-    m_ptimelord_client.reset(new TimelordClient(ioc_));
-    m_ptimelord_client->Connect(hostname, port);
-    m_ptimelord_client->SetConnectionHandler(std::bind(&Miner::HandleTimelord_Connected, this));
-    m_ptimelord_client->SetErrorHandler(std::bind(&Miner::HandleTimelord_Error, this, _1, _2));
-    m_ptimelord_client->SetProofReceiver(std::bind(&Miner::HandleTimelord_Proof, this, _1, _2));
+    PrepareTimelordClient(hostname, port);
     m_pthread_timelord.reset(new std::thread(std::bind(&Miner::TimelordProc, this)));
 }
 
@@ -194,8 +188,8 @@ int Miner::Run() {
                 m_client.RequireVdf(current_challenge, iters);
                 PLOG_INFO << "waiting for VDF proofs...";
                 std::atomic_bool running{true};
-                BreakReason reason =
-                        CheckAndBreak(running, queried_challenge.target_duration * 1.5, queried_challenge.challenge, current_challenge, iters, vdf_mtx, vdf);
+                BreakReason reason = CheckAndBreak(running, queried_challenge.target_duration * 1.5,
+                                                   queried_challenge.challenge, current_challenge, iters, vdf_mtx, vdf);
                 if (reason == BreakReason::ChallengeIsChanged) {
                     PLOG_INFO << "!!!!! Challenge is changed !!!!!";
                     m_state = State::RequireChallenge;
@@ -209,7 +203,7 @@ int Miner::Run() {
                     // until the service is recover
                     m_state = State::RequireChallenge;
                 } else if (reason == BreakReason::Timeout) {
-                    m_state = State::WaitVDF; // request vdf again
+                    m_state = State::WaitVDF;  // request vdf again
                 }
             } else if (m_state == State::ProcessVDF) {
                 if (pos.has_value()) {
@@ -258,9 +252,40 @@ int Miner::Run() {
     return 0;
 }
 
-Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_seconds, uint256 const& initial_challenge,
-                                        uint256 const& current_challenge, uint64_t iters_limits,
-                                        std::mutex& vdf_write_lock, chiapos::optional<RPCClient::VdfProof>& out_vdf) {
+void Miner::PrepareTimelordClient(std::string const& hostname, unsigned short port) {
+    PLOGI << "Establishing connection to timelord " << hostname << ":" << port;
+    m_ptimelord_client.reset(new TimelordClient(m_ioc));
+    m_ptimelord_client->SetConnectionHandler([]() { PLOGI << "Connected to timelord"; });
+    m_ptimelord_client->SetErrorHandler(
+            [this, hostname, port](FrontEndClient::ErrorType type, std::string const& errs) {
+                PLOGE << "Timelord client " << hostname << ":" << port
+                      << ", reports error: type=" << static_cast<int>(type) << ", errs: " << errs;
+                // TODO We need to re-try to connect to timelord server here
+                if (!m_shutting_down) {
+                    // prepare to reconnect
+                    // wait 3 seconds
+                    int const RECONNECT_WAIT_SECONDS = 3;
+                    PLOGI << "Establish connection to timelord after " << RECONNECT_WAIT_SECONDS << " seconds";
+                    auto ptimer = std::make_shared<asio::steady_timer>(m_ioc);
+                    ptimer->expires_after(std::chrono::seconds(RECONNECT_WAIT_SECONDS));
+                    ptimer->async_wait([this, hostname, port, ptimer](std::error_code const& ec) {
+                        if (ec) {
+                            return;
+                        }
+                        // ready to connect
+                        PrepareTimelordClient(hostname, port);
+                    });
+                }
+            });
+    m_ptimelord_client->SetProofReceiver(
+            [this](uint256 const& challenge, ProofDetail const& detail) { SaveProof(challenge, detail); });
+    m_ptimelord_client->Connect(hostname, port);
+}
+
+Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_seconds,
+                                        uint256 const& initial_challenge, uint256 const& current_challenge,
+                                        uint64_t iters_limits, std::mutex& vdf_write_lock,
+                                        chiapos::optional<RPCClient::VdfProof>& out_vdf) {
     // before we get in the loop, we need to send the request to timelord if it is running
     if (m_pthread_timelord) {
         PLOGD << "request proof from timelord";
@@ -336,7 +361,7 @@ std::string Miner::ToString(State state) {
     assert(false);
 }
 
-void Miner::TimelordProc() { ioc_.run(); }
+void Miner::TimelordProc() { m_ioc.run(); }
 
 chiapos::optional<ProofDetail> Miner::QueryProofFromTimelord(uint256 const& challenge, uint64_t iters) const {
     std::lock_guard<std::mutex> lg(m_mtx_proofs);
@@ -362,13 +387,5 @@ void Miner::SaveProof(uint256 const& challenge, ProofDetail const& detail) {
     }
     PLOGI << "proof is saved.";
 }
-
-void Miner::HandleTimelord_Connected() { PLOGD << "connected to timelord"; }
-
-void Miner::HandleTimelord_Error(FrontEndClient::ErrorType type, std::string const& errs) {
-    PLOGE << "timelord client reports error: type=" << static_cast<int>(type) << ", errs: " << errs;
-}
-
-void Miner::HandleTimelord_Proof(uint256 const& challenge, ProofDetail const& detail) { SaveProof(challenge, detail); }
 
 }  // namespace miner

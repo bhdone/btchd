@@ -38,6 +38,8 @@ private:
 
     enum class BreakReason { Error, Timeout, ChallengeIsChanged, VDFIsAcquired };
 
+    void PrepareTimelordClient(std::string const& hostname, unsigned short port);
+
     /// A thread proc to check the challenge or the VDF from P2P network
     BreakReason CheckAndBreak(std::atomic_bool& running, int timeout_seconds, uint256 const& initial_challenge,
                               uint256 const& current_challenge, uint64_t iters_limits, std::mutex& vdf_write_lock,
@@ -51,12 +53,6 @@ private:
 
     void SaveProof(uint256 const& challenge, ProofDetail const& detail);
 
-    void HandleTimelord_Connected();
-
-    void HandleTimelord_Error(FrontEndClient::ErrorType type, std::string const& errs);
-
-    void HandleTimelord_Proof(uint256 const& challenge, ProofDetail const& detail);
-
 private:
     // utilities
     RPCClient& m_client;
@@ -68,12 +64,13 @@ private:
     // State
     std::atomic<State> m_state{State::RequireChallenge};
     // thread and timelord
-    asio::io_context ioc_;
+    asio::io_context m_ioc;
     std::unique_ptr<std::thread> m_pthread_timelord;
     std::unique_ptr<TimelordClient> m_ptimelord_client;
     mutable std::mutex m_mtx_proofs;
     std::map<uint256, std::vector<ProofDetail>> m_proofs;
     std::set<uint256> m_submit_history;
+    std::atomic_bool m_shutting_down{false};
 };
 
 }  // namespace miner
