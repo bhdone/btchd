@@ -92,7 +92,6 @@ void FrontEndClient::DoReadNext() {
                 LogPrintf("%s: read error, %s\n", __func__, ec.message());
                 err_handler_(FrontEndClient::ErrorType::READ, ec.message());
             }
-            Exit();
             return;
         }
         std::string result = static_cast<char const*>(read_buf_.data().data());
@@ -118,7 +117,6 @@ void FrontEndClient::DoSendNext() {
     asio::async_write(*ps_, asio::buffer(send_buf_), [this](error_code const& ec, std::size_t bytes) {
         if (ec) {
             err_handler_(FrontEndClient::ErrorType::WRITE, ec.message());
-            Exit();
             return;
         }
         sending_msgs_.pop_front();
@@ -252,6 +250,7 @@ void TimelordClient::HandleMessage_CalcReply(UniValue const& msg) {
 void TimelordClient::HandleError(FrontEndClient::ErrorType type, std::string const& errs) {
     if (err_handler_) {
         err_handler_(type, errs);
+        client_.Exit();
     }
 }
 
