@@ -590,6 +590,7 @@ void UpdateChallengeToTimelord(uint256 challenge, uint64_t iters) {
     if (g_queried_challenges.find(std::make_pair(challenge, iters)) != std::end(g_queried_challenges)) {
         return;
     }
+    g_queried_challenges.emplace(challenge, iters);
     asio::post(g_iocTimelord, [challenge, iters]() {
         LogPrintf("Update challenge(iters=%s)%s to %d timelord(s)\n", MakeNumberStr(iters), challenge.GetHex(), g_timelordVec.size());
         // deliver the iters to every timelord clients
