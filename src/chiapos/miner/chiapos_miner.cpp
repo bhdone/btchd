@@ -123,6 +123,7 @@ int Miner::Run() {
     chiapos::optional<RPCClient::VdfProof> vdf;
     std::vector<RPCClient::VdfProof> void_block_vec;
     uint64_t iters;
+    std::string curr_plot_path;
     while (1) {
         try {
             std::this_thread::yield();
@@ -153,13 +154,14 @@ int Miner::Run() {
                           << ", dcf_bits: " << m_difficulty_constant_factor_bits
                           << ", filter_bits: " << queried_challenge.filter_bits;
                 pos = pos::QueryBestPosProof(m_prover, current_challenge, m_difficulty_constant_factor_bits,
-                                             queried_challenge.filter_bits);
+                                             queried_challenge.filter_bits, &curr_plot_path);
                 if (pos.has_value()) {
                     // Check plot-id
                     chiapos::PlotId plot_id = chiapos::MakePlotId(pos->local_pk, m_farmer_pk, pos->pool_pk_or_hash);
                     if (plot_id != pos->plot_id) {
                         // The provided mnemonic is invalid or it doesn't match to the farmer
-                        PLOG_ERROR << "!!! Invalid mnemonic! Please check and fix your configure file!";
+                        PLOG_ERROR << "!!! Invalid mnemonic! Please check and fix your configure file! Plot path: "
+                                   << curr_plot_path;
                         return 1;
                     }
                     PLOG_INFO << "submit pos to chain";
