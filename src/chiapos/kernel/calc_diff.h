@@ -11,7 +11,7 @@ namespace chiapos {
 
 // K between 25 and 50
 int const MIN_K_TEST_NET = 25;
-int const MIN_K = 32;
+int const MIN_K = 25;
 int const MAX_K = 50;
 
 int const NUMBER_OF_ZEROS_BITS_FOR_FILTER = 9;
