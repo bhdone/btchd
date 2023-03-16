@@ -181,10 +181,6 @@ int Miner::Run() {
                                    << curr_plot_path;
                         return 1;
                     }
-                    PLOG_INFO << "submit pos to chain";
-                    if (!m_client.SubmitPos(*pos, m_farmer_sk, m_prover.GetGroupHash(), m_prover.GetTotalSize())) {
-                        PLOGE << "submit pos failed!!!";
-                    }
                     // Get the iters from PoS
                     iters = pos->iters;
                     PLOG_INFO << "calculated, iters=" << chiapos::FormatNumberStr(std::to_string(iters))

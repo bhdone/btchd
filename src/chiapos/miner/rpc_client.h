@@ -156,9 +156,6 @@ public:
 
     bool SubmitVdf(VdfProof const& vdf);
 
-    bool SubmitPos(PosProof const& pos, chiapos::SecreKey const& farmer_sk, uint256 const& group_hash,
-                   uint64_t total_size);
-
     void SubmitProof(ProofPack const& proof_pack);
 
     chiapos::Bytes BindPlotter(std::string const& address, chiapos::SecreKey const& farmerSk);
