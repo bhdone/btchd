@@ -230,10 +230,14 @@ static UniValue submitProof(JSONRPCRequest const& request) {
     }
 
     auto params = Params().GetConsensus();
-    LOCK(cs_main);
 
-    CBlockIndex* pindexPrev = LookupBlockIndex(hashPrevBlock);
-    uint64_t nDifficulty = AdjustDifficulty(pindexPrev->chiaposFields.nDifficulty, nTotalDuration, params.BHDIP008TargetSpacing);
+    uint64_t nDifficulty{1};
+    {
+        LOCK(cs_main);
+
+        CBlockIndex* pindexPrev = LookupBlockIndex(hashPrevBlock);
+        nDifficulty = AdjustDifficulty(pindexPrev->chiaposFields.nDifficulty, nTotalDuration, params.BHDIP008TargetSpacing);
+    }
 
     // We should put it to the chain immediately
     GenerateChiaBlock(hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge, vchFarmerSk,
