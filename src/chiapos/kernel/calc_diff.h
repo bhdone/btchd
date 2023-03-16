@@ -17,7 +17,7 @@ int const MAX_K = 50;
 int const NUMBER_OF_ZEROS_BITS_FOR_FILTER = 9;
 int const NUMBER_OF_ZEROS_BITS_FOR_FILTER_TESTNET = 0;
 
-int const DIFFICULTY_CONSTANT_FACTOR_BITS = 32;
+int const DIFFICULTY_CONSTANT_FACTOR_BITS = 67;
 
 arith_uint256 Pow2(int bits);
 
