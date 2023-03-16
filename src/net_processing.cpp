@@ -3339,17 +3339,17 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                     pos.challenge.GetHex(), pfrom->GetId(), chiapos::BytesToHex(pos.vchFarmerPk));
         }
 
-        SavePosQuality(pos, groupHash, nTotalSize);
-
-        chiapos::SendPosPreviewOverP2PNetwork(connman, pos, groupHash, nTotalSize, pfrom, [&pos](CNode* pnode) {
-            AssertLockHeld(cs_main);
-            CNodeState* pstate = State(pnode->GetId());
-            if (pstate != nullptr && (pstate->FindPosPreview(pos.vchProof))) {
-                return false;
-            }
-            pstate->SavePosPreview(pos.vchProof);
-            return true;
-        });
+        if (SavePosQuality(pos, groupHash, nTotalSize)) {
+            chiapos::SendPosPreviewOverP2PNetwork(connman, pos, groupHash, nTotalSize, pfrom, [&pos](CNode* pnode) {
+                AssertLockHeld(cs_main);
+                CNodeState* pstate = State(pnode->GetId());
+                if (pstate != nullptr && (pstate->FindPosPreview(pos.vchProof))) {
+                    return false;
+                }
+                pstate->SavePosPreview(pos.vchProof);
+                return true;
+            });
+        }
 
         return true;
     }

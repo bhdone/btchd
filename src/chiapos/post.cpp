@@ -394,6 +394,7 @@ struct PosQuality {
     CPosProof pos;
     uint64_t quality;
 };
+// challenge, PosQuality[]
 static std::map<uint256, std::vector<PosQuality>> g_posquality;
 
 bool IsTheBestPos(CPosProof const& pos, uint64_t quality)
@@ -413,7 +414,7 @@ bool IsTheBestPos(CPosProof const& pos, uint64_t quality)
     return true;
 }
 
-void SavePosQuality(CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, uint64_t quality)
+bool SavePosQuality(CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, uint64_t quality)
 {
     UpdateMinerGroup(pos.vchFarmerPk, groupHash, nTotalSize);
 
@@ -425,8 +426,15 @@ void SavePosQuality(CPosProof const& pos, uint256 const& groupHash, uint64_t nTo
     if (it == std::end(g_posquality)) {
         g_posquality.insert(std::make_pair(pos.challenge, std::vector<PosQuality> { { pos, quality } }));
     } else {
+        auto it2 = std::find_if(std::begin(it->second), std::end(it->second), [&pos](PosQuality const& quality) -> bool {
+            return quality.pos.vchProof == pos.vchProof;
+        });
+        if (it2 != std::end(it->second)) {
+            return false;
+        }
         it->second.push_back({ pos, quality });
     }
+    return true;
 }
 
 void SendPosPreviewOverP2PNetwork(CConnman* connman, CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, CNode* pfrom, NodeChecker checker) {

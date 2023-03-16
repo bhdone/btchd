@@ -49,6 +49,8 @@ struct NodeIsAlwaysGood {
 
 using SentHandler = std::function<void(CNode* pnode)>;
 
+// farmer-pk
+// map: <group-hash, size>
 using MinerGroups = std::map<Bytes, std::map<uint256, uint64_t>>;
 MinerGroups const& QueryAllMinerGroups();
 
@@ -58,7 +60,8 @@ void SendPosPreviewOverP2PNetwork(CConnman* connman, CPosProof const& pos, uint2
 
 bool IsTheBestPos(CPosProof const& pos, uint64_t quality = 0);
 
-void SavePosQuality(CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, uint64_t quality = 0);
+/// Returns true means the proof is new
+bool SavePosQuality(CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, uint64_t quality = 0);
 
 void SendVdfProofOverP2PNetwork(CConnman* connman, CVdfProof const& vdf, CNode* pfrom = nullptr,
                                 NodeChecker checker = NodeIsAlwaysGood());
