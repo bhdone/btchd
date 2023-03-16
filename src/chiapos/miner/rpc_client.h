@@ -69,7 +69,7 @@ public:
 
     struct PosProof {
         uint256 mixed_quality_string;
-        uint64_t quality;
+        uint64_t iters;
         uint256 challenge;
         uint8_t k;
         chiapos::PlotId plot_id;

@@ -136,7 +136,7 @@ bool RPCClient::SubmitPos(PosProof const& pos, chiapos::SecreKey const& farmer_s
 void RPCClient::SubmitProof(ProofPack const& proof_pack) {
     SendMethod(m_no_proxy, "submitproof", proof_pack.prev_block_hash, proof_pack.prev_block_height,
                proof_pack.pos.challenge, proof_pack.pos, proof_pack.farmer_sk, proof_pack.vdf,
-               proof_pack.void_block_vec, proof_pack.reward_dest, proof_pack.pos.quality);
+               proof_pack.void_block_vec, proof_pack.reward_dest);
 }
 
 chiapos::Bytes RPCClient::BindPlotter(std::string const& address, chiapos::SecreKey const& farmerSk) {
@@ -220,7 +220,8 @@ chiapos::Bytes RPCClient::RetargetPledge(chiapos::Bytes const& tx_id, std::strin
     return chiapos::BytesFromHex(res.result.get_str());
 }
 
-RPCClient::MiningRequirement RPCClient::QueryMiningRequirement(const std::string &address, const chiapos::PubKey &farmer_pk) {
+RPCClient::MiningRequirement RPCClient::QueryMiningRequirement(std::string const& address,
+                                                               chiapos::PubKey const& farmer_pk) {
     auto res = SendMethod(m_no_proxy, "queryminingrequirement", address, farmer_pk);
     MiningRequirement mining_requirement;
     mining_requirement.req = res.result["require"].get_int64();

@@ -255,13 +255,6 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
         return false;
     }
 
-    // Check quality
-    uint64_t nQuality = CalculateQuality(fields.posProof);
-    if (nQuality != fields.nQuality) {
-        return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
-                             "incorrect quality");
-    }
-
     // Check vdf-iters
     LogPrint(BCLog::POC, "%s: checking iters related with quality, plot-type: %d, plot-k: %d\n", __func__,
              fields.posProof.nPlotType, fields.posProof.nPlotK);
@@ -274,7 +267,7 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
                              "mixed quality-string is null(wrong PoS)\n");
     }
-    uint64_t nItersRequired = CalculateIterationsQuality(mixed_quality_string, nDifficultyPrev, params.BHDIP009DifficultyConstantFactorBits);
+    uint64_t nItersRequired = CalculateIterationsQuality(mixed_quality_string, nDifficultyPrev, params.BHDIP009DifficultyConstantFactorBits, fields.posProof.nPlotK);
     LogPrint(BCLog::POC, "%s: required iters: %ld, actual: %ld\n", __func__, nItersRequired, fields.vdfProof.nVdfIters);
     if (fields.vdfProof.nVdfIters < nItersRequired) {
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
@@ -388,66 +381,6 @@ void ClearAllMinerGroups()
 {
     std::lock_guard<std::mutex> lg(g_mtx_minergroups);
     g_minergroups.clear();
-}
-
-struct PosQuality {
-    CPosProof pos;
-    uint64_t quality;
-};
-// challenge, PosQuality[]
-static std::map<uint256, std::vector<PosQuality>> g_posquality;
-
-bool IsTheBestPos(CPosProof const& pos, uint64_t quality)
-{
-    auto it = g_posquality.find(pos.challenge);
-    if (it == std::end(g_posquality)) {
-        return true;
-    }
-    if (quality == 0) {
-        quality = CalculateQuality(pos);
-    }
-    for (auto const& pq : it->second) {
-        if (pq.quality > quality) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool SavePosQuality(CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, uint64_t quality)
-{
-    UpdateMinerGroup(pos.vchFarmerPk, groupHash, nTotalSize);
-
-    // Calculate the quality
-    if (quality == 0) {
-        quality = CalculateQuality(pos);
-    }
-    auto it = g_posquality.find(pos.challenge);
-    if (it == std::end(g_posquality)) {
-        g_posquality.insert(std::make_pair(pos.challenge, std::vector<PosQuality> { { pos, quality } }));
-    } else {
-        auto it2 = std::find_if(std::begin(it->second), std::end(it->second), [&pos](PosQuality const& quality) -> bool {
-            return quality.pos.vchProof == pos.vchProof;
-        });
-        if (it2 != std::end(it->second)) {
-            return false;
-        }
-        it->second.push_back({ pos, quality });
-    }
-    return true;
-}
-
-void SendPosPreviewOverP2PNetwork(CConnman* connman, CPosProof const& pos, uint256 const& groupHash, uint64_t nTotalSize, CNode* pfrom, NodeChecker checker) {
-    connman->ForEachNode([connman, &pos, pfrom, &checker, &groupHash, nTotalSize](CNode* pnode) {
-        if (pfrom && pfrom->GetId() == pnode->GetId()) {
-            // Same node, exit
-            return;
-        }
-        if (!checker(pnode)) {
-            return;
-        }
-        connman->PushMessage(pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::POSPREVIEW, pos, groupHash, nTotalSize));
-    });
 }
 
 void SendVdfProofOverP2PNetwork(CConnman* connman, CVdfProof const& vdf, CNode* pfrom, NodeChecker checker) {

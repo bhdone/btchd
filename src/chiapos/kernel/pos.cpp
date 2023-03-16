@@ -192,11 +192,11 @@ uint256 MakeMixedQualityString(PlotId const& plotId, uint8_t k, uint256 const& c
     Bytes plot_id_bytes = MakeBytes(plotId);
     LargeBits quality_string_bits =
             verifier.ValidateProof(plot_id_bytes.data(), k, challenge.begin(), vchProof.data(), vchProof.size());
-    Bytes qs = ToBytes(quality_string_bits);
-    if (qs.empty()) {
+    Bytes quality_string = ToBytes(quality_string_bits);
+    if (quality_string.empty()) {
         return uint256();
     }
-    return GetMixedQualityString(qs, challenge);
+    return GetMixedQualityString(quality_string, challenge);
 }
 
 uint256 MakeMixedQualityString(PubKey const& localPk, PubKey const& farmerPk, PubKeyOrHash const& poolPkOrHash,

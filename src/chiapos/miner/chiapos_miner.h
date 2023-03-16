@@ -16,7 +16,7 @@
 
 namespace miner {
 namespace pos {
-chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256 const& challenge,
+chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256 const& challenge, uint64_t difficulty,
                                                          int difficulty_constant_factor_bits, int filter_bits,
                                                          std::string* out_plot_path = nullptr);
 }

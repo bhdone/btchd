@@ -3309,51 +3309,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-    if (strCommand == NetMsgType::POSPREVIEW) {
-        LOCK(cs_main);
-
-        chiapos::CPosProof pos;
-        uint256 groupHash;
-        uint64_t nTotalSize;
-        vRecv >> pos;
-        vRecv >> groupHash;
-        vRecv >> nTotalSize;
-
-        int nTargetHeight = ::ChainActive().Height() + 1;
-        auto params = Params().GetConsensus();
-        CValidationState state;
-        if (!chiapos::CheckPosProof(pos, state, params, nTargetHeight)) {
-            // invalid pos, misbehaving
-            if (g_banman) {
-                g_banman->Ban(pfrom->addr, BanReason::BanReasonNodeMisbehaving);
-            }
-            g_connman->DisconnectNode(pfrom->addr);
-            LogPrintf("%s: pos proof is invalid, disconnected from addr %s and ban.\n", pfrom->addr.ToString());
-            return true;
-        }
-
-        CNodeState* pstateFrom = State(pfrom->GetId());
-
-        if (pstateFrom->SavePosPreview(pos.vchProof)) {
-            LogPrint(BCLog::NET, "%s: Saved proof for challenge %s from peer=%d (farmerpk=%s)\n", __func__,
-                    pos.challenge.GetHex(), pfrom->GetId(), chiapos::BytesToHex(pos.vchFarmerPk));
-        }
-
-        if (SavePosQuality(pos, groupHash, nTotalSize)) {
-            chiapos::SendPosPreviewOverP2PNetwork(connman, pos, groupHash, nTotalSize, pfrom, [&pos](CNode* pnode) {
-                AssertLockHeld(cs_main);
-                CNodeState* pstate = State(pnode->GetId());
-                if (pstate != nullptr && (pstate->FindPosPreview(pos.vchProof))) {
-                    return false;
-                }
-                pstate->SavePosPreview(pos.vchProof);
-                return true;
-            });
-        }
-
-        return true;
-    }
-
     if (strCommand == NetMsgType::VDF) {
         LOCK(cs_main);
 

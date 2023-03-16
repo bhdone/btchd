@@ -24,7 +24,7 @@ TEST_F(MinerTest, QualityCalculating) {
     EXPECT_TRUE(m_pclient->CheckChiapos());
     miner::RPCClient::Challenge queried_challenge = m_pclient->QueryChallenge();
     // Find PoS
-    auto pos = miner::pos::QueryBestPosProof(*m_pprover, queried_challenge.challenge,
+    auto pos = miner::pos::QueryBestPosProof(*m_pprover, queried_challenge.challenge, 10000,
                                              chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS,
                                              chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER);
     EXPECT_TRUE(pos.has_value());

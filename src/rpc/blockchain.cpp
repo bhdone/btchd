@@ -145,7 +145,6 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
         }
     } else {
         // BHDIP009 fields
-        result.pushKV("quality", blockindex->chiaposFields.nQuality);
         result.pushKV("farmerSignature", chiapos::BytesToHex(blockindex->chiaposFields.vchFarmerSignature));
         result.pushKV("challenge", blockindex->chiaposFields.posProof.challenge.GetHex());
         // Proof of Space fields
@@ -234,7 +233,6 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
         result.pushKV("chia_duration", blockindex->chiaposFields.GetTotalDuration());
         result.pushKV("chia_difficulty", blockindex->chiaposFields.nDifficulty);
         result.pushKV("chia_blockWork", CalcChiaBlockWork(blockindex->chiaposFields).GetLow64());
-        result.pushKV("chia_quality", blockindex->chiaposFields.nQuality);
         result.pushKV("chia_farmerSignature", chiapos::BytesToHex(blockindex->chiaposFields.vchFarmerSignature));
     }
 

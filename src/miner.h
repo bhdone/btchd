@@ -179,7 +179,6 @@ public:
     std::unique_ptr<CBlockTemplate> CreateNewChiaBlock(const CBlockIndex *pindexPrev,
         const CScript &scriptPubKeyIn,
         const chiapos::CKey &farmerSk,
-        uint64_t nQuality,
         const chiapos::CPosProof &posProof,
         const chiapos::CVdfProof &vdfProof,
         const std::vector<chiapos::CVdfProof> &vVoidBlock);

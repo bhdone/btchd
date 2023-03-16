@@ -111,8 +111,8 @@ CVdfProof ParseVdfProof(UniValue const& val) {
 }
 
 void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTxDestination const& rewardDest,
-                       uint256 const& initialChallenge, chiapos::Bytes const& vchFarmerSk, uint64_t nQuality,
-                       CPosProof const& posProof, CVdfProof const& vdfProof, std::vector<CVdfProof> const& vVoidBlock) {
+                       uint256 const& initialChallenge, chiapos::Bytes const& vchFarmerSk,
+                       CPosProof const& posProof, CVdfProof const& vdfProof, std::vector<CVdfProof> const& vVoidBlock, uint64_t nDifficulty) {
     CKey farmerSk(MakeArray<SK_LEN>(vchFarmerSk));
     auto params = Params();
     std::shared_ptr<CBlock> pblock;
@@ -146,9 +146,12 @@ void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTx
             }
 
             // Quality for the block we are going to generate
-            uint64_t quality = CalculateQuality(posProof);
-            uint64_t quality_chain = CalculateQuality(pindexCurr->chiaposFields.posProof);
-            if (quality < quality_chain) {
+            uint256 mixed_quality_string = GenerateMixedQualityString(posProof);
+            uint64_t nDuration = vdfProof.nVdfDuration;
+            for (auto const& block : vVoidBlock) {
+                nDuration += block.nVdfDuration;
+            }
+            if (nDifficulty < pindexCurr->chiaposFields.nDifficulty) {
                 // The quality is too low, and it will not be accepted by the chain
                 throw std::runtime_error("the quality is too low, the new block will not be accepted by the chain");
             }
@@ -167,7 +170,7 @@ void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTx
         PubKeyOrHash poolPkOrHash =
                 MakePubKeyOrHash(static_cast<PlotPubKeyType>(posProof.nPlotType), posProof.vchPoolPkOrHash);
         std::unique_ptr<CBlockTemplate> ptemplate = BlockAssembler(params).CreateNewChiaBlock(
-                pindexPrev, GetScriptForDestination(rewardDest), farmerSk, nQuality, posProof, vdfProof, vVoidBlock);
+                pindexPrev, GetScriptForDestination(rewardDest), farmerSk, posProof, vdfProof, vVoidBlock);
         if (ptemplate == nullptr) {
             throw std::runtime_error("cannot generate new block, the template object is null");
         }
@@ -208,10 +211,12 @@ static UniValue submitProof(JSONRPCRequest const& request) {
     posProof.vchFarmerPk = MakeBytes(farmerSk.GetPubkey());
     // VDF proof
     CVdfProof vdfProof = ParseVdfProof(request.params[5]);
+    uint64_t nTotalDuration = vdfProof.nVdfDuration;
     // Void blocks
     std::vector<CVdfProof> vVoidBlock;
     for (UniValue const& val : request.params[6].getValues()) {
         CVdfProof vdf = ParseVdfProof(val);
+        nTotalDuration += vdf.nVdfDuration;
         vVoidBlock.push_back(std::move(vdf));
     }
     // Reward address
@@ -220,29 +225,14 @@ static UniValue submitProof(JSONRPCRequest const& request) {
     if (!IsValidDestination(rewardDest)) {
         throw std::runtime_error("The reward destination is invalid");
     }
-    // Quality for the PoS
-    uint64_t nQuality = request.params[8].get_int64();
 
-    if (IsTheBestPos(posProof)) {
-        // We should put it to the chain immediately
-        LogPrintf("%s: The best proof (quality=%s) we have, now commit it to the chain.\n", __func__,
-                  chiapos::FormatNumberStr(std::to_string(nQuality)));
-        GenerateChiaBlock(hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge, vchFarmerSk, nQuality,
-                          posProof, vdfProof, vVoidBlock);
-    } else {
-        if (!IsBlockWatcherRunning()) {
-            StartBlockWatcher();
-        }
-        GetBlockWatcher().WaitForBlock(
-                10,
-                std::bind(GenerateChiaBlock, hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge,
-                          vchFarmerSk, nQuality, posProof, vdfProof, vVoidBlock),
-                [hashPrevBlock]() -> bool {
-                    LOCK(cs_main);
-                    CBlockIndex* pindex = ::ChainActive().Tip();
-                    return pindex && pindex->GetBlockHash() != hashPrevBlock;
-                });
-    }
+    auto params = Params().GetConsensus();
+    CBlockIndex* pindexPrev = LookupBlockIndex(hashPrevBlock);
+    uint64_t nDifficulty = AdjustDifficulty(pindexPrev->chiaposFields.nDifficulty, nTotalDuration, params.BHDIP008TargetSpacing);
+
+    // We should put it to the chain immediately
+    GenerateChiaBlock(hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge, vchFarmerSk,
+                      posProof, vdfProof, vVoidBlock, nDifficulty);
 
     return true;
 }
@@ -346,51 +336,6 @@ static UniValue submitVdf(JSONRPCRequest const& request) {
 
     // Send proof to P2P network
     SendVdfProofOverP2PNetwork(g_connman.get(), proof);
-
-    return true;
-}
-
-static UniValue submitPos(JSONRPCRequest const& request) {
-    RPCHelpMan("submitpos", "Submit a found pos to p2p network",
-               {
-                       {"challenge", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the challenge for the proof"},
-                       {"pkhash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
-                        "the public key or hash depends the plot type"},
-                       {"localpk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the local public key from plot file"},
-                       {"farmerpk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
-                        "the farmer public key generated from chia mnemonic"},
-                       {"plottype", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the plot file"},
-                       {"plotk", RPCArg::Type::NUM, RPCArg::Optional::NO, "the size `k` of the plot file"},
-                       {"proof", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "the pos proof"},
-                       {"groupHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Group hash"},
-                       {"totalSize", RPCArg::Type::NUM, RPCArg::Optional::NO, "total size"},
-               },
-               RPCResult("\"succ\" (bool) True means the pos is accepted and will be published"),
-               RPCExamples(HelpExampleCli("submitpos", "xxx")))
-            .Check(request);
-
-    CPosProof pos;
-    pos.challenge = ParseHashV(request.params[0], "challenge");
-    pos.vchPoolPkOrHash = ParseHexV(request.params[1], "public-key or hash");
-    pos.vchLocalPk = ParseHexV(request.params[2], "local public-key");
-    pos.vchFarmerPk = ParseHexV(request.params[3], "farmer public-key");
-    pos.nPlotType = request.params[4].get_int();
-    pos.nPlotK = request.params[5].get_int();
-    pos.vchProof = ParseHexV(request.params[6], "proof of space");
-
-    uint256 groupHash = ParseHashV(request.params[7], "group hash");
-    uint64_t nTotalSize = request.params[8].get_int64();
-
-    LOCK(cs_main);
-    int nTargetHeight = ::ChainActive().Height() + 1;
-    CValidationState state;
-    auto params = Params().GetConsensus();
-    if (!chiapos::CheckPosProof(pos, state, params, nTargetHeight)) {
-        throw std::runtime_error("invalid proof");
-    }
-
-    SavePosQuality(pos, groupHash, nTotalSize);
-    SendPosPreviewOverP2PNetwork(g_connman.get(), pos, groupHash, nTotalSize);
 
     return true;
 }
@@ -574,7 +519,7 @@ static CRPCCommand const commands[] = {
         {"chia", "queryminernetspace", &queryMinerNetspace, {"clear"}},
         {"chia", "querychainvdfinfo", &queryChainVdfInfo, {"height"}},
         {"chia", "queryminingrequirement", &queryMiningRequirement, {"address", "farmer-pk"}},
-        {"chia", "submitpos", &submitPos, {}},
+        // {"chia", "submitpos", &submitPos, {}},
         {"chia",
          "submitproof",
          &submitProof,

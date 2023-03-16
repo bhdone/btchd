@@ -43,7 +43,6 @@ const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
 const char *VDF="vdf";
 const char *REQVDF="reqvdf";
-const char *POSPREVIEW="pospreview";
 } // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of
@@ -78,7 +77,6 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::BLOCKTXN,
     NetMsgType::VDF,
     NetMsgType::REQVDF,
-    NetMsgType::POSPREVIEW,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 

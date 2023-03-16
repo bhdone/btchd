@@ -76,7 +76,6 @@ class CBlockFields {
 public:
     uint64_t nVersion{CHIAHEADER_VERSION};
     uint64_t nDifficulty;
-    uint64_t nQuality;
 
     CPosProof posProof;
     CVdfProof vdfProof;
@@ -112,7 +111,6 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(nVersion);
         READWRITE(nDifficulty);
-        READWRITE(nQuality);
         READWRITE(posProof);
         READWRITE(vdfProof);
         READWRITE(vVoidBlockVdf);
