@@ -219,6 +219,9 @@ static UniValue submitProof(JSONRPCRequest const& request) {
         nTotalDuration += vdf.nVdfDuration;
         vVoidBlock.push_back(std::move(vdf));
     }
+    if (nTotalDuration == 0) {
+        throw std::runtime_error("duration is zero from vdf proof");
+    }
     // Reward address
     std::string strRewardDest = request.params[7].get_str();
     CTxDestination rewardDest = DecodeDestination(strRewardDest);
