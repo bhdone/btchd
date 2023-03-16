@@ -29,7 +29,6 @@ arith_uint256 lower_bits(uint256 const& quality_string, int bits) {
 }  // namespace
 
 
-// int const QUALITY_BASE_BITS = 32;
 using QualityBaseType = uint32_t;
 constexpr int QualityBaseBits = sizeof(QualityBaseType) * 8;
 
