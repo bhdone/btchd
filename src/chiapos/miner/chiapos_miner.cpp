@@ -31,17 +31,32 @@
 namespace miner {
 namespace pos {
 
+bool IsZeroBytes(Bytes const& bytes)
+{
+    for (uint8_t byte : bytes) {
+        if (byte != 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
 chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::QualityStringPack> const& qs_pack_vec,
                                                      uint256 const& challenge, uint64_t difficulty,
                                                      int difficulty_constant_factor_bits) {
     assert(!qs_pack_vec.empty());
     chiapos::QualityStringPack res;
-    uint64_t best_iters{0};
+    int64_t best_iters{-1};
     for (chiapos::QualityStringPack const& qs_pack : qs_pack_vec) {
-        uint256 mixed_quality_string = chiapos::GetMixedQualityString(qs_pack.quality_str.ToBytes(), challenge);
+        Bytes quality_string = qs_pack.quality_str.ToBytes();
+        assert(!IsZeroBytes(quality_string));
+        uint256 mixed_quality_string = chiapos::GetMixedQualityString(quality_string, challenge);
         uint64_t iters = chiapos::CalculateIterationsQuality(mixed_quality_string, difficulty,
                                                              difficulty_constant_factor_bits, qs_pack.k);
-        if (iters < best_iters) {
+        if (best_iters == -1) {
+            res = qs_pack;
+            best_iters = iters;
+        } else if (iters < best_iters) {
             res = qs_pack;
             best_iters = iters;
         }
@@ -60,7 +75,8 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
     }
     chiapos::QualityStringPack qs_pack =
             QueryTheBestQualityString(qs_pack_vec, challenge, difficulty, difficulty_constant_factor_bits);
-    uint256 mixed_quality_string = chiapos::GetMixedQualityString(qs_pack.quality_str.ToBytes(), challenge);
+    Bytes quality_string = qs_pack.quality_str.ToBytes();
+    uint256 mixed_quality_string = chiapos::GetMixedQualityString(quality_string, challenge);
     if (out_plot_path) {
         *out_plot_path = qs_pack.plot_path;
     }
