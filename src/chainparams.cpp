@@ -146,7 +146,7 @@ public:
         consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 100;
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
-        consensus.BHDIP009StartDifficulty = (arith_uint256(1000000000) * consensus.BHDIP009StartBlockIters / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits) / chiapos::Pow2(consensus.BHDIP009PlotIdBitsOfFilter)).GetLow64();
+        consensus.BHDIP009StartDifficulty = 10;
 
         int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 5, 8};
@@ -429,7 +429,7 @@ public:
         consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 40;
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K_TEST_NET;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
-        consensus.BHDIP009StartDifficulty = (arith_uint256(1000000000) * consensus.BHDIP009StartBlockIters / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits) / chiapos::Pow2(consensus.BHDIP009PlotIdBitsOfFilter)).GetLow64();
+        consensus.BHDIP009StartDifficulty = 1;
         int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 1, 8};
         consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 3, 20};
