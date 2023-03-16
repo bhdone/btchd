@@ -49,16 +49,9 @@ uint256 GenerateMixedQualityString(CPosProof const& posProof) {
             posProof.nPlotK, posProof.challenge, posProof.vchProof);
 }
 
-double CalculateQuality(uint256 const& mixed_quality_string) {
-    arith_uint256 lower = lower_bits(mixed_quality_string, QualityBaseBits);
-    arith_uint256 higher = Pow2(QualityBaseBits);
-    return lower.getdouble() / higher.getdouble();
-}
-
 uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_t difficulty, int difficulty_constant_factor_bits, uint8_t k) {
     assert(difficulty > 0);
-    double quality = CalculateQuality(mixed_quality_string);
-    auto iters = (difficulty * Pow2(difficulty_constant_factor_bits) * quality / expected_plot_size<arith_uint256>(k));
+    auto iters = difficulty * Pow2(difficulty_constant_factor_bits) / expected_plot_size<arith_uint256>(k) * lower_bits(mixed_quality_string, QualityBaseBits) / Pow2(QualityBaseBits);
     if (iters > Pow2(64)) {
         return std::numeric_limits<uint64_t>::max();
     }
