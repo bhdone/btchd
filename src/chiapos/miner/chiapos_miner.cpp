@@ -346,7 +346,7 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
                     vdf.proof = detail->proof;
                     vdf.witness_type = detail->witness_type;
                     vdf.iters = detail->iters;
-                    vdf.duration = detail->duration;
+                    vdf.duration = std::max(detail->duration, 1);
                     {
                         std::lock_guard<std::mutex> lg(vdf_write_lock);
                         out_vdf = vdf;
