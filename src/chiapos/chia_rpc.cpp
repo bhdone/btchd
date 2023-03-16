@@ -230,6 +230,8 @@ static UniValue submitProof(JSONRPCRequest const& request) {
     }
 
     auto params = Params().GetConsensus();
+    LOCK(cs_main);
+
     CBlockIndex* pindexPrev = LookupBlockIndex(hashPrevBlock);
     uint64_t nDifficulty = AdjustDifficulty(pindexPrev->chiaposFields.nDifficulty, nTotalDuration, params.BHDIP008TargetSpacing);
 
