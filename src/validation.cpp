@@ -2873,12 +2873,14 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
     } else {
         vdf_speed_str = "0";
     }
-    LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s, chia-work=%.5e, vdf=%s ips, challenge=%s, difficulty=%s, pos_k=%d\n", __func__,
+    LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s, chia-work=%.5e, vdf=%s, vdf=%s ips, challenge=%s, difficulty=%s, pos_k=%d\n", __func__,
             pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
             log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
             FormatISO8601DateTime(pindexNew->GetBlockTime()),
             GuessVerificationProgress(chainParams.TxData(), pindexNew), ::ChainstateActive().CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)), ::ChainstateActive().CoinsTip().GetCacheSize(),
-            (!warningMessages.empty() ? strprintf(" warning='%s'", warningMessages) : ""), CalcChiaBlockWork(pindexNew->chiaposFields).getdouble(), vdf_speed_str, challenge.GetHex(),
+            (!warningMessages.empty() ? strprintf(" warning='%s'", warningMessages) : ""), CalcChiaBlockWork(pindexNew->chiaposFields).getdouble(),
+            chiapos::MakeNumberStr(pindexNew->chiaposFields.GetTotalIters()),
+            vdf_speed_str, challenge.GetHex(),
             chiapos::MakeNumberStr(pindexNew->chiaposFields.nDifficulty),
             (int)pindexNew->chiaposFields.posProof.nPlotK
             );
