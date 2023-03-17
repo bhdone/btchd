@@ -310,10 +310,17 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
     PLOGI << "Establishing connection to timelord " << hostname << ":" << port;
     auto ptimelord_client = std::make_shared<TimelordClient>(m_ioc);
     ptimelord_client->SetConnectionHandler([]() { PLOGI << "Connected to timelord"; });
-    ptimelord_client->SetErrorHandler([this, hostname, port](FrontEndClient::ErrorType type, std::string const& errs) {
+    auto pweak_timelord = std::weak_ptr<TimelordClient>(ptimelord_client);
+    ptimelord_client->SetErrorHandler([this, hostname, port, pweak_timelord](FrontEndClient::ErrorType type, std::string const& errs) {
         PLOGE << "Timelord client " << hostname << ":" << port << ", reports error: type=" << static_cast<int>(type)
               << ", errs: " << errs;
-        // TODO We need to re-try to connect to timelord server here
+        // remove the pointer from vec
+        auto ptimelord = pweak_timelord.lock();
+        if (ptimelord) {
+            auto it = std::remove(std::begin(m_timelord_vec), std::end(m_timelord_vec), ptimelord);
+            m_timelord_vec.erase(it, std::end(m_timelord_vec));
+        }
+        // We need to re-try to connect to timelord server here
         if (!m_shutting_down) {
             // prepare to reconnect
             // wait 3 seconds
@@ -326,7 +333,7 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
                     return;
                 }
                 // ready to connect
-                PrepareTimelordClient(hostname, port);
+                m_timelord_vec.push_back(PrepareTimelordClient(hostname, port));
             });
         }
     });
