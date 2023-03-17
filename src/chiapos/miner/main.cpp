@@ -128,9 +128,6 @@ struct Arguments {
     int difficulty_constant_factor_bits;  // dcf bits (chain parameter)
     std::string datadir;                  // The root path of the data directory
     std::string cookie_path;              // The file stores the connecting information of current btchd server
-    // bool timelord;
-    // std::string timelord_host;
-    // unsigned short timelord_port;
 } g_args;
 
 miner::Config g_config;

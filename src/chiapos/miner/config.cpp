@@ -11,8 +11,6 @@
 
 namespace miner {
 
-Config::Config() { m_timelord_endpoints.push_back("timelord.bhd.one:19191"); }
-
 std::string Config::ToJsonString() const {
     UniValue root(UniValue::VOBJ);
     root.pushKV("reward", m_reward_dest);
