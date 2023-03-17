@@ -169,6 +169,7 @@ int Miner::Run() {
     std::vector<RPCClient::VdfProof> void_block_vec;
     uint64_t iters;
     std::string curr_plot_path;
+    uint64_t vdf_speed{0};
     while (1) {
         try {
             std::this_thread::yield();
@@ -224,8 +225,16 @@ int Miner::Run() {
                 }
                 m_state = State::WaitVDF;
             } else if (m_state == State::WaitVDF) {
+                std::string estimate_time_str{"n/a"};
+                if (vdf_speed) {
+                    int estimate_seconds = iters / vdf_speed;
+                    estimate_time_str = tinyformat::format("%d:%d min, (%s seconds), vdf speed=%s ips",
+                                                           estimate_seconds / 60, estimate_seconds % 60,
+                                                           estimate_seconds, chiapos::MakeNumberStr(vdf_speed));
+                }
                 PLOG_INFO << "request VDF proof for challenge: " << current_challenge.GetHex()
                           << ", iters: " << chiapos::FormatNumberStr(std::to_string(iters));
+                PLOGI << "estimate time: " << estimate_time_str;
                 m_client.RequireVdf(current_challenge, iters);
                 PLOG_INFO << "waiting for VDF proofs...";
                 std::atomic_bool running{true};
@@ -236,6 +245,8 @@ int Miner::Run() {
                     m_state = State::RequireChallenge;
                 } else if (reason == BreakReason::VDFIsAcquired) {
                     PLOG_INFO << "a VDF proof has been received";
+                    assert(vdf.has_value());
+                    vdf_speed = vdf->iters / std::max<uint64_t>(vdf->duration, 1);
                     m_state = State::ProcessVDF;
                 } else if (reason == BreakReason::Error) {
                     // The challenge monitor returns without a valid reason
