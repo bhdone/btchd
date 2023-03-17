@@ -246,7 +246,9 @@ int Miner::Run() {
                 } else if (reason == BreakReason::VDFIsAcquired) {
                     PLOG_INFO << "a VDF proof has been received";
                     assert(vdf.has_value());
-                    vdf_speed = vdf->iters / std::max<uint64_t>(vdf->duration, 1);
+                    if (vdf->duration >= 3) {
+                        vdf_speed = vdf->iters / vdf->duration;
+                    }
                     m_state = State::ProcessVDF;
                 } else if (reason == BreakReason::Error) {
                     // The challenge monitor returns without a valid reason
