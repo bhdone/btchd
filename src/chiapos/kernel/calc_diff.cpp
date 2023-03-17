@@ -31,7 +31,7 @@ arith_uint256 lower_bits(uint256 const& quality_string, int bits) {
 using QualityBaseType = uint32_t;
 constexpr int QualityBaseBits = sizeof(QualityBaseType) * 8;
 
-constexpr int DIFFICULTY_CHANGE_MAX_FACTOR = 2;
+constexpr double DIFFICULTY_CHANGE_MAX_FACTOR = 1.5;
 
 arith_uint256 Pow2(int bits) { return arith_uint256(1) << bits; }
 
