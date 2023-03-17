@@ -53,10 +53,7 @@ chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::Qualit
         uint256 mixed_quality_string = chiapos::GetMixedQualityString(quality_string, challenge);
         uint64_t iters = chiapos::CalculateIterationsQuality(mixed_quality_string, difficulty,
                                                              difficulty_constant_factor_bits, qs_pack.k);
-        if (best_iters == -1) {
-            res = qs_pack;
-            best_iters = iters;
-        } else if (iters < best_iters) {
+        if (best_iters == -1 || iters < best_iters) {
             res = qs_pack;
             best_iters = iters;
         }
