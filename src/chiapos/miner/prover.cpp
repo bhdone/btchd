@@ -3,7 +3,9 @@
 #include <chiapos/kernel/calc_diff.h>
 #include <chiapos/kernel/pos.h>
 #include <chiapos/kernel/utils.h>
+
 #include <plog/Log.h>
+#include <tinyformat.h>
 
 #include <algorithm>
 
@@ -115,11 +117,10 @@ Prover::Prover(std::vector<Path> const& path_list, std::vector<uint8_t> const& a
                 bool allowed{true};
                 if (!allowed_k_vec.empty()) {
                     auto it = std::find(std::begin(allowed_k_vec), std::end(allowed_k_vec), plotFile.GetK());
-                    if (it == std::end(allowed_k_vec)) {
-                        allowed = false;
-                    }
+                    allowed = it != std::end(allowed_k_vec);
                 }
                 if (allowed) {
+                    PLOGD << tinyformat::format("Add plot, k=%d, path=%s", (int)plotFile.GetK(), file);
                     auto plot_id = plotFile.GetPlotId();
                     generator.Write(plot_id.begin(), plot_id.size());
                     m_plotter_files.push_back(std::move(plotFile));
@@ -131,7 +132,8 @@ Prover::Prover(std::vector<Path> const& path_list, std::vector<uint8_t> const& a
         }
     }
     generator.Finalize(m_group_hash.begin());
-    PLOG_INFO << "found total " << m_plotter_files.size() << " plots, group hash: " << m_group_hash.GetHex() << ", total size: " << chiapos::MakeNumberStr(m_total_size);
+    PLOG_INFO << "found total " << m_plotter_files.size() << " plots, group hash: " << m_group_hash.GetHex()
+              << ", total size: " << chiapos::MakeNumberStr(m_total_size);
     if (!allowed_k_vec.empty()) {
         std::stringstream ss;
         for (auto k : allowed_k_vec) {

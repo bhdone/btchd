@@ -28,29 +28,49 @@ arith_uint256 lower_bits(uint256 const& quality_string, int bits) {
 
 }  // namespace
 
-
 using QualityBaseType = uint32_t;
 constexpr int QualityBaseBits = sizeof(QualityBaseType) * 8;
+
+constexpr int DIFFICULTY_CHANGE_MAX_FACTOR = 2;
 
 arith_uint256 Pow2(int bits) { return arith_uint256(1) << bits; }
 
 uint64_t AdjustDifficulty(uint64_t prev_block_difficulty, uint64_t curr_block_duration, uint64_t target_duration) {
     assert(curr_block_duration > 0);
     uint64_t new_difficulty = prev_block_difficulty / curr_block_duration * target_duration;
+    if (new_difficulty > prev_block_difficulty) {
+        uint64_t max_difficulty = prev_block_difficulty * DIFFICULTY_CHANGE_MAX_FACTOR;
+        new_difficulty = std::min(new_difficulty, max_difficulty);
+    } else {
+        uint64_t min_difficulty = prev_block_difficulty / DIFFICULTY_CHANGE_MAX_FACTOR;
+        new_difficulty = std::max(new_difficulty, min_difficulty);
+    }
     return std::max<uint64_t>(new_difficulty, 1);
 }
 
 uint256 GenerateMixedQualityString(CPosProof const& posProof) {
     PubKeyOrHash poolPkOrHash =
             MakePubKeyOrHash(static_cast<PlotPubKeyType>(posProof.nPlotType), posProof.vchPoolPkOrHash);
-    return chiapos::MakeMixedQualityString(
-            MakeArray<PK_LEN>(posProof.vchLocalPk), MakeArray<PK_LEN>(posProof.vchFarmerPk), poolPkOrHash,
-            posProof.nPlotK, posProof.challenge, posProof.vchProof);
+    return chiapos::MakeMixedQualityString(MakeArray<PK_LEN>(posProof.vchLocalPk),
+                                           MakeArray<PK_LEN>(posProof.vchFarmerPk), poolPkOrHash, posProof.nPlotK,
+                                           posProof.challenge, posProof.vchProof);
 }
 
-uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_t difficulty, int difficulty_constant_factor_bits, uint8_t k) {
+uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_t difficulty,
+                                    int difficulty_constant_factor_bits, uint8_t k, double* quality_in_plot,
+                                    arith_uint256* quality) {
     assert(difficulty > 0);
-    auto iters = difficulty * Pow2(difficulty_constant_factor_bits) / expected_plot_size<arith_uint256>(k) * lower_bits(mixed_quality_string, QualityBaseBits) / Pow2(QualityBaseBits);
+    auto l = lower_bits(mixed_quality_string, QualityBaseBits);
+    auto h = Pow2(QualityBaseBits);
+    auto size = expected_plot_size<arith_uint256>(k);
+    auto iters = difficulty * Pow2(difficulty_constant_factor_bits) * l / (size * h);
+    double q = static_cast<double>(l.GetLow64()) / static_cast<double>(h.GetLow64());
+    if (quality_in_plot) {
+        *quality_in_plot = q;
+    }
+    if (quality) {
+        *quality = size * h / l;
+    }
     if (iters > Pow2(64)) {
         return std::numeric_limits<uint64_t>::max();
     }

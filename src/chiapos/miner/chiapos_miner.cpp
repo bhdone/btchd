@@ -28,11 +28,12 @@
 #include <chiapos/timelord_cli/msg_ids.h>
 #include <chiapos/timelord_cli/timelord_client.h>
 
+#include <tinyformat.h>
+
 namespace miner {
 namespace pos {
 
-bool IsZeroBytes(Bytes const& bytes)
-{
+bool IsZeroBytes(Bytes const& bytes) {
     for (uint8_t byte : bytes) {
         if (byte != 0) {
             return false;
@@ -47,16 +48,31 @@ chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::Qualit
     assert(!qs_pack_vec.empty());
     chiapos::QualityStringPack res;
     int64_t best_iters{-1};
+    double best_quality_in_plot;
+    arith_uint256 best_quality;
     for (chiapos::QualityStringPack const& qs_pack : qs_pack_vec) {
         Bytes quality_string = qs_pack.quality_str.ToBytes();
         assert(!IsZeroBytes(quality_string));
         uint256 mixed_quality_string = chiapos::GetMixedQualityString(quality_string, challenge);
-        uint64_t iters = chiapos::CalculateIterationsQuality(mixed_quality_string, difficulty,
-                                                             difficulty_constant_factor_bits, qs_pack.k);
+        double quality_in_plot;
+        arith_uint256 quality;
+        uint64_t iters =
+                chiapos::CalculateIterationsQuality(mixed_quality_string, difficulty, difficulty_constant_factor_bits,
+                                                    qs_pack.k, &quality_in_plot, &quality);
+        PLOGD << tinyformat::format("checking pos, quality_in_plot=%1.3f, quality=%e, iters=%lld, k=%d",
+                                    quality_in_plot, quality.getdouble(), chiapos::MakeNumberStr(iters),
+                                    (int)qs_pack.k);
         if (best_iters == -1 || iters < best_iters) {
             res = qs_pack;
             best_iters = iters;
+            best_quality_in_plot = quality_in_plot;
+            best_quality = quality;
         }
+    }
+    if (best_iters != -1) {
+        PLOGI << tinyformat::format("Best proof is queried, quality_in_plot=%1.3f, quality=%e, iters=%lld, k=%d",
+                                    best_quality_in_plot, best_quality.getdouble(), chiapos::MakeNumberStr(best_iters),
+                                    res.k);
     }
     return res;
 }
