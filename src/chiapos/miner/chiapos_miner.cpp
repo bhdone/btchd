@@ -225,7 +225,7 @@ int Miner::Run() {
                     // The challenge monitor returns without a valid reason
                     // the connection to the RPC service might has errors
                     // So we reset the state to RequireChallenge and wait
-                    // until the service is recover
+                    // until the service is recovered
                     m_state = State::RequireChallenge;
                 } else if (reason == BreakReason::Timeout) {
                     m_state = State::WaitVDF;  // request vdf again
