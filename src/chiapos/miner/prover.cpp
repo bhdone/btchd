@@ -102,7 +102,7 @@ std::vector<Path> StrListToPathList(std::vector<std::string> const& str_list) {
     return path_list;
 }
 
-Prover::Prover(std::vector<Path> const& path_list) {
+Prover::Prover(std::vector<Path> const& path_list, std::vector<uint8_t> const& allowed_k_vec) {
     CSHA256 generator;
     for (auto const& path : path_list) {
         std::vector<std::string> files;
@@ -112,9 +112,18 @@ Prover::Prover(std::vector<Path> const& path_list) {
         for (auto const& file : files) {
             chiapos::CPlotFile plotFile(file);
             if (plotFile.IsReady()) {
-                auto plot_id = plotFile.GetPlotId();
-                generator.Write(plot_id.begin(), plot_id.size());
-                m_plotter_files.push_back(std::move(plotFile));
+                bool allowed{true};
+                if (!allowed_k_vec.empty()) {
+                    auto it = std::find(std::begin(allowed_k_vec), std::end(allowed_k_vec), plotFile.GetK());
+                    if (it == std::end(allowed_k_vec)) {
+                        allowed = false;
+                    }
+                }
+                if (allowed) {
+                    auto plot_id = plotFile.GetPlotId();
+                    generator.Write(plot_id.begin(), plot_id.size());
+                    m_plotter_files.push_back(std::move(plotFile));
+                }
             } else {
                 m_total_size -= fs::file_size(file);
                 PLOG_ERROR << "bad plot: " << file;
@@ -123,6 +132,13 @@ Prover::Prover(std::vector<Path> const& path_list) {
     }
     generator.Finalize(m_group_hash.begin());
     PLOG_INFO << "found total " << m_plotter_files.size() << " plots, group hash: " << m_group_hash.GetHex() << ", total size: " << chiapos::MakeNumberStr(m_total_size);
+    if (!allowed_k_vec.empty()) {
+        std::stringstream ss;
+        for (auto k : allowed_k_vec) {
+            ss << (int)k << ", ";
+        }
+        PLOG_INFO << "PlotK allowed: " << ss.str();
+    }
 }
 
 std::vector<chiapos::QualityStringPack> Prover::GetQualityStrings(uint256 const& challenge, int bits_of_filter) const {

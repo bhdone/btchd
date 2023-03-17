@@ -9,6 +9,7 @@
 #include <chiapos/src/verifier.hpp>
 
 #include "utils.h"
+#include "pos.h"
 
 namespace chiapos {
 
@@ -139,6 +140,8 @@ bool CPlotFile::GetFullProof(uint256 const& challenge, int index, Bytes& out) co
     }
     return false;
 }
+
+uint8_t CPlotFile::GetK() const { return m_impl->diskProver->GetSize(); }
 
 Bytes ToBytes(PubKeyOrHash const& val) { return boost::apply_visitor(MakePubKeyOrHashBytes(), val); }
 

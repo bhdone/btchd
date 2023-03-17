@@ -38,6 +38,13 @@ std::string Config::ToJsonString() const {
         timelord_endpoints.push_back(UniValue(endpoint));
     }
     root.pushKV("timelords", timelord_endpoints);
+
+    UniValue allowed_ks(UniValue::VARR);
+    for (auto const& k : m_allowed_k_vec) {
+        allowed_ks.push_back((int)k);
+    }
+    root.pushKV("allowedPlotK", allowed_ks);
+
     return root.write(4);
 }
 
@@ -111,6 +118,14 @@ void Config::ParseFromJsonString(std::string const& json_str) {
     if (root.exists("noproxy") && root["noproxy"].isBool()) {
         m_no_proxy = root["noproxy"].get_bool();
     }
+
+    if (root.exists("allowedPlotK")) {
+        m_allowed_k_vec.clear();
+        auto k_vals = root["allowedPlotK"].getValues();
+        for (UniValue k_val : k_vals) {
+            m_allowed_k_vec.push_back(k_val.get_int());
+        }
+    }
 }
 
 Config::RPC Config::GetRPC() const { return m_rpc; }
@@ -138,5 +153,7 @@ chiapos::PubKey Config::GetFarmerPk() const {
 }
 
 std::vector<std::string> Config::GetTimelordEndpoints() const { return m_timelord_endpoints; }
+
+std::vector<uint8_t> Config::GetAllowedKs() const { return m_allowed_k_vec; }
 
 }  // namespace miner

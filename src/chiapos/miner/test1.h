@@ -75,7 +75,7 @@ protected:
     }
 
     std::unique_ptr<miner::Prover> CreateProver() const {
-        return std::unique_ptr<miner::Prover>(new miner::Prover({GetPlotPath()}));
+        return std::unique_ptr<miner::Prover>(new miner::Prover({GetPlotPath()}, {}));
     }
 };
 

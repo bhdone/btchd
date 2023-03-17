@@ -18,7 +18,7 @@ class Prover {
     std::vector<chiapos::CPlotFile> m_plotter_files;
 
 public:
-    explicit Prover(std::vector<Path> const& path_list);
+    Prover(std::vector<Path> const& path_list, std::vector<uint8_t> const& allowed_k_vec);
 
     uint64_t GetTotalSize() const { return m_total_size; }
 

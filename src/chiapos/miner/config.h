@@ -42,6 +42,8 @@ public:
 
     std::vector<std::string> GetTimelordEndpoints() const;
 
+    std::vector<uint8_t> GetAllowedKs() const;
+
 private:
     RPC m_rpc;
     std::string m_reward_dest;
@@ -50,6 +52,7 @@ private:
     bool m_testnet{true};
     bool m_no_proxy{true};
     std::vector<std::string> m_timelord_endpoints;
+    std::vector<uint8_t> m_allowed_k_vec;
 };
 
 }  // namespace miner

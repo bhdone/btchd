@@ -167,7 +167,7 @@ int HandleCommand_GenConfig(std::string const& config_path) {
 }
 
 int HandleCommand_Mining() {
-    miner::Prover prover(miner::StrListToPathList(miner::g_config.GetPlotPath()));
+    miner::Prover prover(miner::StrListToPathList(miner::g_config.GetPlotPath()), miner::g_config.GetAllowedKs());
     std::unique_ptr<miner::RPCClient> pclient = tools::CreateRPCClient(miner::g_config, miner::g_args.cookie_path);
     // Start mining
     miner::Miner miner(*pclient, prover, miner::g_config.GetFarmerSk(), miner::g_config.GetFarmerPk(),
