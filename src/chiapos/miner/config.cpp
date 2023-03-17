@@ -125,8 +125,6 @@ bool Config::Testnet() const { return m_testnet; }
 
 bool Config::NoProxy() const { return m_no_proxy; }
 
-void Config::SetSeed(std::string seed) { m_seed = std::move(seed); }
-
 chiapos::SecreKey Config::GetFarmerSk() const {
     keyman::Wallet wallet(m_seed, "");
     keyman::Key key = wallet.GetFarmerKey(0);

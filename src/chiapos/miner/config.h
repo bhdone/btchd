@@ -36,8 +36,6 @@ public:
 
     bool NoProxy() const;
 
-    void SetSeed(std::string seed);
-
     chiapos::SecreKey GetFarmerSk() const;
 
     chiapos::PubKey GetFarmerPk() const;
