@@ -277,11 +277,16 @@ int HandleCommand_MiningRequirement() {
     std::unique_ptr<miner::RPCClient> pclient = tools::CreateRPCClient(miner::g_config, miner::g_args.cookie_path);
     auto req = pclient->QueryMiningRequirement(miner::g_config.GetRewardDest(), miner::g_config.GetFarmerPk());
     int const PREFIX_WIDTH = 14;
-    std::cout << std::setw(PREFIX_WIDTH) << "mined: " << std::setw(15) << tinyformat::format("%d/%d", req.mined_count, req.total_count) << " BLK" << std::endl;
-    std::cout << std::setw(PREFIX_WIDTH) << "supplied: " << std::setw(15) << chiapos::MakeNumberStr(req.supplied / COIN) << " BHD" << std::endl;
-    std::cout << std::setw(PREFIX_WIDTH) << "burned: " << std::setw(15) << chiapos::MakeNumberStr(req.burned / COIN) << " BHD" << std::endl;
-    std::cout << std::setw(PREFIX_WIDTH) << "accumulate: " << std::setw(15) << chiapos::MakeNumberStr(req.accumulate / COIN) << " BHD" << std::endl;
-    std::cout << std::setw(PREFIX_WIDTH) << "require: " << std::setw(15) << chiapos::MakeNumberStr(req.req / COIN) << " BHD" << std::endl;
+    std::cout << std::setw(PREFIX_WIDTH) << "mined: " << std::setw(15)
+              << tinyformat::format("%d/%d", req.mined_count, req.total_count) << " BLK" << std::endl;
+    std::cout << std::setw(PREFIX_WIDTH) << "supplied: " << std::setw(15) << chiapos::MakeNumberStr(req.supplied / COIN)
+              << " BHD" << std::endl;
+    std::cout << std::setw(PREFIX_WIDTH) << "burned: " << std::setw(15) << chiapos::MakeNumberStr(req.burned / COIN)
+              << " BHD" << std::endl;
+    std::cout << std::setw(PREFIX_WIDTH) << "accumulate: " << std::setw(15)
+              << chiapos::MakeNumberStr(req.accumulate / COIN) << " BHD" << std::endl;
+    std::cout << std::setw(PREFIX_WIDTH) << "require: " << std::setw(15) << chiapos::MakeNumberStr(req.req / COIN)
+              << " BHD" << std::endl;
     return 0;
 }
 
@@ -463,7 +468,7 @@ int main(int argc, char** argv) {
             ("d,datadir", "The root path of the data directory",
              cxxopts::value<std::string>())  // --datadir, -d
             ("cookie", "Full path to `.cookie` from btchd datadir",
-             cxxopts::value<std::string>())                            // --cookie
+             cxxopts::value<std::string>())  // --cookie
             ("command", std::string("Command") + miner::GetCommandsList(),
              cxxopts::value<std::string>())  // --command
             ;
