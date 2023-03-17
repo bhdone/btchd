@@ -214,7 +214,7 @@ int Miner::Run() {
                     iters = pos->iters;
                     PLOG_INFO << "calculated, iters=" << chiapos::FormatNumberStr(std::to_string(iters))
                               << ", with k=" << static_cast<int>(pos->k)
-                              << ", difficulty=" << queried_challenge.difficulty
+                              << ", difficulty=" << chiapos::MakeNumberStr(queried_challenge.difficulty)
                               << ", dcf_bits=" << m_difficulty_constant_factor_bits;
                 } else {
                     // Get the iters for next void block
