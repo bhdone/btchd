@@ -142,7 +142,7 @@ Miner::~Miner() {
 }
 
 void Miner::StartTimelord(std::vector<std::string> const& endpoints, uint16_t default_port) {
-    PLOGI << "starting timelord client...";
+    PLOGI << tinyformat::format("start timelord total %d client...", endpoints.size());
     for (auto const& endpoint : endpoints) {
         auto p = endpoint.find_first_of(':');
         std::string hostname;
