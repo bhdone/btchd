@@ -188,7 +188,6 @@ TEST(Consensus, RandomQualities) {
     int const N = 300;
     int const ADJUST_N = 10;
     uint64_t diff{10000000};
-    srand(time(nullptr));
     uint64_t vdf_speed = 200000;
     for (int i = 0; i < N; ++i) {
         uint256 qs = MakeRandUint256();
