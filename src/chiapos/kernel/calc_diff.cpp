@@ -64,9 +64,8 @@ uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_
     auto h = Pow2(QualityBaseBits);
     auto size = expected_plot_size<arith_uint256>(k);
     auto iters = difficulty * Pow2(difficulty_constant_factor_bits) * l / (size * h);
-    double q = static_cast<double>(l.GetLow64()) / static_cast<double>(h.GetLow64());
     if (quality_in_plot) {
-        *quality_in_plot = q;
+        *quality_in_plot = static_cast<double>(l.GetLow64()) / static_cast<double>(h.GetLow64());
     }
     if (quality) {
         *quality = size * h / l;
