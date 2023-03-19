@@ -169,4 +169,11 @@ std::vector<HostEntry> ParseHostsStr(std::string const& hosts, uint16_t default_
     return res;
 }
 
+std::string FormatTime(int duration) {
+    int sec = duration % 60;
+    int min = duration / 60 % 60;
+    int hour = duration / 3600;
+    return std::to_string(hour) + ":" + std::to_string(min) + ":" + std::to_string(sec);
+}
+
 }  // namespace chiapos

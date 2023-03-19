@@ -121,6 +121,8 @@ std::string MakeNumberStr(uint64_t value);
 using HostEntry = std::pair<std::string, uint16_t>;
 std::vector<HostEntry> ParseHostsStr(std::string const& hosts, uint16_t default_port);
 
+std::string FormatTime(int duration);
+
 }  // namespace chiapos
 
 #endif
