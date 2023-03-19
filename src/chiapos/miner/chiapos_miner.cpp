@@ -167,7 +167,7 @@ int Miner::Run() {
     std::mutex vdf_mtx;
     std::vector<RPCClient::VdfProof> void_block_vec;
     std::string curr_plot_path;
-    uint64_t vdf_speed{0};
+    uint64_t vdf_speed{100000};
     while (1) {
         try {
             std::this_thread::yield();
@@ -224,12 +224,10 @@ int Miner::Run() {
                 m_state = State::WaitVDF;
             } else if (m_state == State::WaitVDF) {
                 std::string estimate_time_str{"n/a"};
-                if (vdf_speed) {
-                    int estimate_seconds = m_current_iters / vdf_speed;
-                    estimate_time_str = tinyformat::format("%d:%d min, (%s seconds), vdf speed=%s ips",
-                                                           estimate_seconds / 60, estimate_seconds % 60,
-                                                           estimate_seconds, chiapos::MakeNumberStr(vdf_speed));
-                }
+                int estimate_seconds = m_current_iters / vdf_speed;
+                estimate_time_str =
+                        tinyformat::format("%d:%d min, (%s seconds), vdf speed=%s ips", estimate_seconds / 60,
+                                           estimate_seconds % 60, estimate_seconds, chiapos::MakeNumberStr(vdf_speed));
                 PLOG_INFO << "request VDF proof for challenge: " << m_current_challenge.GetHex()
                           << ", iters: " << chiapos::FormatNumberStr(std::to_string(m_current_iters));
                 PLOGI << "estimate time: " << estimate_time_str;
