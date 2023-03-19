@@ -181,6 +181,8 @@ int Miner::Run() {
                 pos.reset();
                 vdf.reset();
                 void_block_vec.clear();
+                m_current_challenge.SetNull();
+                m_current_iters = 0;
                 // Query challenge
                 queried_challenge = m_client.QueryChallenge();
                 if (m_submit_history.find(queried_challenge.challenge) != std::end(m_submit_history)) {
@@ -315,7 +317,9 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
         if (ptimelord_client == nullptr) {
             return;
         }
-        ptimelord_client->Calc(m_current_challenge, m_current_iters);
+        if (!m_current_challenge.IsNull()) {
+            ptimelord_client->Calc(m_current_challenge, m_current_iters);
+        }
     });
     ptimelord_client->SetErrorHandler(
             [this, hostname, port, pweak_timelord](FrontEndClient::ErrorType type, std::string const& errs) {
