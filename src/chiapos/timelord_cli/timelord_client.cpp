@@ -15,17 +15,16 @@ static int const WAIT_PONG_TIMEOUT_SECONDS = 10;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-FrontEndClient::FrontEndClient(asio::io_context& ioc) : ioc_(ioc) {}
+FrontEndClient::FrontEndClient(asio::io_context& ioc) : ioc_(ioc), s_(ioc) {}
 
-void FrontEndClient::SetConnectionHandler(ConnectionHandler conn_handler) { conn_handler_ = std::move(conn_handler); }
-
-void FrontEndClient::SetMessageHandler(MessageHandler msg_handler) { msg_handler_ = std::move(msg_handler); }
-
-void FrontEndClient::SetErrorHandler(ErrorHandler err_handler) { err_handler_ = std::move(err_handler); }
-
-void FrontEndClient::SetCloseHandler(CloseHandler close_handler) { close_handler_ = std::move(close_handler); }
-
-void FrontEndClient::Connect(std::string const& host, unsigned short port) {
+void FrontEndClient::Connect(std::string const& host, unsigned short port, ConnectionHandler conn_handler,
+                             MessageHandler msg_handler, ErrorHandler err_handler) {
+    assert(conn_handler);
+    assert(msg_handler);
+    assert(err_handler);
+    conn_handler_ = std::move(conn_handler);
+    msg_handler_ = std::move(msg_handler);
+    err_handler_ = std::move(err_handler);
     // solve the address
     tcp::resolver r(ioc_);
     try {
@@ -40,8 +39,7 @@ void FrontEndClient::Connect(std::string const& host, unsigned short port) {
             return;
         }
         // retrieve the first result and start the connection
-        ps_.reset(new tcp::socket(ioc_));
-        ps_->async_connect(*it_result, [this](error_code const& ec) {
+        s_.async_connect(*it_result, [this](error_code const& ec) {
             if (ec) {
                 LogPrintf("Error on connect: %s\n", ec.message());
                 err_handler_(FrontEndClient::ErrorType::CONN, ec.message());
@@ -56,9 +54,6 @@ void FrontEndClient::Connect(std::string const& host, unsigned short port) {
 }
 
 bool FrontEndClient::SendMessage(UniValue const& msg) {
-    if (ps_ == nullptr) {
-        return false;
-    }
     bool do_send = sending_msgs_.empty();
     sending_msgs_.push_back(msg.write());
     if (do_send) {
@@ -67,28 +62,16 @@ bool FrontEndClient::SendMessage(UniValue const& msg) {
     return true;
 }
 
-void FrontEndClient::SendShutdown() {
-    bool do_send = sending_msgs_.empty();
-    sending_msgs_.push_back("shutdown");
-    if (do_send) {
-        DoSendNext();
-    }
-}
-
 void FrontEndClient::Exit() {
-    if (ps_) {
-        error_code ignored_ec;
-        ps_->shutdown(tcp::socket::shutdown_both, ignored_ec);
-        ps_->close(ignored_ec);
-        // callback
-        close_handler_();
-    }
+    error_code ignored_ec;
+    s_.shutdown(tcp::socket::shutdown_both, ignored_ec);
+    s_.close(ignored_ec);
 }
 
 void FrontEndClient::DoReadNext() {
-    asio::async_read_until(*ps_, read_buf_, '\0', [this](error_code const& ec, std::size_t bytes) {
+    asio::async_read_until(s_, read_buf_, '\0', [this](error_code const& ec, std::size_t bytes) {
         if (ec) {
-            if (ec != asio::error::operation_aborted) {
+            if (ec != asio::error::operation_aborted && ec != asio::error::eof) {
                 LogPrintf("%s: read error, %s\n", __func__, ec.message());
                 err_handler_(FrontEndClient::ErrorType::READ, ec.message());
             }
@@ -114,7 +97,7 @@ void FrontEndClient::DoSendNext() {
     send_buf_.resize(msg.size() + 1);
     memcpy(send_buf_.data(), msg.data(), msg.size());
     send_buf_[msg.size()] = '\0';
-    asio::async_write(*ps_, asio::buffer(send_buf_), [this](error_code const& ec, std::size_t bytes) {
+    asio::async_write(s_, asio::buffer(send_buf_), [this](error_code const& ec, std::size_t bytes) {
         if (ec) {
             err_handler_(FrontEndClient::ErrorType::WRITE, ec.message());
             return;
@@ -149,14 +132,23 @@ bool TimelordClient::Calc(uint256 const& challenge, uint64_t iters) {
     return client_.SendMessage(msg);
 }
 
-void TimelordClient::RequestServiceShutdown() { client_.SendShutdown(); }
-
 void TimelordClient::Connect(std::string const& host, unsigned short port) {
-    client_.SetConnectionHandler(std::bind(&TimelordClient::HandleConnect, this));
-    client_.SetMessageHandler(std::bind(&TimelordClient::HandleMessage, this, _1));
-    client_.SetErrorHandler(std::bind(&TimelordClient::HandleError, this, _1, _2));
-    client_.SetCloseHandler(std::bind(&TimelordClient::HandleClose, this));
-    client_.Connect(host, port);
+    client_.Connect(
+            host, port,
+            [this]() {
+                conn_handler_();
+                DoWriteNextPing();
+            },
+            [this](UniValue const& msg) {
+                auto msg_id = msg["id"].get_int();
+                LogPrint(BCLog::NET, "%s(timelord): msgid=%s\n", __func__,
+                         TimelordMsgIdToString(static_cast<TimelordMsgs>(msg_id)));
+                auto it = msg_handlers_.find(msg_id);
+                if (it != std::end(msg_handlers_)) {
+                    it->second(msg);
+                }
+            },
+            [this](FrontEndClient::ErrorType type, std::string const& errs) { err_handler_(type, errs); });
 }
 
 void TimelordClient::Exit() {
@@ -184,28 +176,13 @@ void TimelordClient::DoWaitPong() {
     ptimer_waitpong_.reset(new asio::steady_timer(ioc_));
     ptimer_waitpong_->expires_after(std::chrono::seconds(WAIT_PONG_TIMEOUT_SECONDS));
     ptimer_waitpong_->async_wait([this](error_code const& ec) {
+        ptimer_waitpong_.reset();
         if (!ec) {
             // timeout, report error
             LogPrintf("%s: PONG timeout, the connection might be dead\n", __func__);
+            err_handler_(FrontEndClient::ErrorType::READ, "PING/PONG timeout");
         }
-        ptimer_waitpong_.reset();
     });
-}
-
-void TimelordClient::HandleConnect() {
-    if (conn_handler_) {
-        conn_handler_();
-    }
-    DoWriteNextPing();
-}
-
-void TimelordClient::HandleMessage(UniValue const& msg) {
-    auto msg_id = msg["id"].get_int();
-    LogPrint(BCLog::NET, "%s(timelord): msgid=%s\n", __func__, TimelordMsgIdToString(static_cast<TimelordMsgs>(msg_id)));
-    auto it = msg_handlers_.find(msg_id);
-    if (it != std::end(msg_handlers_)) {
-        it->second(msg);
-    }
 }
 
 void TimelordClient::HandleMessage_Pong(UniValue const& msg) {
@@ -244,18 +221,5 @@ void TimelordClient::HandleMessage_CalcReply(UniValue const& msg) {
         }
     } else if (!calculating) {
         LogPrint(BCLog::NET, "%s: delay challenge=%s\n", __func__, challenge.GetHex());
-    }
-}
-
-void TimelordClient::HandleError(FrontEndClient::ErrorType type, std::string const& errs) {
-    if (err_handler_) {
-        err_handler_(type, errs);
-        client_.Exit();
-    }
-}
-
-void TimelordClient::HandleClose() {
-    if (err_handler_) {
-        err_handler_(FrontEndClient::ErrorType::CLOSE, "close");
     }
 }

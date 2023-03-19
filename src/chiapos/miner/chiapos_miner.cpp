@@ -326,6 +326,7 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
                 if (ptimelord) {
                     auto it = std::remove(std::begin(m_timelord_vec), std::end(m_timelord_vec), ptimelord);
                     m_timelord_vec.erase(it, std::end(m_timelord_vec));
+                    ptimelord->Exit();
                 }
                 // We need to re-try to connect to timelord server here
                 if (!m_shutting_down) {
@@ -453,6 +454,7 @@ void Miner::SaveProof(uint256 const& challenge, ProofDetail const& detail) {
     if (it == std::end(m_proofs)) {
         m_proofs.insert(std::make_pair(challenge, std::vector<ProofDetail>{detail}));
     } else {
+        // exit if the proof does already exist
         it->second.push_back(detail);
     }
     PLOGI << "proof is saved.";
