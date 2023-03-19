@@ -225,9 +225,9 @@ int Miner::Run() {
             } else if (m_state == State::WaitVDF) {
                 std::string estimate_time_str{"n/a"};
                 int estimate_seconds = m_current_iters / vdf_speed;
-                estimate_time_str =
-                        tinyformat::format("%d:%d min, (%s seconds), vdf speed=%s ips", estimate_seconds / 60,
-                                           estimate_seconds % 60, estimate_seconds, chiapos::MakeNumberStr(vdf_speed));
+                estimate_time_str = tinyformat::format(
+                        "%s seconds (%s), vdf speed=%s ips", chiapos::MakeNumberStr(estimate_seconds),
+                        chiapos::FormatTime(estimate_seconds), chiapos::MakeNumberStr(vdf_speed));
                 PLOG_INFO << "request VDF proof for challenge: " << m_current_challenge.GetHex()
                           << ", iters: " << chiapos::FormatNumberStr(std::to_string(m_current_iters));
                 PLOGI << "estimate time: " << estimate_time_str;
@@ -245,6 +245,8 @@ int Miner::Run() {
                     assert(vdf.has_value());
                     if (vdf->duration >= 3) {
                         vdf_speed = vdf->iters / vdf->duration;
+                        PLOGI << tinyformat::format("vdf speed is updated to %s ips",
+                                                    chiapos::MakeNumberStr(vdf_speed));
                     }
                     m_state = State::ProcessVDF;
                 } else if (reason == BreakReason::Error) {
