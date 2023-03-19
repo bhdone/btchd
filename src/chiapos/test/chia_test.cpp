@@ -201,7 +201,7 @@ TEST(Consensus, RandomQualities) {
         diff = AdjustDifficulty(diff, duration, 60 * 3);
         LogPrintf("[%d] iters=%lld, q=%1.3f, quality=%e duration=%d secs (%1.3f min), diff=%s%s\n", i, iters, q_in_plot,
                   quality.getdouble(), duration, static_cast<double>(duration) / 60, MakeNumberStr(diff),
-                  (duration > 60 * 5 ? ", WARNING" : ""));
+                  (duration > 60 * 30 ? ", WARNING" : ""));
     }
 }
 
