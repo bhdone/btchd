@@ -311,32 +311,33 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
     auto ptimelord_client = std::make_shared<TimelordClient>(m_ioc);
     ptimelord_client->SetConnectionHandler([]() { PLOGI << "Connected to timelord"; });
     auto pweak_timelord = std::weak_ptr<TimelordClient>(ptimelord_client);
-    ptimelord_client->SetErrorHandler([this, hostname, port, pweak_timelord](FrontEndClient::ErrorType type, std::string const& errs) {
-        PLOGE << "Timelord client " << hostname << ":" << port << ", reports error: type=" << static_cast<int>(type)
-              << ", errs: " << errs;
-        // remove the pointer from vec
-        auto ptimelord = pweak_timelord.lock();
-        if (ptimelord) {
-            auto it = std::remove(std::begin(m_timelord_vec), std::end(m_timelord_vec), ptimelord);
-            m_timelord_vec.erase(it, std::end(m_timelord_vec));
-        }
-        // We need to re-try to connect to timelord server here
-        if (!m_shutting_down) {
-            // prepare to reconnect
-            // wait 3 seconds
-            int const RECONNECT_WAIT_SECONDS = 3;
-            PLOGI << "Establish connection to timelord after " << RECONNECT_WAIT_SECONDS << " seconds";
-            auto ptimer = std::make_shared<asio::steady_timer>(m_ioc);
-            ptimer->expires_after(std::chrono::seconds(RECONNECT_WAIT_SECONDS));
-            ptimer->async_wait([this, hostname, port, ptimer](std::error_code const& ec) {
-                if (ec) {
-                    return;
+    ptimelord_client->SetErrorHandler(
+            [this, hostname, port, pweak_timelord](FrontEndClient::ErrorType type, std::string const& errs) {
+                PLOGE << "Timelord client " << hostname << ":" << port
+                      << ", reports error: type=" << static_cast<int>(type) << ", errs: " << errs;
+                // remove the pointer from vec
+                auto ptimelord = pweak_timelord.lock();
+                if (ptimelord) {
+                    auto it = std::remove(std::begin(m_timelord_vec), std::end(m_timelord_vec), ptimelord);
+                    m_timelord_vec.erase(it, std::end(m_timelord_vec));
                 }
-                // ready to connect
-                m_timelord_vec.push_back(PrepareTimelordClient(hostname, port));
+                // We need to re-try to connect to timelord server here
+                if (!m_shutting_down) {
+                    // prepare to reconnect
+                    // wait 3 seconds
+                    int const RECONNECT_WAIT_SECONDS = 3;
+                    PLOGI << "Establish connection to timelord after " << RECONNECT_WAIT_SECONDS << " seconds";
+                    auto ptimer = std::make_shared<asio::steady_timer>(m_ioc);
+                    ptimer->expires_after(std::chrono::seconds(RECONNECT_WAIT_SECONDS));
+                    ptimer->async_wait([this, hostname, port, ptimer](std::error_code const& ec) {
+                        if (ec) {
+                            return;
+                        }
+                        // ready to connect
+                        m_timelord_vec.push_back(PrepareTimelordClient(hostname, port));
+                    });
+                }
             });
-        }
-    });
     ptimelord_client->SetProofReceiver(
             [this](uint256 const& challenge, ProofDetail const& detail) { SaveProof(challenge, detail); });
     ptimelord_client->Connect(hostname, port);
