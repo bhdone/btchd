@@ -73,6 +73,9 @@ private:
     std::map<uint256, std::vector<ProofDetail>> m_proofs;
     std::set<uint256> m_submit_history;
     std::atomic_bool m_shutting_down{false};
+    // temporary save the current challenge/iters
+    uint256 m_current_challenge;
+    uint64_t m_current_iters;
 };
 
 }  // namespace miner

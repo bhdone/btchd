@@ -162,12 +162,10 @@ void Miner::StartTimelord(std::vector<std::string> const& endpoints, uint16_t de
 int Miner::Run() {
     int const ERROR_RECOVER_WAIT_SECONDS = 3;
     RPCClient::Challenge queried_challenge;
-    uint256 current_challenge;
     chiapos::optional<RPCClient::PosProof> pos;
-    std::mutex vdf_mtx;
     chiapos::optional<RPCClient::VdfProof> vdf;
+    std::mutex vdf_mtx;
     std::vector<RPCClient::VdfProof> void_block_vec;
-    uint64_t iters;
     std::string curr_plot_path;
     uint64_t vdf_speed{0};
     while (1) {
@@ -189,17 +187,17 @@ int Miner::Run() {
                     PLOG_INFO << "proof is already submitted, waiting for next challenge...";
                     std::this_thread::sleep_for(std::chrono::seconds(1));
                 } else {
-                    current_challenge = queried_challenge.challenge;
-                    PLOG_INFO << "challenge is ready: " << current_challenge.GetHex()
+                    m_current_challenge = queried_challenge.challenge;
+                    PLOG_INFO << "challenge is ready: " << m_current_challenge.GetHex()
                               << ", target height: " << queried_challenge.target_height
                               << ", filter_bits: " << queried_challenge.filter_bits;
                     m_state = State::FindPoS;
                 }
             } else if (m_state == State::FindPoS) {
-                PLOG_INFO << "finding PoS for challenge: " << current_challenge.GetHex()
+                PLOG_INFO << "finding PoS for challenge: " << m_current_challenge.GetHex()
                           << ", dcf_bits: " << m_difficulty_constant_factor_bits
                           << ", filter_bits: " << queried_challenge.filter_bits;
-                pos = pos::QueryBestPosProof(m_prover, current_challenge, queried_challenge.difficulty,
+                pos = pos::QueryBestPosProof(m_prover, m_current_challenge, queried_challenge.difficulty,
                                              m_difficulty_constant_factor_bits, queried_challenge.filter_bits,
                                              &curr_plot_path);
                 if (pos.has_value()) {
@@ -212,34 +210,35 @@ int Miner::Run() {
                         return 1;
                     }
                     // Get the iters from PoS
-                    iters = pos->iters;
-                    PLOG_INFO << "calculated, iters=" << chiapos::FormatNumberStr(std::to_string(iters))
+                    m_current_iters = pos->iters;
+                    PLOG_INFO << "calculated, iters=" << chiapos::FormatNumberStr(std::to_string(m_current_iters))
                               << ", with k=" << static_cast<int>(pos->k)
                               << ", difficulty=" << chiapos::MakeNumberStr(queried_challenge.difficulty)
                               << ", dcf_bits=" << m_difficulty_constant_factor_bits;
                 } else {
                     // Get the iters for next void block
                     PLOG_INFO << "PoS cannot be found";
-                    iters = queried_challenge.prev_vdf_iters / queried_challenge.prev_vdf_duration *
-                            queried_challenge.target_duration;
+                    m_current_iters = queried_challenge.prev_vdf_iters / queried_challenge.prev_vdf_duration *
+                                      queried_challenge.target_duration;
                 }
                 m_state = State::WaitVDF;
             } else if (m_state == State::WaitVDF) {
                 std::string estimate_time_str{"n/a"};
                 if (vdf_speed) {
-                    int estimate_seconds = iters / vdf_speed;
+                    int estimate_seconds = m_current_iters / vdf_speed;
                     estimate_time_str = tinyformat::format("%d:%d min, (%s seconds), vdf speed=%s ips",
                                                            estimate_seconds / 60, estimate_seconds % 60,
                                                            estimate_seconds, chiapos::MakeNumberStr(vdf_speed));
                 }
-                PLOG_INFO << "request VDF proof for challenge: " << current_challenge.GetHex()
-                          << ", iters: " << chiapos::FormatNumberStr(std::to_string(iters));
+                PLOG_INFO << "request VDF proof for challenge: " << m_current_challenge.GetHex()
+                          << ", iters: " << chiapos::FormatNumberStr(std::to_string(m_current_iters));
                 PLOGI << "estimate time: " << estimate_time_str;
-                m_client.RequireVdf(current_challenge, iters);
+                m_client.RequireVdf(m_current_challenge, m_current_iters);
                 PLOG_INFO << "waiting for VDF proofs...";
                 std::atomic_bool running{true};
-                BreakReason reason = CheckAndBreak(running, queried_challenge.target_duration * 1.5,
-                                                   queried_challenge.challenge, current_challenge, iters, vdf_mtx, vdf);
+                BreakReason reason =
+                        CheckAndBreak(running, queried_challenge.target_duration * 1.5, queried_challenge.challenge,
+                                      m_current_challenge, m_current_iters, vdf_mtx, vdf);
                 if (reason == BreakReason::ChallengeIsChanged) {
                     PLOG_INFO << "!!!!! Challenge is changed !!!!!";
                     m_state = State::RequireChallenge;
@@ -265,7 +264,7 @@ int Miner::Run() {
                     m_state = State::SubmitProofs;
                 } else {
                     PLOG_INFO << "no valid PoS, trying to find another one";
-                    current_challenge = chiapos::MakeChallenge(current_challenge, vdf->proof);
+                    m_current_challenge = chiapos::MakeChallenge(m_current_challenge, vdf->proof);
                     void_block_vec.push_back(*vdf);
                     m_state = State::FindPoS;
                 }
@@ -309,8 +308,15 @@ int Miner::Run() {
 TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsigned short port) {
     PLOGI << "Establishing connection to timelord " << hostname << ":" << port;
     auto ptimelord_client = std::make_shared<TimelordClient>(m_ioc);
-    ptimelord_client->SetConnectionHandler([]() { PLOGI << "Connected to timelord"; });
     auto pweak_timelord = std::weak_ptr<TimelordClient>(ptimelord_client);
+    ptimelord_client->SetConnectionHandler([this, pweak_timelord]() {
+        PLOGI << "Connected to timelord";
+        auto ptimelord_client = pweak_timelord.lock();
+        if (ptimelord_client == nullptr) {
+            return;
+        }
+        ptimelord_client->Calc(m_current_challenge, m_current_iters);
+    });
     ptimelord_client->SetErrorHandler(
             [this, hostname, port, pweak_timelord](FrontEndClient::ErrorType type, std::string const& errs) {
                 PLOGE << "Timelord client " << hostname << ":" << port
@@ -346,13 +352,13 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
 
 Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_seconds,
                                         uint256 const& initial_challenge, uint256 const& current_challenge,
-                                        uint64_t iters_limits, std::mutex& vdf_write_lock,
+                                        uint64_t iters, std::mutex& vdf_write_lock,
                                         chiapos::optional<RPCClient::VdfProof>& out_vdf) {
     // before we get in the loop, we need to send the request to timelord if it is running
     if (m_pthread_timelord) {
         PLOGD << "request proof from timelord";
         for (auto ptr : m_timelord_vec) {
-            ptr->Calc(current_challenge, iters_limits);
+            ptr->Calc(current_challenge, iters);
         }
     }
     auto start_time = std::chrono::system_clock::now();
@@ -371,7 +377,7 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
             }
             // Query proof from timelord if it is created
             if (m_pthread_timelord) {
-                auto detail = QueryProofFromTimelord(current_challenge, iters_limits);
+                auto detail = QueryProofFromTimelord(current_challenge, iters);
                 if (detail.has_value()) {
                     PLOGI << "queried vdf proof from timelord";
                     RPCClient::VdfProof vdf;
@@ -389,7 +395,7 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
                 }
             }
             // Query VDF and when the VDF is ready we break the VDF computer and use the VDF proof
-            RPCClient::VdfProof vdf = m_client.QueryVdf(current_challenge, iters_limits);
+            RPCClient::VdfProof vdf = m_client.QueryVdf(current_challenge, iters);
             // VDF is ready
             {
                 std::lock_guard<std::mutex> lg(vdf_write_lock);
