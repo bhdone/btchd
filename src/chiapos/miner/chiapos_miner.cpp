@@ -362,9 +362,11 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
     // before we get in the loop, we need to send the request to timelord if it is running
     if (m_pthread_timelord) {
         PLOGD << "request proof from timelord";
-        for (auto ptr : m_timelord_vec) {
-            ptr->Calc(current_challenge, iters);
-        }
+        asio::post(m_ioc, [this, current_challenge, iters]() {
+            for (auto ptr : m_timelord_vec) {
+                ptr->Calc(current_challenge, iters);
+            }
+        });
     }
     auto start_time = std::chrono::system_clock::now();
     while (running) {
