@@ -164,7 +164,6 @@ int Miner::Run() {
     RPCClient::Challenge queried_challenge;
     chiapos::optional<RPCClient::PosProof> pos;
     chiapos::optional<RPCClient::VdfProof> vdf;
-    std::mutex vdf_mtx;
     std::vector<RPCClient::VdfProof> void_block_vec;
     std::string curr_plot_path;
     uint64_t vdf_speed{100000};
@@ -238,7 +237,7 @@ int Miner::Run() {
                 std::atomic_bool running{true};
                 BreakReason reason =
                         CheckAndBreak(running, queried_challenge.target_duration * 1.5, queried_challenge.challenge,
-                                      m_current_challenge, m_current_iters, vdf_mtx, vdf);
+                                      m_current_challenge, m_current_iters, vdf);
                 if (reason == BreakReason::ChallengeIsChanged) {
                     PLOG_INFO << "!!!!! Challenge is changed !!!!!";
                     m_state = State::RequireChallenge;
@@ -357,8 +356,7 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
 
 Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_seconds,
                                         uint256 const& initial_challenge, uint256 const& current_challenge,
-                                        uint64_t iters, std::mutex& vdf_write_lock,
-                                        chiapos::optional<RPCClient::VdfProof>& out_vdf) {
+                                        uint64_t iters, chiapos::optional<RPCClient::VdfProof>& out_vdf) {
     // before we get in the loop, we need to send the request to timelord if it is running
     if (m_pthread_timelord) {
         PLOGD << "request proof from timelord";
@@ -394,20 +392,14 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
                     vdf.witness_type = detail->witness_type;
                     vdf.iters = detail->iters;
                     vdf.duration = std::max(detail->duration, 1);
-                    {
-                        std::lock_guard<std::mutex> lg(vdf_write_lock);
-                        out_vdf = vdf;
-                    }
+                    out_vdf = vdf;
                     return BreakReason::VDFIsAcquired;
                 }
             }
             // Query VDF and when the VDF is ready we break the VDF computer and use the VDF proof
             RPCClient::VdfProof vdf = m_client.QueryVdf(current_challenge, iters);
             // VDF is ready
-            {
-                std::lock_guard<std::mutex> lg(vdf_write_lock);
-                out_vdf = vdf;
-            }
+            out_vdf = vdf;
             return BreakReason::VDFIsAcquired;
         } catch (NetError const& e) {
             PLOGE << "NetError: " << e.what();

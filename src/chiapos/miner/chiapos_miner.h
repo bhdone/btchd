@@ -44,7 +44,7 @@ private:
 
     /// A thread proc to check the challenge or the VDF from P2P network
     BreakReason CheckAndBreak(std::atomic_bool& running, int timeout_seconds, uint256 const& initial_challenge,
-                              uint256 const& current_challenge, uint64_t iters_limits, std::mutex& vdf_write_lock,
+                              uint256 const& current_challenge, uint64_t iters_limits,
                               chiapos::optional<RPCClient::VdfProof>& out_vdf);
 
     static std::string ToString(State state);
