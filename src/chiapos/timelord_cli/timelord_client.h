@@ -35,6 +35,8 @@ public:
 
     void Exit();
 
+    void Close();
+
 private:
     void DoReadNext();
 

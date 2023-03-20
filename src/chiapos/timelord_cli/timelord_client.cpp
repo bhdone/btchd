@@ -65,6 +65,10 @@ bool FrontEndClient::SendMessage(UniValue const& msg) {
 void FrontEndClient::Exit() {
     error_code ignored_ec;
     s_.shutdown(tcp::socket::shutdown_both, ignored_ec);
+}
+
+void FrontEndClient::Close() {
+    error_code ignored_ec;
     s_.close(ignored_ec);
 }
 
