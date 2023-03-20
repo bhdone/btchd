@@ -13,7 +13,6 @@ static int const SECONDS_TO_PING = 60;
 static int const WAIT_PONG_TIMEOUT_SECONDS = 10;
 
 using std::placeholders::_1;
-using std::placeholders::_2;
 
 FrontEndClient::FrontEndClient(asio::io_context& ioc) : ioc_(ioc), s_(ioc) {}
 
