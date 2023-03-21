@@ -83,8 +83,6 @@ public:
 
     void Exit();
 
-    void RequestServiceShutdown();
-
 private:
     void DoWriteNextPing();
 
