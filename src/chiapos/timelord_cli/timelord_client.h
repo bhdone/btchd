@@ -22,6 +22,8 @@ class UniValue;
 class FrontEndClient {
 public:
     enum class ErrorType { CONN, READ, WRITE };
+    enum class Status { READY, CONNECTING, CONNECTED, CLOSED };
+
     using ConnectionHandler = std::function<void()>;
     using MessageHandler = std::function<void(UniValue const&)>;
     using ErrorHandler = std::function<void(ErrorType err_type, std::string const& errs)>;
@@ -35,14 +37,13 @@ public:
 
     void Exit();
 
-    void Close();
-
 private:
     void DoReadNext();
 
     void DoSendNext();
 
     asio::io_context& ioc_;
+    std::atomic<Status> st_{Status::READY};
     tcp::socket s_;
     asio::streambuf read_buf_;
     std::vector<uint8_t> send_buf_;

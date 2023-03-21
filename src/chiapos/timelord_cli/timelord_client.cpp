@@ -18,6 +18,10 @@ FrontEndClient::FrontEndClient(asio::io_context& ioc) : ioc_(ioc), s_(ioc) {}
 
 void FrontEndClient::Connect(std::string const& host, unsigned short port, ConnectionHandler conn_handler,
                              MessageHandler msg_handler, ErrorHandler err_handler) {
+    if (st_ != Status::READY) {
+        throw std::runtime_error("the client is not ready");
+    }
+    st_ = Status::CONNECTING;
     assert(conn_handler);
     assert(msg_handler);
     assert(err_handler);
@@ -41,6 +45,7 @@ void FrontEndClient::Connect(std::string const& host, unsigned short port, Conne
         s_.async_connect(*it_result, [this](error_code const& ec) {
             if (ec) {
                 LogPrintf("Error on connect: %s\n", ec.message());
+                st_ = Status::CLOSED;
                 err_handler_(FrontEndClient::ErrorType::CONN, ec.message());
                 return;
             }
@@ -53,22 +58,28 @@ void FrontEndClient::Connect(std::string const& host, unsigned short port, Conne
 }
 
 bool FrontEndClient::SendMessage(UniValue const& msg) {
-    bool do_send = sending_msgs_.empty();
-    sending_msgs_.push_back(msg.write());
-    if (do_send) {
-        DoSendNext();
+    if (st_ != Status::CONNECTED) {
+        return false;
     }
+    asio::post(ioc_, [this, msg]() {
+        bool do_send = sending_msgs_.empty();
+        sending_msgs_.push_back(msg.write());
+        if (do_send) {
+            DoSendNext();
+        }
+    });
     return true;
 }
 
 void FrontEndClient::Exit() {
-    error_code ignored_ec;
-    s_.shutdown(tcp::socket::shutdown_both, ignored_ec);
-}
-
-void FrontEndClient::Close() {
-    error_code ignored_ec;
-    s_.close(ignored_ec);
+    if (st_ != Status::CONNECTED && st_ != Status::CONNECTING) {
+        return;
+    }
+    asio::post(ioc_, [this]() {
+        error_code ignored_ec;
+        s_.shutdown(tcp::socket::shutdown_both, ignored_ec);
+        s_.close(ignored_ec);
+    });
 }
 
 void FrontEndClient::DoReadNext() {
@@ -155,8 +166,10 @@ void TimelordClient::Connect(std::string const& host, unsigned short port) {
 }
 
 void TimelordClient::Exit() {
-    error_code ignored_ec;
-    timer_pingpong_.cancel(ignored_ec);
+    asio::post(ioc_, [this]() {
+        error_code ignored_ec;
+        timer_pingpong_.cancel(ignored_ec);
+    });
     client_.Exit();
 }
 
