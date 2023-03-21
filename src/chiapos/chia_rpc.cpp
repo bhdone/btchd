@@ -290,7 +290,8 @@ static UniValue queryNetspace(JSONRPCRequest const& request) {
     res.pushKV("calculatedOnHeight", pledgeParams.nCalcHeight);
     res.pushKV("supplied", pledgeParams.supplied / COIN);
     res.pushKV("netspace", chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())));
-    res.pushKV("netspace_TB", netspaceTB.getdouble());
+    res.pushKV("netspace_TB", chiapos::MakeNumberStr(chiapos::MakeNumberTB(netspace.GetLow64())));
+    res.pushKV("netspace_PB", chiapos::MakeNumberStr(chiapos::MakeNumberTB(netspace.GetLow64()) / 1000));
 
     return res;
 }

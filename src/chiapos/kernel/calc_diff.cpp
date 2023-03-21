@@ -32,6 +32,7 @@ using QualityBaseType = uint32_t;
 constexpr int QualityBaseBits = sizeof(QualityBaseType) * 8;
 
 constexpr double DIFFICULTY_CHANGE_MAX_FACTOR = 1.5;
+constexpr double UI_ACTUAL_SPACE_CONSTANT_FACTOR = 0.762;
 
 arith_uint256 Pow2(int bits) { return arith_uint256(1) << bits; }
 
@@ -78,9 +79,10 @@ uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_
 
 arith_uint256 CalculateNetworkSpace(uint64_t difficulty, uint64_t iters, int difficulty_constant_factor_bits,
                                     int bits_of_filter) {
+    arith_uint256 diff_iters = static_cast<double>(difficulty) / iters * UI_ACTUAL_SPACE_CONSTANT_FACTOR;
     arith_uint256 additional_difficulty_constant = Pow2(difficulty_constant_factor_bits);
     arith_uint256 eligible_plots_filter_multiplier = Pow2(bits_of_filter);
-    return difficulty * additional_difficulty_constant * eligible_plots_filter_multiplier / iters;
+    return diff_iters * additional_difficulty_constant * eligible_plots_filter_multiplier;
 }
 
 }  // namespace chiapos
