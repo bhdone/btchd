@@ -49,6 +49,7 @@ void FrontEndClient::Connect(std::string const& host, unsigned short port, Conne
                 err_handler_(FrontEndClient::ErrorType::CONN, ec.message());
                 return;
             }
+            st_ = Status::CONNECTED;
             DoReadNext();
             conn_handler_();
         });
@@ -72,9 +73,10 @@ bool FrontEndClient::SendMessage(UniValue const& msg) {
 }
 
 void FrontEndClient::Exit() {
-    if (st_ != Status::CONNECTED && st_ != Status::CONNECTING) {
+    if (st_ == Status::CLOSED || st_ == Status::READY) {
         return;
     }
+    st_ = Status::CLOSED;
     asio::post(ioc_, [this]() {
         error_code ignored_ec;
         s_.shutdown(tcp::socket::shutdown_both, ignored_ec);
