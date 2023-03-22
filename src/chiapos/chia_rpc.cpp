@@ -73,7 +73,7 @@ static UniValue queryChallenge(JSONRPCRequest const& request) {
 
     UniValue res(UniValue::VOBJ);
     int nTargetHeight = pindexPrev->nHeight + 1;
-    if (nTargetHeight == params.BHDIP009Height) {
+    if (nTargetHeight == params.BHDIP009Height || nTargetHeight == params.BHDIP009PlotIdBitsOfFilterEnableOnHeight + 1) {
         Bytes initialVdfProof(100, 0);
         res.pushKV("challenge", MakeChallenge(pindexPrev->GetBlockHash(), initialVdfProof).GetHex());
         res.pushKV("difficulty", params.BHDIP009StartDifficulty);

@@ -318,7 +318,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewChiaBlock(const CBlockI
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
     uint64_t nDifficultyPrev;
-    if (nHeight == params.BHDIP009Height) {
+    if (nHeight == params.BHDIP009Height || nHeight == params.BHDIP009PlotIdBitsOfFilterEnableOnHeight + 1) {
         nDifficultyPrev = params.BHDIP009StartDifficulty;
     } else {
         nDifficultyPrev = pindexPrev->chiaposFields.nDifficulty;

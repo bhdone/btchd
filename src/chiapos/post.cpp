@@ -213,7 +213,7 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
     // Difficulty is important
     LogPrint(BCLog::POC, "%s: checking difficulty\n", __func__);
     uint64_t nDifficultyPrev;
-    if (nTargetHeight == params.BHDIP009Height) {
+    if (nTargetHeight == params.BHDIP009Height || nTargetHeight == params.BHDIP009PlotIdBitsOfFilterEnableOnHeight + 1) {
         nDifficultyPrev = params.BHDIP009StartDifficulty;
     } else {
         nDifficultyPrev = pindexPrev->chiaposFields.nDifficulty;

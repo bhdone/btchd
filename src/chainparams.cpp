@@ -146,7 +146,7 @@ public:
         consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 100;
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
-        consensus.BHDIP009StartDifficulty = 10;
+        consensus.BHDIP009StartDifficulty = 6000000;
 
         int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 5, 8};
