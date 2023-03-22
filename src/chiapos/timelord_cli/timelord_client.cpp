@@ -3,7 +3,9 @@
 #include <chiapos/kernel/utils.h>
 
 #include <univalue.h>
-#include <logging.h>
+
+#include <tinyformat.h>
+#include <plog/Log.h>
 
 #include <memory>
 
@@ -36,7 +38,7 @@ void FrontEndClient::Connect(std::string const& host, unsigned short port, Conne
         if (it_result == std::end(tcp::resolver::results_type())) {
             // cannot resolve the ip from host name
             asio::post(ioc_, [this, host]() {
-                LogPrintf("Failed to resolve host=%s\n", host);
+                PLOGE << tinyformat::format("Failed to resolve host=%s", host);
                 err_handler_(FrontEndClient::ErrorType::CONN, "cannot resolve host");
             });
             return;
@@ -44,7 +46,7 @@ void FrontEndClient::Connect(std::string const& host, unsigned short port, Conne
         // retrieve the first result and start the connection
         s_.async_connect(*it_result, [this](error_code const& ec) {
             if (ec) {
-                LogPrintf("Error on connect: %s\n", ec.message());
+                PLOGE << tinyformat::format("Error on connect: %s", ec.message());
                 st_ = Status::CLOSED;
                 err_handler_(FrontEndClient::ErrorType::CONN, ec.message());
                 return;
@@ -54,7 +56,7 @@ void FrontEndClient::Connect(std::string const& host, unsigned short port, Conne
             conn_handler_();
         });
     } catch (std::exception const& e) {
-        LogPrintf("%s: error on connecting, %s\n", __func__, e.what());
+        PLOGE << tinyformat::format("error on connecting, %s", e.what());
     }
 }
 
@@ -88,7 +90,7 @@ void FrontEndClient::DoReadNext() {
     asio::async_read_until(s_, read_buf_, '\0', [this](error_code const& ec, std::size_t bytes) {
         if (ec) {
             if (ec != asio::error::operation_aborted && ec != asio::error::eof) {
-                LogPrintf("%s: read error, %s\n", __func__, ec.message());
+                PLOGE << tinyformat::format("read error, %s", ec.message());
                 err_handler_(FrontEndClient::ErrorType::READ, ec.message());
             }
             return;
@@ -100,7 +102,7 @@ void FrontEndClient::DoReadNext() {
             msg.read(result);
             msg_handler_(msg);
         } catch (std::exception const& e) {
-            LogPrintf("%s: read error, %s, total read=%d bytes\n", __func__, e.what(), bytes);
+            PLOGE << tinyformat::format("read error, %s, total read=%d bytes", e.what(), bytes);
             err_handler_(FrontEndClient::ErrorType::READ, ec.message());
         }
         DoReadNext();
@@ -157,8 +159,8 @@ void TimelordClient::Connect(std::string const& host, unsigned short port) {
             },
             [this](UniValue const& msg) {
                 auto msg_id = msg["id"].get_int();
-                LogPrint(BCLog::NET, "%s(timelord): msgid=%s\n", __func__,
-                         TimelordMsgIdToString(static_cast<TimelordMsgs>(msg_id)));
+                PLOGD << tinyformat::format("(timelord): msgid=%s",
+                                            TimelordMsgIdToString(static_cast<TimelordMsgs>(msg_id)));
                 auto it = msg_handlers_.find(msg_id);
                 if (it != std::end(msg_handlers_)) {
                     it->second(msg);
@@ -197,7 +199,7 @@ void TimelordClient::DoWaitPong() {
         ptimer_waitpong_.reset();
         if (!ec) {
             // timeout, report error
-            LogPrintf("%s: PONG timeout, the connection might be dead\n", __func__);
+            PLOGE << tinyformat::format("PONG timeout, the connection might be dead");
             err_handler_(FrontEndClient::ErrorType::READ, "PING/PONG timeout");
         }
     });
@@ -238,6 +240,6 @@ void TimelordClient::HandleMessage_CalcReply(UniValue const& msg) {
             proof_receiver_(challenge, detail);
         }
     } else if (!calculating) {
-        LogPrint(BCLog::NET, "%s: delay challenge=%s\n", __func__, challenge.GetHex());
+        PLOGE << tinyformat::format("delay challenge=%s", challenge.GetHex());
     }
 }
