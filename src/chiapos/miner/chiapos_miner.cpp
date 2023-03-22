@@ -220,8 +220,7 @@ int Miner::Run() {
                 } else {
                     // Get the iters for next void block
                     PLOG_INFO << "PoS cannot be found";
-                    m_current_iters = queried_challenge.prev_vdf_iters / queried_challenge.prev_vdf_duration *
-                                      queried_challenge.target_duration;
+                    m_current_iters = queried_challenge.prev_vdf_iters / queried_challenge.prev_vdf_duration * 60 * 60;
                 }
                 m_state = State::WaitVDF;
             } else if (m_state == State::WaitVDF) {
