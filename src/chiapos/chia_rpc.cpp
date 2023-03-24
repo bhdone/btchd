@@ -122,7 +122,7 @@ CVdfProof ParseVdfProof(UniValue const& val) {
 
 void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTxDestination const& rewardDest,
                        uint256 const& initialChallenge, chiapos::Bytes const& vchFarmerSk,
-                       CPosProof const& posProof, CVdfProof const& vdfProof, std::vector<CVdfProof> const& vVoidBlock, uint64_t nDifficulty) {
+                       CPosProof const& posProof, CVdfProof const& vdfProof, uint64_t nDifficulty) {
     CKey farmerSk(MakeArray<SK_LEN>(vchFarmerSk));
     auto params = Params();
     std::shared_ptr<CBlock> pblock;
@@ -158,9 +158,6 @@ void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTx
             // Quality for the block we are going to generate
             uint256 mixed_quality_string = GenerateMixedQualityString(posProof);
             uint64_t nDuration = vdfProof.nVdfDuration;
-            for (auto const& block : vVoidBlock) {
-                nDuration += block.nVdfDuration;
-            }
             if (nDifficulty < pindexCurr->chiaposFields.nDifficulty) {
                 // The quality is too low, and it will not be accepted by the chain
                 throw std::runtime_error("the quality is too low, the new block will not be accepted by the chain");
@@ -180,7 +177,7 @@ void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTx
         PubKeyOrHash poolPkOrHash =
                 MakePubKeyOrHash(static_cast<PlotPubKeyType>(posProof.nPlotType), posProof.vchPoolPkOrHash);
         std::unique_ptr<CBlockTemplate> ptemplate = BlockAssembler(params).CreateNewChiaBlock(
-                pindexPrev, GetScriptForDestination(rewardDest), farmerSk, posProof, vdfProof, vVoidBlock);
+                pindexPrev, GetScriptForDestination(rewardDest), farmerSk, posProof, vdfProof);
         if (ptemplate == nullptr) {
             throw std::runtime_error("cannot generate new block, the template object is null");
         }
@@ -222,13 +219,6 @@ static UniValue submitProof(JSONRPCRequest const& request) {
     // VDF proof
     CVdfProof vdfProof = ParseVdfProof(request.params[5]);
     uint64_t nTotalDuration = vdfProof.nVdfDuration;
-    // Void blocks
-    std::vector<CVdfProof> vVoidBlock;
-    for (UniValue const& val : request.params[6].getValues()) {
-        CVdfProof vdf = ParseVdfProof(val);
-        nTotalDuration += vdf.nVdfDuration;
-        vVoidBlock.push_back(std::move(vdf));
-    }
     if (nTotalDuration == 0) {
         throw std::runtime_error("duration is zero from vdf proof");
     }
@@ -251,7 +241,7 @@ static UniValue submitProof(JSONRPCRequest const& request) {
 
     // We should put it to the chain immediately
     GenerateChiaBlock(hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge, vchFarmerSk,
-                      posProof, vdfProof, vVoidBlock, nDifficulty);
+                      posProof, vdfProof, nDifficulty);
 
     return true;
 }

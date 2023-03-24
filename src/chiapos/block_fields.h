@@ -79,6 +79,8 @@ public:
 
     CPosProof posProof;
     CVdfProof vdfProof;
+
+    // TODO it should be removed before releasing next version
     std::vector<CVdfProof> vVoidBlockVdf;
 
     Bytes vchFarmerSignature;  // A signature by farmer, it should be able to verified by farmer-pubkey
@@ -90,19 +92,11 @@ public:
     bool IsNull() const;
 
     uint64_t GetTotalIters() const {
-        uint64_t nTotalIters = vdfProof.nVdfIters;
-        for (auto const& vdf : vVoidBlockVdf) {
-            nTotalIters += vdf.nVdfIters;
-        }
-        return nTotalIters;
+        return vdfProof.nVdfIters;
     }
 
     uint64_t GetTotalDuration() const {
-        uint64_t nTotalDuration = vdfProof.nVdfDuration;
-        for (auto const& vdf : vVoidBlockVdf) {
-            nTotalDuration += vdf.nVdfDuration;
-        }
-        return nTotalDuration;
+        return vdfProof.nVdfDuration;
     }
 
     ADD_SERIALIZE_METHODS;

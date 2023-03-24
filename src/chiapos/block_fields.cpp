@@ -29,7 +29,6 @@ void CBlockFields::SetNull() {
     nDifficulty = 0;
     posProof.SetNull();
     vdfProof.SetNull();
-    vVoidBlockVdf.clear();
     vchFarmerSignature.clear();
 }
 

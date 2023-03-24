@@ -150,12 +150,6 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
         // Proof of Space fields
         result.pushKV("pos", GetPosFields(blockindex->chiaposFields.posProof));
         result.pushKV("vdf", GetVdfFields(blockindex->chiaposFields.vdfProof));
-        // Void blocks
-        UniValue voidBlocks(UniValue::VARR);
-        for (auto const& vdf : blockindex->chiaposFields.vVoidBlockVdf) {
-            voidBlocks.push_back(GetVdfFields(vdf));
-        }
-        result.pushKV("voidBlocks", voidBlocks);
     }
     if (blockindex->pprev)
         result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
@@ -224,10 +218,6 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
         result.pushKV("chia_pos", GetPosFields(blockindex->chiaposFields.posProof));
         result.pushKV("chia_vdf", GetVdfFields(blockindex->chiaposFields.vdfProof));
         result.pushKV("chia_vdfspeed", chiapos::MakeNumberStr(blockindex->chiaposFields.GetTotalIters() / blockindex->chiaposFields.GetTotalDuration()));
-        UniValue voidBlocks(UniValue::VARR);
-        for (auto const& vdf : blockindex->chiaposFields.vVoidBlockVdf) {
-            voidBlocks.push_back(GetVdfFields(vdf));
-        }
         // Misc for chia fields
         result.pushKV("chia_totalIters", blockindex->chiaposFields.GetTotalIters());
         result.pushKV("chia_duration", blockindex->chiaposFields.GetTotalDuration());

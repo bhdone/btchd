@@ -227,8 +227,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewChiaBlock(const CBlockI
     const CScript &scriptPubKeyIn,
     const chiapos::CKey &farmerSk,
     const chiapos::CPosProof &posProof,
-    const chiapos::CVdfProof &vdfProof,
-    const std::vector<chiapos::CVdfProof> &vVoidBlock)
+    const chiapos::CVdfProof &vdfProof)
 {
     int64_t nTimeStart = GetTimeMicros();
 
@@ -326,7 +325,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewChiaBlock(const CBlockI
 
     pblock->chiaposFields.posProof = posProof;
     pblock->chiaposFields.vdfProof = vdfProof;
-    pblock->chiaposFields.vVoidBlockVdf = vVoidBlock;
     pblock->chiaposFields.nDifficulty =
         chiapos::AdjustDifficulty(nDifficultyPrev, pblock->chiaposFields.GetTotalDuration(), params.BHDIP008TargetSpacing);
 

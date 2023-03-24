@@ -191,24 +191,6 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
         nItersVoidBlock = pindexPrev->chiaposFields.vdfProof.nVdfIters /
                           pindexPrev->chiaposFields.vdfProof.nVdfDuration * params.BHDIP008TargetSpacing;
     }
-    uint256 currentChallenge = initialChallenge;
-    for (CVdfProof const& vdf : fields.vVoidBlockVdf) {
-        // Check the challenge of the vdf proof
-        if (currentChallenge != vdf.challenge) {
-            return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
-                                 "invalid vdf.voidBlock.challenge");
-        }
-        if (vdf.nVdfIters < nItersVoidBlock) {
-            // The duration of the VDF is too short
-            return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
-                                 "vdf-iters of void-block is invalid");
-        }
-        if (!CheckVdfProof(vdf, state)) {
-            return false;
-        }
-        // Mix currentChallenge
-        currentChallenge = MakeChallenge(currentChallenge, vdf.vchProof);
-    }
 
     // Difficulty is important
     LogPrint(BCLog::POC, "%s: checking difficulty\n", __func__);
@@ -235,14 +217,14 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
                              "incorrect difficulty");
     }
 
-    if (fields.vdfProof.challenge != currentChallenge) {
+    if (fields.vdfProof.challenge != initialChallenge) {
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
                              "invalid vdf challenge");
     }
 
     // Checking pos challenge
     LogPrint(BCLog::POC, "%s: checking PoS\n", __func__);
-    if (fields.posProof.challenge != currentChallenge) {
+    if (fields.posProof.challenge != initialChallenge) {
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
                              "invalid pos challenge");
     }

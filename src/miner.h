@@ -180,8 +180,7 @@ public:
         const CScript &scriptPubKeyIn,
         const chiapos::CKey &farmerSk,
         const chiapos::CPosProof &posProof,
-        const chiapos::CVdfProof &vdfProof,
-        const std::vector<chiapos::CVdfProof> &vVoidBlock);
+        const chiapos::CVdfProof &vdfProof);
 
     static Optional<int64_t> m_last_block_num_txs;
     static Optional<int64_t> m_last_block_weight;
