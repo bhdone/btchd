@@ -134,8 +134,10 @@ Miner::~Miner() {
     if (m_pthread_timelord) {
         PLOGI << "exiting timelord client...";
         m_shutting_down = true;
-        for (auto ptr : m_timelord_vec) {
-            ptr->Exit();
+        for (auto desc : m_timelords) {
+            if (desc.second.pclient) {
+                desc.second.pclient->Exit();
+            }
         }
         m_pthread_timelord->join();
     }
@@ -154,7 +156,10 @@ void Miner::StartTimelord(std::vector<std::string> const& endpoints, uint16_t de
         } else {
             hostname = endpoint;
         }
-        m_timelord_vec.push_back(PrepareTimelordClient(hostname, port));
+        std::map<EndpointDesc, ClientDesc>::iterator it;
+        std::tie(it, std::ignore) = m_timelords.insert(std::make_pair(EndpointDesc{hostname, port}, ClientDesc{}));
+        it->second.reconnecting = false;
+        it->second.pclient = PrepareTimelordClient(hostname, port);
     }
     m_pthread_timelord.reset(new std::thread(std::bind(&Miner::TimelordProc, this)));
 }
@@ -326,14 +331,19 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
                       << ", reports error: type=" << static_cast<int>(type) << ", errs: " << errs;
                 // remove the pointer from vec
                 auto ptimelord = pweak_timelord.lock();
-                if (ptimelord) {
-                    auto it = std::remove(std::begin(m_timelord_vec), std::end(m_timelord_vec), ptimelord);
-                    m_timelord_vec.erase(it, std::end(m_timelord_vec));
-                    ptimelord->Exit();
+                if (ptimelord == nullptr) {
+                    return;
                 }
+                ptimelord->Exit();
                 // We need to re-try to connect to timelord server here
                 if (!m_shutting_down) {
                     // prepare to reconnect
+                    auto it = m_timelords.find({hostname, port});
+                    assert(it != std::end(m_timelords));
+                    if (it->second.reconnecting) {
+                        return;
+                    }
+                    it->second.reconnecting = true;
                     // wait 3 seconds
                     int const RECONNECT_WAIT_SECONDS = 3;
                     PLOGI << "Establish connection to timelord after " << RECONNECT_WAIT_SECONDS << " seconds";
@@ -344,7 +354,10 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
                             return;
                         }
                         // ready to connect
-                        m_timelord_vec.push_back(PrepareTimelordClient(hostname, port));
+                        auto it = m_timelords.find({hostname, port});
+                        assert(it != std::end(m_timelords));
+                        it->second.reconnecting = false;
+                        it->second.pclient = PrepareTimelordClient(hostname, port);
                     });
                 }
             });
@@ -361,8 +374,10 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
     if (m_pthread_timelord) {
         PLOGD << "request proof from timelord";
         asio::post(m_ioc, [this, current_challenge, iters]() {
-            for (auto ptr : m_timelord_vec) {
-                ptr->Calc(current_challenge, iters);
+            for (auto desc : m_timelords) {
+                if (!desc.second.reconnecting && desc.second.pclient) {
+                    desc.second.pclient->Calc(current_challenge, iters);
+                }
             }
         });
     }

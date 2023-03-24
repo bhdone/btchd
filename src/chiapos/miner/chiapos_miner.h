@@ -3,16 +3,17 @@
 
 #include <chiapos/kernel/bls_key.h>
 #include <chiapos/kernel/chiapos_types.h>
+#include <chiapos/timelord_cli/timelord_client.h>
 
 #include <functional>
 #include <mutex>
 #include <string>
 #include <optional>
 
+#include <tinyformat.h>
+
 #include "prover.h"
 #include "rpc_client.h"
-
-#include <chiapos/timelord_cli/timelord_client.h>
 
 namespace miner {
 namespace pos {
@@ -22,6 +23,18 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
 }
 
 using TimelordClientPtr = std::shared_ptr<TimelordClient>;
+
+struct EndpointDesc {
+    std::string hostname;
+    uint16_t port;
+    std::string ToString() const { return tinyformat::format("%s:%d", hostname, port); }
+    bool operator<(EndpointDesc const& rhs) const { return ToString() < rhs.ToString(); }
+};
+
+struct ClientDesc {
+    bool reconnecting;
+    TimelordClientPtr pclient;
+};
 
 /// Miner is a state machine
 class Miner {
@@ -68,7 +81,7 @@ private:
     // thread and timelord
     asio::io_context m_ioc;
     std::unique_ptr<std::thread> m_pthread_timelord;
-    std::vector<TimelordClientPtr> m_timelord_vec;
+    std::map<EndpointDesc, ClientDesc> m_timelords;
     mutable std::mutex m_mtx_proofs;
     std::map<uint256, std::vector<ProofDetail>> m_proofs;
     std::set<uint256> m_submit_history;
