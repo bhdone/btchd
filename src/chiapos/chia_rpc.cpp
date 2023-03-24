@@ -101,6 +101,11 @@ static UniValue queryChallenge(JSONRPCRequest const& request) {
     } else {
         res.pushKV("filter_bits", params.BHDIP009PlotIdBitsOfFilter);
     }
+    if (nTargetHeight < params.BHDIP009BaseItersEnableOnHeight) {
+        res.pushKV("base_iters", 0);
+    } else {
+        res.pushKV("base_iters", params.BHDIP009BaseIters);
+    }
     return res;
 }
 

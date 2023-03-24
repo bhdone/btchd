@@ -26,7 +26,7 @@ TEST_F(MinerTest, QualityCalculating) {
     // Find PoS
     auto pos = miner::pos::QueryBestPosProof(*m_pprover, queried_challenge.challenge, 10000,
                                              chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS,
-                                             chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER);
+                                             chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER, 0);
     EXPECT_TRUE(pos.has_value());
     if (!pos.has_value()) {
         return;

@@ -173,9 +173,9 @@ TEST(Consensus, SteadyQualities) {
     int const N = 5;
     uint64_t diff = 150;
     uint256 qs = MakeRandUint256(0x55);
-    uint64_t vdf_speed = 200000;
+    uint64_t vdf_speed = 100000;
     for (int i = 0; i < N; ++i) {
-        uint64_t iters = CalculateIterationsQuality(qs, diff, DIFFICULTY_CONSTANT_FACTOR_BITS, 32);
+        uint64_t iters = CalculateIterationsQuality(qs, diff, DIFFICULTY_CONSTANT_FACTOR_BITS, 32, 0);
         // adjust difficulty
         uint64_t duration = std::max<uint64_t>(iters / vdf_speed, 1);
         diff = AdjustDifficulty(diff, duration, 60 * 3);
@@ -188,19 +188,19 @@ TEST(Consensus, RandomQualities) {
     int const N = 300;
     int const ADJUST_N = 10;
     uint64_t diff{10000000};
-    uint64_t vdf_speed = 200000;
+    uint64_t vdf_speed = 100000;
     for (int i = 0; i < N; ++i) {
         uint256 qs = MakeRandUint256();
         double q_in_plot;
         arith_uint256 quality;
         uint64_t iters =
-                CalculateIterationsQuality(qs, diff, DIFFICULTY_CONSTANT_FACTOR_BITS, 32, &q_in_plot, &quality);
+                CalculateIterationsQuality(qs, diff, DIFFICULTY_CONSTANT_FACTOR_BITS, 32, vdf_speed * 60, &q_in_plot, &quality);
         // adjust difficulty
         uint64_t duration = std::max<uint64_t>(iters / vdf_speed, 1);
         diff = AdjustDifficulty(diff, duration, 60 * 3);
         LogPrintf("[%d] iters=%lld, q=%1.3f, quality=%e duration=%d secs (%1.3f min), diff=%s%s\n", i, iters, q_in_plot,
                   quality.getdouble(), duration, static_cast<double>(duration) / 60, MakeNumberStr(diff),
-                  (duration > 60 * 30 ? ", WARNING" : ""));
+                  (duration > 60 * 10 ? ", WARNING" : ""));
     }
 }
 

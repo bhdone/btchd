@@ -44,7 +44,7 @@ bool IsZeroBytes(Bytes const& bytes) {
 
 chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::QualityStringPack> const& qs_pack_vec,
                                                      uint256 const& challenge, uint64_t difficulty,
-                                                     int difficulty_constant_factor_bits) {
+                                                     int difficulty_constant_factor_bits, int base_iters) {
     assert(!qs_pack_vec.empty());
     chiapos::QualityStringPack res;
     int64_t best_iters{-1};
@@ -58,7 +58,7 @@ chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::Qualit
         arith_uint256 quality;
         uint64_t iters =
                 chiapos::CalculateIterationsQuality(mixed_quality_string, difficulty, difficulty_constant_factor_bits,
-                                                    qs_pack.k, &quality_in_plot, &quality);
+                                                    qs_pack.k, base_iters, &quality_in_plot, &quality);
         PLOGD << tinyformat::format("checking pos, quality_in_plot=%1.3f, quality=%e, iters=%lld, k=%d",
                                     quality_in_plot, quality.getdouble(), chiapos::MakeNumberStr(iters),
                                     (int)qs_pack.k);
@@ -79,7 +79,7 @@ chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::Qualit
 
 chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256 const& challenge, uint64_t difficulty,
                                                          int difficulty_constant_factor_bits, int filter_bits,
-                                                         std::string* out_plot_path) {
+                                                         int base_iters, std::string* out_plot_path) {
     auto qs_pack_vec = prover.GetQualityStrings(challenge, filter_bits);
     PLOG_INFO << "total " << qs_pack_vec.size() << " answer(s), filter_bits=" << filter_bits;
     if (qs_pack_vec.empty()) {
@@ -87,7 +87,7 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
         return {};
     }
     chiapos::QualityStringPack qs_pack =
-            QueryTheBestQualityString(qs_pack_vec, challenge, difficulty, difficulty_constant_factor_bits);
+            QueryTheBestQualityString(qs_pack_vec, challenge, difficulty, difficulty_constant_factor_bits, base_iters);
     Bytes quality_string = qs_pack.quality_str.ToBytes();
     uint256 mixed_quality_string = chiapos::GetMixedQualityString(quality_string, challenge);
     if (out_plot_path) {
@@ -100,7 +100,7 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
     RPCClient::PosProof proof;
     proof.mixed_quality_string = mixed_quality_string;
     proof.iters = chiapos::CalculateIterationsQuality(mixed_quality_string, difficulty, difficulty_constant_factor_bits,
-                                                      qs_pack.k);
+                                                      qs_pack.k, base_iters);
     proof.challenge = challenge;
     proof.k = qs_pack.k;
     proof.plot_id = chiapos::MakeUint256(memo.plot_id);
@@ -201,7 +201,7 @@ int Miner::Run() {
                           << ", filter_bits: " << queried_challenge.filter_bits;
                 pos = pos::QueryBestPosProof(m_prover, m_current_challenge, queried_challenge.difficulty,
                                              m_difficulty_constant_factor_bits, queried_challenge.filter_bits,
-                                             &curr_plot_path);
+                                             queried_challenge.base_iters, &curr_plot_path);
                 if (pos.has_value()) {
                     // Check plot-id
                     chiapos::PlotId plot_id = chiapos::MakePlotId(pos->local_pk, m_farmer_pk, pos->pool_pk_or_hash);

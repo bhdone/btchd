@@ -24,6 +24,7 @@
 #include <chiapos/kernel/calc_diff.h>
 
 const uint32_t SECONDS_OF_A_DAY = 60 * 60 * 24;
+const int AVERAGE_VDF_SPEED = 100 * 1000;
 
 static CBlock CreateGenesisBlock(char const* pszTimestamp, CScript const& genesisOutputScript, uint32_t nTime,
                                  uint64_t nNonce, uint64_t nBaseTarget, int32_t nVersion,
@@ -140,12 +141,14 @@ public:
         // The reward address should be filled
         consensus.BHDIP009FundAddresses = { "3Maw3PdwSvtXgBKJ9QPGwRSQW8AgQrGK3W" };
         consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
-        consensus.BHDIP009StartBlockIters = 100000 * consensus.BHDIP008TargetSpacing;
+        consensus.BHDIP009StartBlockIters = AVERAGE_VDF_SPEED * consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009DifficultyConstantFactorBits = chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS;
         consensus.BHDIP009PlotIdBitsOfFilter = chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER;
         consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 100;
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
+        consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
+        consensus.BHDIP009BaseItersEnableOnHeight = consensus.BHDIP009Height;
         consensus.BHDIP009StartDifficulty = 6000000;
 
         int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
@@ -423,12 +426,14 @@ public:
         consensus.BHDIP009Height = 200000; // When reach the height the consensus will change to chiapos
         consensus.BHDIP009FundAddresses = {"2NGWAccrksGM4TmefLN4qyW1kV7VpMngtBQ"};
         consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
-        consensus.BHDIP009StartBlockIters = 100000 * consensus.BHDIP008TargetSpacing;
+        consensus.BHDIP009StartBlockIters = AVERAGE_VDF_SPEED * consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009DifficultyConstantFactorBits = chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS;
         consensus.BHDIP009PlotIdBitsOfFilter = chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER_TESTNET;
         consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 1000;
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K_TEST_NET;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
+        consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
+        consensus.BHDIP009BaseItersEnableOnHeight = consensus.BHDIP009Height + 2000;
         consensus.BHDIP009StartDifficulty = 6000000;
         int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 1, 8};

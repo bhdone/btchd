@@ -65,6 +65,7 @@ public:
         int target_height;
         uint64_t target_duration;
         int filter_bits;
+        int base_iters;
     };
 
     struct PosProof {

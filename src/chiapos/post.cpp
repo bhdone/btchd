@@ -262,7 +262,11 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
                              "mixed quality-string is null(wrong PoS)\n");
     }
-    uint64_t nItersRequired = CalculateIterationsQuality(mixed_quality_string, nDifficultyPrev, params.BHDIP009DifficultyConstantFactorBits, fields.posProof.nPlotK);
+    uint64_t nBaseIters{0};
+    if (nTargetHeight >= params.BHDIP009BaseItersEnableOnHeight) {
+        nBaseIters = params.BHDIP009BaseIters;
+    }
+    uint64_t nItersRequired = CalculateIterationsQuality(mixed_quality_string, nDifficultyPrev, params.BHDIP009DifficultyConstantFactorBits, fields.posProof.nPlotK, nBaseIters);
     LogPrint(BCLog::POC, "%s: required iters: %ld, actual: %ld\n", __func__, nItersRequired, fields.vdfProof.nVdfIters);
     if (fields.vdfProof.nVdfIters < nItersRequired) {
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,

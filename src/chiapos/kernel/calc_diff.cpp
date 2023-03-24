@@ -58,13 +58,13 @@ uint256 GenerateMixedQualityString(CPosProof const& posProof) {
 }
 
 uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_t difficulty,
-                                    int difficulty_constant_factor_bits, uint8_t k, double* quality_in_plot,
-                                    arith_uint256* quality) {
+                                    int difficulty_constant_factor_bits, uint8_t k, uint64_t base_iters,
+                                    double* quality_in_plot, arith_uint256* quality) {
     assert(difficulty > 0);
     auto l = lower_bits(mixed_quality_string, QualityBaseBits);
     auto h = Pow2(QualityBaseBits);
     auto size = expected_plot_size<arith_uint256>(k);
-    auto iters = difficulty * Pow2(difficulty_constant_factor_bits) * l / (size * h);
+    auto iters = difficulty * Pow2(difficulty_constant_factor_bits) * l / (size * h) + base_iters;
     if (quality_in_plot) {
         *quality_in_plot = static_cast<double>(l.GetLow64()) / static_cast<double>(h.GetLow64());
     }

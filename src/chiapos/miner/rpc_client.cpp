@@ -87,6 +87,7 @@ RPCClient::Challenge RPCClient::QueryChallenge() {
     ch.target_height = res.result["target_height"].get_int();
     ch.target_duration = res.result["target_duration"].get_int64();
     ch.filter_bits = res.result["filter_bits"].get_int();
+    ch.base_iters = res.result["base_iters"].get_int();
     return ch;
 }
 
