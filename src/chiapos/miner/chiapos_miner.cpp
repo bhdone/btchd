@@ -197,7 +197,8 @@ int Miner::Run() {
                     PLOG_INFO << "challenge is ready: " << m_current_challenge.GetHex()
                               << ", target height: " << queried_challenge.target_height
                               << ", filter_bits: " << queried_challenge.filter_bits
-                              << ", difficulty: " << chiapos::MakeNumberStr(queried_challenge.difficulty);
+                              << ", difficulty: " << chiapos::MakeNumberStr(queried_challenge.difficulty)
+                              << ", base_iters: " << queried_challenge.base_iters;
                     m_state = State::FindPoS;
                 }
             } else if (m_state == State::FindPoS) {
