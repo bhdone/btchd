@@ -415,51 +415,43 @@ void SendCoinsDialog::on_sendButton_clicked()
     // Check special tx
     CDatacarrierPayloadRef payload;
     if (prepareStatus.status == WalletModel::OK) {
-        if (operateMethod == PayOperateMethod::BindPlotter) {
+        auto params = Params().GetConsensus();
+        if (operateMethod == PayOperateMethod::BindPlotter || operateMethod == PayOperateMethod::ChiaBindFarmerPk) {
             payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_BINDCHIAFARMER});
             if (!payload || (payload->type != DATACARRIER_TYPE_BINDPLOTTER && payload->type != DATACARRIER_TYPE_BINDCHIAFARMER)) {
                 QMessageBox msgBox(QMessageBox::Warning, tr("Bind plotter data"), tr("Invalid bind plotter data!"), QMessageBox::Close, this);
                 msgBox.exec();
                 return;
             }
-
-            if (chain.haveActiveBindPlotter(ExtractAccountID(ctrl.m_pick_dest), BindPlotterPayload::As(payload)->GetId()))
+            if (operateMethod == PayOperateMethod::ChiaBindFarmerPk && nSpendHeight < params.BHDIP009Height) {
+                QMessageBox msgBox(QMessageBox::Warning, tr("Chia consensus doesn't activate"), tr("Cannot proceed the operator"), QMessageBox::Close, this);
+                msgBox.exec();
+                return;
+            }
+            if (chain.haveActiveBindPlotter(ExtractAccountID(ctrl.m_pick_dest), BindPlotterPayload::As(payload)->GetId())) {
                 prepareStatus = WalletModel::SendCoinsReturn(WalletModel::BindPlotterExist,
                     QString::fromStdString(BindPlotterPayload::As(payload)->GetId().ToString()) + "\n" + QString::fromStdString(EncodeDestination(ctrl.m_pick_dest)));
-        } else if (operateMethod == PayOperateMethod::Point) {
-            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_POINT});
-            if (!payload || payload->type != DATACARRIER_TYPE_POINT) {
-                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
             }
-        } else if (operateMethod == PayOperateMethod::ChiaPoint) {
-            // TODO matthew: unfinished checking
-            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_CHIA_POINT});
-            if (!payload || payload->type != DATACARRIER_TYPE_CHIA_POINT) {
-                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
-            }
-        } else if (operateMethod == PayOperateMethod::ChiaPointT1) {
-            // TODO matthew: unfinished checking
-            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_CHIA_POINT_TERM_1});
-            if (!payload || payload->type != DATACARRIER_TYPE_CHIA_POINT_TERM_1) {
-                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
-            }
-        } else if (operateMethod == PayOperateMethod::ChiaPointT2) {
-            // TODO matthew: unfinished checking
-            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_CHIA_POINT_TERM_2});
-            if (!payload || payload->type != DATACARRIER_TYPE_CHIA_POINT_TERM_2) {
-                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
-            }
-        } else if (operateMethod == PayOperateMethod::ChiaPointT3) {
-            // TODO matthew: unfinished checking
-            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_CHIA_POINT_TERM_3});
-            if (!payload || payload->type != DATACARRIER_TYPE_CHIA_POINT_TERM_3) {
-                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
-            }
-        } else if (operateMethod == PayOperateMethod::ChiaPointRetarget) {
-            // TODO matthew: unfinished checking
-            payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_CHIA_POINT_RETARGET});
-            if (!payload || payload->type != DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
-                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
+        } else {
+            std::map<PayOperateMethod, DatacarrierType> checkingMethods;
+            checkingMethods[PayOperateMethod::Point] = DATACARRIER_TYPE_POINT;
+            checkingMethods[PayOperateMethod::ChiaPoint] = DATACARRIER_TYPE_CHIA_POINT;
+            checkingMethods[PayOperateMethod::ChiaPointT1] = DATACARRIER_TYPE_CHIA_POINT_TERM_1;
+            checkingMethods[PayOperateMethod::ChiaPointT2] = DATACARRIER_TYPE_CHIA_POINT_TERM_2;
+            checkingMethods[PayOperateMethod::ChiaPointT3] = DATACARRIER_TYPE_CHIA_POINT_TERM_3;
+            checkingMethods[PayOperateMethod::ChiaPointRetarget] = DATACARRIER_TYPE_CHIA_POINT_RETARGET;
+            for (auto mth : checkingMethods) {
+                if (operateMethod == mth.first) {
+                    if (nSpendHeight < params.BHDIP009Height) {
+                        QMessageBox msgBox(QMessageBox::Warning, tr("Chia consensus doesn't activate"), tr("Cannot proceed the operator"), QMessageBox::Close, this);
+                        msgBox.exec();
+                        return;
+                    }
+                    payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{mth.second});
+                    if (!payload || payload->type != mth.second) {
+                        prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
+                    }
+                }
             }
         }
     }
