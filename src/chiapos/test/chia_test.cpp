@@ -177,10 +177,10 @@ TEST(Consensus, SteadyQualities) {
     for (int i = 0; i < N; ++i) {
         uint64_t iters = CalculateIterationsQuality(qs, diff, DIFFICULTY_CONSTANT_FACTOR_BITS, 32, 0);
         // adjust difficulty
-        uint64_t duration = std::max<uint64_t>(iters / vdf_speed, 1);
-        diff = AdjustDifficulty(diff, duration, 60 * 3);
-        LogPrintf("[%d] iters=%lld, duration=%d secs (%1.3f min), diff=%s\n", i, iters, duration,
-                  static_cast<double>(duration) / 60, MakeNumberStr(diff));
+        uint64_t du = std::max<uint64_t>(iters / vdf_speed, 1);
+        diff = AdjustDifficulty(diff, du, 60 * 3);
+        LogPrintf("[%d] iters=%lld, duration=%d secs (%1.3f min), diff=%s\n", i, iters, du,
+                  static_cast<double>(du) / 60, MakeNumberStr(diff));
     }
 }
 
@@ -193,14 +193,14 @@ TEST(Consensus, RandomQualities) {
         uint256 qs = MakeRandUint256();
         double q_in_plot;
         arith_uint256 quality;
-        uint64_t iters =
-                CalculateIterationsQuality(qs, diff, DIFFICULTY_CONSTANT_FACTOR_BITS, 32, vdf_speed * 60, &q_in_plot, &quality);
+        uint64_t iters = CalculateIterationsQuality(qs, diff, DIFFICULTY_CONSTANT_FACTOR_BITS, 32, vdf_speed * 60,
+                                                    &q_in_plot, &quality);
         // adjust difficulty
-        uint64_t duration = std::max<uint64_t>(iters / vdf_speed, 1);
-        diff = AdjustDifficulty(diff, duration, 60 * 3);
+        uint64_t du = std::max<uint64_t>(iters / vdf_speed, 1);
+        diff = AdjustDifficulty(diff, du, 60 * 3);
         LogPrintf("[%d] iters=%lld, q=%1.3f, quality=%e duration=%d secs (%1.3f min), diff=%s%s\n", i, iters, q_in_plot,
-                  quality.getdouble(), duration, static_cast<double>(duration) / 60, MakeNumberStr(diff),
-                  (duration > 60 * 10 ? ", WARNING" : ""));
+                  quality.getdouble(), du, static_cast<double>(du) / 60, MakeNumberStr(diff),
+                  (du > 60 * 10 ? ", WARNING" : ""));
     }
 }
 
