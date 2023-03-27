@@ -29,6 +29,9 @@
 #include <ui_interface.h>
 #include <validation.h>
 
+#include <chiapos/miner/keyman.h>
+#include <chiapos/kernel/utils.h>
+
 #include <functional>
 #include <memory>
 #include <array>
@@ -341,10 +344,11 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     // Always use a CCoinControl instance, use the CoinControlDialog instance if CoinControl has been enabled
     CCoinControl ctrl;
-    if (operateMethod == PayOperateMethod::BindPlotter)
+    if (operateMethod == PayOperateMethod::BindPlotter || operateMethod == PayOperateMethod::ChiaBindFarmerPk)
     {
         if (model->node().isInitialBlockDownload()){
-            QMessageBox msgBox(QMessageBox::Warning, tr("Bind plotter"), tr("Please wait block sync!"), QMessageBox::Ok, this);
+            auto title = operateMethod == PayOperateMethod::BindPlotter ? tr("Bind plotter") : tr("Bind farmer pk");
+            QMessageBox msgBox(QMessageBox::Warning, title, tr("Please wait block sync!"), QMessageBox::Ok, this);
             msgBox.exec();
             return;
         }
@@ -357,20 +361,29 @@ void SendCoinsDialog::on_sendButton_clicked()
             ctrl.m_min_txfee = PROTOCOL_BINDPLOTTER_MINFEE;
         }
 
+        std::pair<CAmount, int> bindPunishment;
+
         // Update bind fee
-        uint64_t plotterId;
-        if (recipients[0].plotterPassphrase.size() == PROTOCOL_BINDPLOTTER_SCRIPTSIZE * 2 && IsHex(recipients[0].plotterPassphrase.toStdString())) {
-            std::vector<unsigned char> bindData(ParseHex(recipients[0].plotterPassphrase.toStdString()));
-            plotterId = GetPlotterBindDataFromScript(CScript(bindData.cbegin(), bindData.cend())).GetBurstPlotterId();
-        } else {
-            plotterId = PocLegacy::GeneratePlotterId(recipients[0].plotterPassphrase.toStdString());
+        if (operateMethod == PayOperateMethod::BindPlotter) {
+            uint64_t plotterId;
+            if (recipients[0].plotterPassphrase.size() == PROTOCOL_BINDPLOTTER_SCRIPTSIZE * 2 && IsHex(recipients[0].plotterPassphrase.toStdString())) {
+                std::vector<unsigned char> bindData(ParseHex(recipients[0].plotterPassphrase.toStdString()));
+                plotterId = GetPlotterBindDataFromScript(CScript(bindData.cbegin(), bindData.cend())).GetBurstPlotterId();
+            } else {
+                plotterId = PocLegacy::GeneratePlotterId(recipients[0].plotterPassphrase.toStdString());
+            }
+            if (plotterId == 0) {
+                QMessageBox msgBox(QMessageBox::Warning, tr("Bind plotter"), tr("Invalid bind plotter data!"), QMessageBox::Close, this);
+                msgBox.exec();
+                return;
+            }
+            bindPunishment = chain.getBindPlotterPunishment(nSpendHeight, CPlotterBindData(plotterId));
+        } else if (operateMethod == PayOperateMethod::ChiaBindFarmerPk) {
+            keyman::Wallet wallet(recipients[0].plotterPassphrase.toStdString(), "");
+            keyman::Key key = wallet.GetFarmerKey(0);
+            Bytes farmerPk = chiapos::MakeBytes(key.GetPublicKey());
+            bindPunishment = chain.getBindPlotterPunishment(nSpendHeight, CPlotterBindData(CChiaFarmerPk(farmerPk)));
         }
-        if (plotterId == 0) {
-            QMessageBox msgBox(QMessageBox::Warning, tr("Bind plotter"), tr("Invalid bind plotter data!"), QMessageBox::Close, this);
-            msgBox.exec();
-            return;
-        }
-        auto bindPunishment = chain.getBindPlotterPunishment(nSpendHeight, CPlotterBindData(plotterId));
         if (bindPunishment.first > 0) {
             ctrl.m_min_txfee = std::max(ctrl.m_min_txfee, bindPunishment.first + PROTOCOL_BINDPLOTTER_MINFEE);
             QString information = tr("This binding operation triggers anti-cheating mechanism and therefore requires a large transaction fee %1.")
@@ -389,19 +402,29 @@ void SendCoinsDialog::on_sendButton_clicked()
         updateCoinControlState(ctrl);
     }
     else if (operateMethod == PayOperateMethod::ChiaPoint) {
-        // TODO matthew: complete the method
+        ctrl.m_coin_pick_policy = CoinControlDialog::coinControl()->m_coin_pick_policy;
+        ctrl.m_pick_dest = ctrl.destChange = CoinControlDialog::coinControl()->m_pick_dest;
+        updateCoinControlState(ctrl);
     }
     else if (operateMethod == PayOperateMethod::ChiaPointT1) {
-        // TODO matthew: complete the method
+        ctrl.m_coin_pick_policy = CoinControlDialog::coinControl()->m_coin_pick_policy;
+        ctrl.m_pick_dest = ctrl.destChange = CoinControlDialog::coinControl()->m_pick_dest;
+        updateCoinControlState(ctrl);
     }
     else if (operateMethod == PayOperateMethod::ChiaPointT2) {
-        // TODO matthew: complete the method
+        ctrl.m_coin_pick_policy = CoinControlDialog::coinControl()->m_coin_pick_policy;
+        ctrl.m_pick_dest = ctrl.destChange = CoinControlDialog::coinControl()->m_pick_dest;
+        updateCoinControlState(ctrl);
     }
     else if (operateMethod == PayOperateMethod::ChiaPointT3) {
-        // TODO matthew: complete the method
+        ctrl.m_coin_pick_policy = CoinControlDialog::coinControl()->m_coin_pick_policy;
+        ctrl.m_pick_dest = ctrl.destChange = CoinControlDialog::coinControl()->m_pick_dest;
+        updateCoinControlState(ctrl);
     }
     else if (operateMethod == PayOperateMethod::ChiaPointRetarget) {
-        // TODO matthew: complete the method
+        ctrl.m_coin_pick_policy = CoinControlDialog::coinControl()->m_coin_pick_policy;
+        ctrl.m_pick_dest = ctrl.destChange = CoinControlDialog::coinControl()->m_pick_dest;
+        updateCoinControlState(ctrl);
     }
     else
     {

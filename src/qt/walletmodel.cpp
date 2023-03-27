@@ -267,23 +267,17 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod pa
             if (vecSend.size() != 1 || recipients[0].plotterPassphrase.isEmpty())
                 return TransactionCreationFailed;
             const SendCoinsRecipient &rcp = recipients[0];
-            if (rcp.plotterPassphrase.size() == PROTOCOL_BINDCHIAFARMER_SCRIPTSIZE * 2 && IsHex(rcp.plotterPassphrase.toStdString())) {
-                // Hex data
-                std::vector<unsigned char> bindData(ParseHex(rcp.plotterPassphrase.toStdString()));
-                vecSend.push_back({CScript(bindData.cbegin(), bindData.cend()), 0, false});
-            } else {
-                // Passphrase
-                int nTipHeight = m_wallet->chain().lock()->getHeight().get_value_or(0);
-                vecSend.push_back({GetBindPlotterScriptForDestination(coinControl.m_pick_dest, rcp.plotterPassphrase.toStdString(), nTipHeight + rcp.plotterDataAliveHeight), 0, false});
-            }
+            // Passphrase only
+            int nTipHeight = m_wallet->chain().lock()->getHeight().get_value_or(0);
+            vecSend.push_back({GetBindPlotterScriptForDestination(coinControl.m_pick_dest, rcp.plotterPassphrase.toStdString(), nTipHeight + rcp.plotterDataAliveHeight), 0, false});
             nChangePosRet = 1;
             nTxVersion = CTransaction::UNIFORM_VERSION;
         } else if (payOperateMethod == PayOperateMethod::ChiaPointRetarget) {
             if (vecSend.size() != 1)
                 return TransactionCreationFailed;
-            // TODO matthew: complete these two arguments below
-            DatacarrierType pointType{DATACARRIER_TYPE_CHIA_POINT};
-            int nPointHeight{0};
+            // TODO matthew: complete these two arguments below, should be retrieved from ui layout
+            DatacarrierType pointType;
+            int nPointHeight;
             vecSend.push_back({GetPointRetargetScriptForDestination(ExtractDestination(vecSend[0].scriptPubKey), pointType, nPointHeight), 0, false});
             vecSend[0].scriptPubKey = GetScriptForDestination(coinControl.m_pick_dest);
             nChangePosRet = 1;

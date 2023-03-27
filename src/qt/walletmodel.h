@@ -99,6 +99,11 @@ public:
     QString plotterPassphrase;
     int plotterDataAliveHeight;
 
+    // For retargeting
+    QString txid;
+    DatacarrierType pointType;
+    int pointHeight;
+
     static const int CURRENT_VERSION = 1;
     int nVersion;
 

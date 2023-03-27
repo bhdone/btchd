@@ -9,12 +9,63 @@
 
 #include <QStackedWidget>
 
+#include <QStringList>
+#include <QStringListModel>
+
 class WalletModel;
 class PlatformStyle;
 
 namespace Ui {
     class SendCoinsEntry;
 }
+
+class PointItemModel : public QAbstractItemModel
+{
+public:
+    int columnCount(QModelIndex const& parent = QModelIndex()) const override
+    {
+        return 5;
+    }
+
+    QVariant data(QModelIndex const& index, int role = Qt::DisplayRole) const override
+    {
+        return QVariant();
+    }
+
+    QModelIndex index(int row, int column, QModelIndex const& parent = QModelIndex()) const override
+    {
+        return createIndex(row, column);
+    }
+
+    QModelIndex parent(QModelIndex const& index) const override
+    {
+        return QModelIndex();
+    }
+
+    int rowCount(QModelIndex const& parent = QModelIndex()) const override
+    {
+        return 0;
+    }
+
+    QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override
+    {
+        if (role == Qt::DisplayRole) {
+            switch (section) {
+            case 0:
+                return tr("Height");
+            case 1:
+                return tr("Term");
+            case 2:
+                return tr("Expires");
+            case 3:
+                return tr("Amount");
+            case 4: 
+                return tr("TxID");
+            }
+        }
+        return QVariant();
+    }
+};
 
 /**
  * A single entry in the dialog for sending bitcoins.
@@ -71,6 +122,7 @@ private:
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
     const PlatformStyle *platformStyle;
+    PointItemModel pointsListModel;
 
     bool updateLabel(const QString &address);
 };

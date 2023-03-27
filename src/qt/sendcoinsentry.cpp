@@ -20,6 +20,8 @@
 #include <QApplication>
 #include <QClipboard>
 
+#include <QStringListModel>
+
 #include <array>
 
 static const int hour_blocks = 3600 / 180;
@@ -55,6 +57,13 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, const Platform
     ui->plotterPassphrase->setVisible(false);
     ui->plotterDataAliveHeightLabel->setVisible(false);
     ui->plotterDataValidHeightSelector->setVisible(false);
+
+    ui->pointsLabel->setVisible(false);
+
+    ui->pointsList->setVisible(false);
+    ui->pointsList->setModel(&pointsListModel);
+    ui->pointsList->header()->setVisible(true);
+    ui->pointsList->header()->setStretchLastSection(true);
 
     ui->addressBookButton->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
     ui->pasteButton->setIcon(platformStyle->SingleColorIcon(":/icons/editpaste"));
@@ -105,6 +114,14 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, const Platform
                 .arg(n));
         }
         ui->plotterDataValidHeightSelector->setCurrentIndex(getIndexForPlotterDataValidHeight(PROTOCOL_BINDPLOTTER_DEFAULTMAXALIVE));
+    } else if (payOperateMethod == PayOperateMethod::ChiaBindFarmerPk) {
+    } else if (payOperateMethod == PayOperateMethod::ChiaPointRetarget) {
+        ui->pointsLabel->setVisible(true);
+        ui->pointsList->setVisible(true);
+        ui->amountLabel->setVisible(false);
+        ui->checkboxSubtractFeeFromAmount->setVisible(false);
+        ui->payAmount->setVisible(false);
+        ui->useAvailableBalanceButton->setVisible(false);
     }
 }
 
