@@ -361,6 +361,8 @@ qt_btchd_qt_LDADD += $(CRYPTO_LIBS)
 qt_btchd_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 qt_btchd_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
 
+qt_btchd_qt_LDADD += $(LIBCHIA_COMMON) $(BIP3X_LIBS) $(TOOLBOX_LIBS) $(UTF8PROC_LIBS)
+
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)
 

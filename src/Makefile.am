@@ -31,6 +31,15 @@ GTEST_SRCS = $(srcdir)/googletest/googletest/src/gtest-all.cc
 
 BITCOIN_INCLUDES += $(GTEST_INCLUDES)
 
+LIBBITCOIN_SERVER=libbitcoin_server.a
+LIBBITCOIN_COMMON=libbitcoin_common.a
+LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
+LIBBITCOIN_CLI=libbitcoin_cli.a
+LIBBITCOIN_UTIL=libbitcoin_util.a
+LIBBITCOIN_CRYPTO_BASE=crypto/libbitcoin_crypto_base.a
+LIBBITCOINQT=qt/libbitcoinqt.a
+LIBSECP256K1=secp256k1/libsecp256k1.la
+
 CHIAPOS_LIBS = -lbls -lrelic_s -lsodium -lbhd_vdf
 
 CHIAPOS_KERNEL_INCLUDES = \
@@ -39,6 +48,7 @@ CHIAPOS_KERNEL_INCLUDES = \
   chiapos/kernel/vdf.h \
   chiapos/kernel/bls_key.h \
   chiapos/kernel/calc_diff.h \
+  chiapos/miner/keyman.h \
   chiapos/utils.h
 
 CHIAPOS_KERNEL_CPPS = \
@@ -46,13 +56,8 @@ CHIAPOS_KERNEL_CPPS = \
   chiapos/kernel/vdf.cpp \
   chiapos/kernel/bls_key.cpp \
   chiapos/kernel/calc_diff.cpp \
+  chiapos/miner/keyman.cpp \
   chiapos/kernel/utils.cpp
-
-CHIAPOS_TEST_H = \
-  chiapos/test/chia_test.h
-
-CHIAPOS_TEST_CPPS = \
-  chiapos/test/chia_test.cpp
 
 CHIAPOS_H = \
   chiapos/post.h \
@@ -69,14 +74,12 @@ CHIAPOS_CPPS = \
   chiapos/chia_rpc.cpp \
   $(CHIAPOS_KERNEL_CPPS)
 
-LIBBITCOIN_SERVER=libbitcoin_server.a
-LIBBITCOIN_COMMON=libbitcoin_common.a
-LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
-LIBBITCOIN_CLI=libbitcoin_cli.a
-LIBBITCOIN_UTIL=libbitcoin_util.a
-LIBBITCOIN_CRYPTO_BASE=crypto/libbitcoin_crypto_base.a
-LIBBITCOINQT=qt/libbitcoinqt.a
-LIBSECP256K1=secp256k1/libsecp256k1.la
+LIBCHIA_COMMON=libchia_common.a
+
+libchia_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libchia_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libchia_common_a_SOURCES = \
+  $(CHIAPOS_CPPS)
 
 if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libbitcoin_zmq.a
@@ -109,6 +112,7 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(w
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
 EXTRA_LIBRARIES += \
+  $(LIBCHIA_COMMON) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_COMMON) \
@@ -557,9 +561,9 @@ libbitcoin_common_a_SOURCES = \
   script/standard.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
+  chiapos/test/chia_test.cpp \
   $(GTEST_SRCS) \
   $(CHIAPOS_CPPS) \
-  $(CHIAPOS_TEST_CPPS) \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
@@ -728,7 +732,6 @@ CHIAPOS_MINER_CPPS = \
   chiapos/miner/rpc_client.cpp \
   chiapos/miner/chiapos_miner.cpp \
   chiapos/miner/http_client.cpp \
-  chiapos/miner/keyman.cpp \
   chiapos/miner/main.cpp \
   chiapos/miner/tools.cpp \
   chiapos/miner/test1.cpp \
@@ -738,7 +741,6 @@ btchd_miner_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DCURL_STATICLIB
 btchd_miner_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(GTEST_INCLUDES)
 btchd_miner_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 btchd_miner_SOURCES = \
-  sync.cpp \
   chainparams.cpp \
   chainparamsbase.cpp \
   consensus/merkle.cpp \
@@ -777,8 +779,20 @@ CURL_LIBS = -lcurl
 BIP3X_LIBS = -L/usr/local/lib/bip3x-2.2 -lbip39
 TOOLBOX_LIBS = -L/usr/local/lib/toolbox-3.2 -ltoolbox
 
-btchd_miner_LDADD = $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS) $(UTF8PROC_LIBS) $(CURL_LIBS) $(BIP3X_LIBS) $(TOOLBOX_LIBS) $(LIBBITCOIN_CRYPTO) $(UNIVALUE_LIBS) $(LIBBITCOIN_COMMON)
-#
+btchd_miner_LDADD = \
+  $(BOOST_LIBS) \
+  $(CRYPTO_LIBS) \
+  $(EVENT_PTHREADS_LIBS) \
+  $(CHIAPOS_LIBS) \
+  $(MPIR_LIBS) \
+  $(UTF8PROC_LIBS) \
+  $(CURL_LIBS) \
+  $(BIP3X_LIBS) \
+  $(TOOLBOX_LIBS) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(UNIVALUE_LIBS) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL)
 
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
