@@ -292,6 +292,7 @@ BITCOIN_CORE_H = \
   wallet/wallettool.h \
   wallet/walletutil.h \
   wallet/coinselection.h \
+  wallet/txpledge.h \
   warnings.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
@@ -413,6 +414,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
+  wallet/txpledge.cpp \
   $(BITCOIN_CORE_H)
 
 libbitcoin_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)

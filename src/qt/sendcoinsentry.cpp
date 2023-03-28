@@ -16,6 +16,7 @@
 #include <qt/platformstyle.h>
 
 #include <chainparams.h>
+#include <wallet/wallet.h>
 
 #include <QApplication>
 #include <QClipboard>
@@ -61,7 +62,9 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, const Platform
     ui->pointsLabel->setVisible(false);
 
     ui->pointsList->setVisible(false);
-    ui->pointsList->setModel(&pointsListModel);
+
+    pointsListModel = new PointItemModel(GetWallets()[0].get());
+    ui->pointsList->setModel(pointsListModel);
     ui->pointsList->header()->setVisible(true);
     ui->pointsList->header()->setStretchLastSection(true);
 

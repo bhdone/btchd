@@ -162,7 +162,8 @@ BITCOIN_QT_H = \
   qt/walletmodel.h \
   qt/walletmodeltransaction.h \
   qt/walletview.h \
-  qt/winshutdownmonitor.h
+  qt/winshutdownmonitor.h \
+  qt/pointitemmodel.h
 
 RES_ICONS = \
   qt/res/icons/add.png \
@@ -274,7 +275,8 @@ BITCOIN_QT_WALLET_CPP = \
   qt/walletframe.cpp \
   qt/walletmodel.cpp \
   qt/walletmodeltransaction.cpp \
-  qt/walletview.cpp
+  qt/walletview.cpp \
+  qt/pointitemmodel.cpp
 
 BITCOIN_QT_WALLET_BIP70_CPP = \
   qt/paymentrequestplus.cpp
