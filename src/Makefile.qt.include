@@ -360,6 +360,7 @@ qt_btchd_qt_LDADD += $(SSL_LIBS)
 endif
 endif
 qt_btchd_qt_LDADD += $(CRYPTO_LIBS)
+qt_btchd_qt_LDADD += $(LIBBIP39)
 qt_btchd_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 qt_btchd_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
 

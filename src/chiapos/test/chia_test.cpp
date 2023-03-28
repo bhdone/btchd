@@ -1,9 +1,11 @@
 #include <chainparams.h>
 
 #include <chiapos/post.h>
-#include <chiapos/miner/prover.h>
 #include <chiapos/kernel/calc_diff.h>
 #include <chiapos/kernel/utils.h>
+
+#include <chiapos/miner/keyman.h>
+#include <chiapos/miner/prover.h>
 
 #include <key_io.h>
 #include <logging.h>
@@ -202,6 +204,26 @@ TEST(Consensus, RandomQualities) {
                   quality.getdouble(), du, static_cast<double>(du) / 60, MakeNumberStr(diff),
                   (du > 60 * 10 ? ", WARNING" : ""));
     }
+}
+
+namespace mnemonic_test {
+
+char const* SZ_PASSPHRASE = "focus clutch crawl female stomach toss ice pepper silly already there identify plug invite road public cart victory fine ready nation orange air wink";
+char const* SZ_SK = "2d9b342abe20578835804df43ac06bf7d2489741c53642e3aec2413242305dfc";
+char const* SZ_PK = "8ec1bd0cac36d4c035ff623ea387bdb0453c9524061c5a797b374446b67d44d7b84782ea7c4e35756bd12f302296592d";
+char const* SZ_FARMER_PK = "a7ecb9581e69e4ce968e5465764f29f519901d9bc892da89e3048b87ba820c8b04e17d726bfbb236e3f0e33f8a83851e";
+char const* SZ_POOL_PK = "97e034b18cdd88c5a9193ab731c12a6804ebe189583d44196a4072a8545bf21e8421e727a7ccad442ed39026bd56ad85";
+
+} // namespace mnemonic_test
+
+TEST(BIP39, Decode) {
+    keyman::Mnemonic mnemonic(mnemonic_test::SZ_PASSPHRASE);
+    keyman::Wallet wallet(mnemonic, "");
+    keyman::Key sk = wallet.GetMainKey();
+    EXPECT_EQ(BytesToHex(MakeBytes(sk.GetPrivateKey())), mnemonic_test::SZ_SK);
+    EXPECT_EQ(BytesToHex(MakeBytes(sk.GetPublicKey())), mnemonic_test::SZ_PK);
+    EXPECT_EQ(BytesToHex(MakeBytes(wallet.GetFarmerKey(0).GetPublicKey())), mnemonic_test::SZ_FARMER_PK);
+    EXPECT_EQ(BytesToHex(MakeBytes(wallet.GetPoolKey(0).GetPublicKey())), mnemonic_test::SZ_POOL_PK);
 }
 
 int RunAllTests() {

@@ -1,7 +1,6 @@
 #include "keyman.h"
 
-#include <bip3x/Bip39Mnemonic.h>
-#include <bip3x/utils.h>
+#include <bip39/bip39.h>
 #include <openssl/evp.h>
 
 #ifdef __APPLE__
@@ -20,18 +19,6 @@ namespace keyman {
 
 namespace utils {
 
-Bytes CopyMnemonicResultToBytes(bip3x::Bip39Mnemonic::MnemonicResult const& res) {
-    Bytes bytes(res.len);
-    memcpy(bytes.data(), res.raw.data(), res.len);
-    return bytes;
-}
-
-bip3x::Bip39Mnemonic::MnemonicResult WordsToMnemonicResult(Mnemonic::Words const& words, std::string lang) {
-    std::string str = Mnemonic::WordsToString(words);
-    bip3x::bytes_data bytes = bip3x::Bip39Mnemonic::decodeMnemonic(str.data(), lang.data());
-    return bip3x::Bip39Mnemonic::encodeBytes(bytes.data(), lang.data());
-}
-
 std::string NormalizeString(std::string const& str) {
     uint8_t* chars = utf8proc_NFKD(reinterpret_cast<uint8_t const*>(str.data()));
     std::string res(reinterpret_cast<char const*>(chars));
@@ -42,8 +29,8 @@ std::string NormalizeString(std::string const& str) {
 }  // namespace utils
 
 Mnemonic Mnemonic::GenerateNew(std::string lang) {
-    bip3x::Bip39Mnemonic::MnemonicResult res = bip3x::Bip39Mnemonic::generate(lang.data());
-    return Mnemonic(res.words, lang);
+    BIP39::word_list passphrase = BIP39::generate_mnemonic();
+    return Mnemonic(passphrase.vec());
 }
 
 std::string Mnemonic::WordsToString(Mnemonic::Words const& words) {
@@ -73,8 +60,8 @@ Mnemonic::Words Mnemonic::StringToWords(std::string str) {
 }
 
 Mnemonic::Mnemonic(Words words, std::string lang) : words_(std::move(words)) {
-    bip3x::Bip39Mnemonic::MnemonicResult res = utils::WordsToMnemonicResult(words_, lang);
-    bytes_ = utils::CopyMnemonicResultToBytes(res);
+    BIP39::word_list passphrase(words);
+    bytes_ = BIP39::decode_mnemonic(passphrase);
 }
 
 Mnemonic::Mnemonic(std::string words, std::string lang) : Mnemonic(StringToWords(words), lang) {}

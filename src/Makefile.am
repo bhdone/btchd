@@ -24,6 +24,21 @@ BITCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFL
 BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
+UTF8PROC_LIBS = -lutf8proc
+
+BIP39_INCLUDES = -I$(srcdir)/bip39/include -I$(srcdir)/bip39 -I$(srcdir)/bip39/lib/PicoSHA2
+BIP39_SRCS = \
+  bip39/util.cpp \
+  bip39/bip39.cpp
+
+LIBBIP39 = libbip39.a
+
+libbip39_a_CPPFLAGS = $(AM_CPPFLAGS) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) $(BIP39_INCLUDES)
+libbip39_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbip39_a_SOURCES = $(BIP39_SRCS)
+
+BITCOIN_INCLUDES += $(BIP39_INCLUDES)
+
 GTEST_INCLUDES = -I$(srcdir)/googletest/googletest/include
 GTEST_INCLUDES += -I$(srcdir)/googletest/googletest
 
@@ -112,6 +127,7 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(w
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
 EXTRA_LIBRARIES += \
+  $(LIBBIP39) \
   $(LIBCHIA_COMMON) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBBITCOIN_UTIL) \
@@ -646,7 +662,7 @@ btchdd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-btchdd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS)
+btchdd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS) $(LIBBIP39) $(UTF8PROC_LIBS)
 
 # bitcoin-cli binary #
 btchd_cli_SOURCES = bitcoin-cli.cpp compat/byteswap.cpp
@@ -776,10 +792,7 @@ btchd_miner_SOURCES = \
   $(CHIAPOS_MINER_CPPS) \
   $(GTEST_SRCS)
 
-UTF8PROC_LIBS = -lutf8proc
 CURL_LIBS = -lcurl
-BIP3X_LIBS = -L/usr/local/lib/bip3x-2.2 -lbip39
-TOOLBOX_LIBS = -L/usr/local/lib/toolbox-3.2 -ltoolbox
 
 btchd_miner_LDADD = \
   $(BOOST_LIBS) \
@@ -789,12 +802,12 @@ btchd_miner_LDADD = \
   $(MPIR_LIBS) \
   $(UTF8PROC_LIBS) \
   $(CURL_LIBS) \
-  $(BIP3X_LIBS) \
   $(TOOLBOX_LIBS) \
-  $(LIBBITCOIN_CRYPTO) \
   $(UNIVALUE_LIBS) \
+  $(LIBBIP39) \
   $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_UTIL)
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO)
 
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
