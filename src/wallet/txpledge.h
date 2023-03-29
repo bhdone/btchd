@@ -21,6 +21,7 @@ struct TxPledge {
     bool fToWatchonly;
     bool fChia;
     bool fRevoked{false};
+    int nBlockHeight;
 };
 
 using TxPledgeMap = std::multimap<int64_t, TxPledge>;

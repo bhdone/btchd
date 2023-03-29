@@ -66,6 +66,7 @@ TxPledgeMap RetrievePledgeMap(CWallet* pwallet, bool fIncludeInvalid, isminefilt
             txPledgeRent.fToWatchonly = (receiveIsmine & ISMINE_WATCH_ONLY) != 0;
             txPledgeRent.fChia = DatacarrierTypeIsChiaPoint(payload->type) ||
                                  payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET;
+            txPledgeRent.nBlockHeight = locked_chain->getBlockHeight(wtx.GetBlockHash()).get_value_or(0);
             mapTxPledge.insert(std::pair<int64_t, TxPledge>(wtx.nTimeReceived, txPledgeRent));
         }
     }
