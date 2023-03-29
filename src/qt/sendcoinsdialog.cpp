@@ -88,7 +88,6 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     GUIUtil::setupAddressWidget(ui->lineEditCoinControlChange, this);
 
     // Operate method
-    // TODO matthew: extend these options
     ui->operateMethodComboBox->addItem(tr("Pay to"), (int)PayOperateMethod::Pay);
     ui->operateMethodComboBox->addItem(tr("Point to"), (int)PayOperateMethod::Point);
     ui->operateMethodComboBox->addItem(tr("(chia) Point to"), (int)PayOperateMethod::ChiaPoint);
