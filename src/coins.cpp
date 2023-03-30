@@ -11,10 +11,10 @@
 #include <random.h>
 #include <version.h>
 #include <key_io.h>
+#include <amount.h>
 
 #include <script/script.h>
 #include <script/standard.h>
-#include "amount.h"
 
 bool CCoinsView::GetCoin(const COutPoint &outpoint, Coin &coin) const { return false; }
 uint256 CCoinsView::GetBestBlock() const { return uint256(); }
@@ -333,11 +333,8 @@ CAmount CCoinsViewCache::GetBalance(const CAccountID &accountID, const CCoinsMap
         for (CCoinsMap::const_iterator it = cacheCoins.cbegin(); it != cacheCoins.cend(); it++) {
             if (it->second.coin.refOutAccountID != accountID) {
                 // Not mine
-                if (!it->second.coin.IsPoint() || PointPayload::As(it->second.coin.extraData)->GetReceiverID() != accountID) {
-                    // NOT debit to me
-                    continue;
-                }
-                if (!it->second.coin.IsPointRetarget() || PointRetargetPayload::As(it->second.coin.extraData)->GetReceiverID() != accountID) {
+                if ((!it->second.coin.IsPoint() || PointPayload::As(it->second.coin.extraData)->GetReceiverID() != accountID) &&
+                    (!it->second.coin.IsPointRetarget() || PointRetargetPayload::As(it->second.coin.extraData)->GetReceiverID() != accountID)) {
                     // NOT debit to me
                     continue;
                 }
@@ -357,11 +354,8 @@ CAmount CCoinsViewCache::GetBalance(const CAccountID &accountID, const CCoinsMap
                 }
                 if (it->second.coin.refOutAccountID != accountID) {
                     // NOT mine
-                    if (!it->second.coin.IsPoint() || PointPayload::As(it->second.coin.extraData)->GetReceiverID() != accountID) {
-                        // NOT debit to me
-                        continue;
-                    }
-                    if (!it->second.coin.IsPointRetarget() || PointRetargetPayload::As(it->second.coin.extraData)->GetReceiverID() != accountID) {
+                    if ((!it->second.coin.IsPoint() || PointPayload::As(it->second.coin.extraData)->GetReceiverID() != accountID) &&
+                        (!it->second.coin.IsPointRetarget() || PointRetargetPayload::As(it->second.coin.extraData)->GetReceiverID() != accountID)) {
                         // NOT debit to me
                         continue;
                     }
