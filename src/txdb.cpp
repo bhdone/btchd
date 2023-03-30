@@ -983,8 +983,9 @@ CAmount CCoinsViewDB::GetBalancePointReceive(DatacarrierType type, CAccountID co
 
     // Apply modified coin
     for (CCoinsMap::const_iterator it = mapChildCoins.cbegin(); it != mapChildCoins.cend(); it++) {
-        if (!(it->second.flags & CCoinsCacheEntry::DIRTY))
+        if (!(it->second.flags & CCoinsCacheEntry::DIRTY)) {
             continue;
+        }
 
         auto itSelected = selected.find(it->first);
         if (itSelected != selected.cend()) {

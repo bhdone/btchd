@@ -2473,11 +2473,12 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     }
     BlockReward blockReward = GetBlockReward(pindex->pprev, nFees, pindex->generatorAccountID, bindData, view, chainparams.GetConsensus());
     // Check coinbase amount
-    if (block.vtx[0]->GetValueOut() > GetTotalReward(blockReward))
+    if (block.vtx[0]->GetValueOut() > GetTotalReward(blockReward)) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS,
                         error("ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)",
                             block.vtx[0]->GetValueOut(), GetTotalReward(blockReward)),
                         REJECT_INVALID, "bad-cb-amount");
+    }
 
     if (pindex->nHeight >= chainparams.GetConsensus().BHDIP006Height) {
         // Standard transaction: vout[0] for miner+accumulate, vout[1] for fund (maybe not exist), vout[2] for witness nulldata (allow not exist)
