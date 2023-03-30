@@ -974,12 +974,15 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
         int64_t nMinerCapacityTB;
         if (isFoundationAddr) {
             // the generator belongs to the foundation, fundation only keeps the network running, always assume it is mining with max netcapacity
-            nMinerCapacityTB = std::max(nNetCapacityTB, (int64_t) 1);
+            nMinerCapacityTB = nNetCapacityTB;
+            nMinedCount = nBlockCount;
         } else {
             nMinerCapacityTB = std::max((nNetCapacityTB * nMinedCount) / nBlockCount, (int64_t) 1);
         }
         if (pMinerCapacity != nullptr) *pMinerCapacity = nMinerCapacityTB;
-        CAmount nMiningRequireBalance = pledgeParams.supplied * nMinerCapacityTB / nNetCapacityTB;
+        auto reqBalance = arith_uint256(pledgeParams.supplied) * nMinedCount / nBlockCount;
+        assert(reqBalance <= std::numeric_limits<int64_t>::max());
+        CAmount nMiningRequireBalance = reqBalance.GetLow64();
         LogPrint(BCLog::POC, "%s: mining require balance=%ld (%s BHD), miner capacity=%s TB, mined=%ld/%ld, isFoundationAddr=%s\n", __func__, nMiningRequireBalance, chiapos::FormatNumberStr(std::to_string(nMiningRequireBalance / COIN)), chiapos::FormatNumberStr(std::to_string(nMinerCapacityTB)), nMinedCount, nBlockCount, (isFoundationAddr ? "yes" : "no"));
         return nMiningRequireBalance;
     } else {
