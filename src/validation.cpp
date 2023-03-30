@@ -1350,14 +1350,14 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
             nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &consensusParams.BHDIP009PledgeTerms);
         }
         CAmount miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, nullptr, nBurned, consensusParams); // Netspace fixed
-        LogPrint(BCLog::POC, "%s: miningRequireBalance=%s BHD, accountBalance=%s BHD, balancePointSent=%s BHD, balancePointReceived=%s BHD\n", __func__,
+        LogPrintf("%s: miningRequireBalance=%s BHD, accountBalance=%s BHD, balancePointSent=%s BHD, balancePointReceived=%s BHD\n", __func__,
                 chiapos::FormatNumberStr(std::to_string(miningRequireBalance / COIN)),
                 chiapos::FormatNumberStr(std::to_string(accountBalance / COIN)),
                 chiapos::FormatNumberStr(std::to_string(balancePointSent / COIN)),
                 chiapos::FormatNumberStr(std::to_string(balancePointReceived / COIN)));
         fFullMortgage = (nHeight >= consensusParams.BHDIP009Height) ? (balancePointReceived >= miningRequireBalance) : (accountBalance - balancePointSent + balancePointReceived) >= miningRequireBalance;
         if (fFullMortgage) {
-            LogPrint(BCLog::POC, "%s: full mortgage for account %s\n", __func__, strGeneratorAddr);
+            LogPrintf("%s: full mortgage for account %s\n", __func__, strGeneratorAddr);
             // Full mortgage
             if (nHeight < consensusParams.BHDIP009Height) {
                 reward.fund = (nSubsidy * consensusParams.BHDIP001FundRoyaltyForFullMortgage) / 1000;
@@ -1366,7 +1366,7 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
             }
             reward.accumulate = GetBlockAccumulateSubsidy(pindexPrev, consensusParams);
         } else {
-            LogPrint(BCLog::POC, "%s: low mortgage for account %s\n", __func__, strGeneratorAddr);
+            LogPrintf("%s: low mortgage for account %s\n", __func__, strGeneratorAddr);
             reward.fUnconditional = true;
             // Low mortgage
             if (nHeight < consensusParams.BHDIP009Height) {
@@ -1390,7 +1390,7 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
         reward.fund009 = GetTotalSupplyBeforeBHDIP009(consensusParams) * (consensusParams.BHDIP009TotalAmountUpgradeMultiply - 1);
     }
     assert(reward.miner + reward.accumulate >= 0);
-    LogPrint(BCLog::POC, "%s: subsidy=%ld (%s BHD) { miner=%ld, miner0=%ld, fund=%ld, accumulate=%ld, fund009=%ld, fUnconditional=%s }, height=%ld\n", __func__, nSubsidy, chiapos::FormatNumberStr(std::to_string(nSubsidy / COIN)), reward.miner / COIN, reward.miner0 / COIN, reward.fund / COIN, reward.accumulate / COIN, reward.fund009 / COIN, reward.fUnconditional ? "true" : "false", nHeight);
+    LogPrintf("%s: subsidy=%ld (%s BHD) { miner=%ld, miner0=%ld, fund=%ld, accumulate=%ld, fund009=%ld, fUnconditional=%s }, height=%ld\n", __func__, nSubsidy, chiapos::FormatNumberStr(std::to_string(nSubsidy / COIN)), reward.miner / COIN, reward.miner0 / COIN, reward.fund / COIN, reward.accumulate / COIN, reward.fund009 / COIN, reward.fUnconditional ? "true" : "false", nHeight);
     return reward;
 }
 
@@ -2874,9 +2874,11 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
     } else {
         vdf_speed_str = "0";
     }
-    LogPrintf("%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s, chia-work=%.5e, vdf=%s, vdf=%s ips, challenge=%s, difficulty=%s, pos_k=%d\n", __func__,
+    LogPrintf(
+            "%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx-chain=%lu tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s,"
+            " chia-work=%.5e, vdf=%s, vdf=%s ips, challenge=%s, difficulty=%s, pos_k=%d\n", __func__,
             pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
-            log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx,
+            log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx, pindexNew->nTx,
             FormatISO8601DateTime(pindexNew->GetBlockTime()),
             GuessVerificationProgress(chainParams.TxData(), pindexNew), ::ChainstateActive().CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)), ::ChainstateActive().CoinsTip().GetCacheSize(),
             (!warningMessages.empty() ? strprintf(" warning='%s'", warningMessages) : ""), CalcChiaBlockWork(pindexNew->chiaposFields).getdouble(),
