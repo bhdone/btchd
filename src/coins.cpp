@@ -167,7 +167,7 @@ void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool 
         } else {
             LogPrintf("%s: Warning, a spent coin is trying to be added to coin cache, ignored. coinbase=%s, tx=%s, vout.i=%d\n", __func__,
                     (fCoinbase ? "yes" : "no"), tx.GetHash().GetHex(), i);
-            for (int i = 0; i < tx.vin.size(); ++i) {
+            for (uint32_t i = 0; i < tx.vin.size(); ++i) {
                 LogPrintf("%s: dump txin[%d]=%s\n", __func__, i, tx.vin[i].ToString());
             }
         }
