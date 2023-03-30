@@ -275,9 +275,9 @@ AX_CHECK_COMPILE_FLAG([-Werror],[CXXFLAG_WERROR="-Werror"],[CXXFLAG_WERROR=""])
 
 if test "x$enable_debug" = xyes; then
   # Clear default -g -O2 flags
-  CFLAGS="-O0 -g3 -pg"
+  CFLAGS="-O0 -g3"
   CXXFLAGS="-O0 -g3"
-  LDFLAGS="$LDFLAGS -pg"
+  LDFLAGS="$LDFLAGS"
 
   case $host in
     *mingw*)
