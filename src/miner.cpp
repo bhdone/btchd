@@ -291,9 +291,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewChiaBlock(const CBlockI
     coinbaseTx.vin[0].scriptSig = (CScript() << nHeight << vchFarmerPk) + COINBASE_FLAGS;
     assert(coinbaseTx.vin[0].scriptSig.size() <= 100);
 
-    CCoinsViewCache &view = ::ChainstateActive().CoinsTip();
     BlockReward blockReward = GetBlockReward(
-        pindexPrev, nFees, generatorAccountID, CPlotterBindData(CChiaFarmerPk(vchFarmerPk)), view, params);
+        pindexPrev, nFees, generatorAccountID, CPlotterBindData(CChiaFarmerPk(vchFarmerPk)), ::ChainstateActive().CoinsTip(), params);
     assert(blockReward.miner + blockReward.accumulate >= 0);
     if (nHeight == params.BHDIP009Height) {
         coinbaseTx.vout.resize(2); // Yes, we need to put all extra amount to fund address
