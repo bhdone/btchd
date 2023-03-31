@@ -229,7 +229,8 @@ static UniValue submitProof(JSONRPCRequest const& request) {
         LOCK(cs_main);
 
         CBlockIndex* pindexPrev = LookupBlockIndex(hashPrevBlock);
-        nDifficulty = AdjustDifficulty(pindexPrev->chiaposFields.nDifficulty, nTotalDuration, params.BHDIP008TargetSpacing);
+        nDifficulty = AdjustDifficulty(pindexPrev->chiaposFields.nDifficulty, nTotalDuration,
+                                       params.BHDIP008TargetSpacing, params.BHDIP009DifficultyChangeMaxFactor);
     }
 
     // We should put it to the chain immediately

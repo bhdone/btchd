@@ -32,7 +32,8 @@ Int expected_plot_size(uint8_t k) {
     return a * b;
 }
 
-uint64_t AdjustDifficulty(uint64_t prev_block_difficulty, uint64_t curr_block_duration, uint64_t target_duration);
+uint64_t AdjustDifficulty(uint64_t prev_block_difficulty, uint64_t curr_block_duration, uint64_t target_duration,
+                          double max_factor);
 
 uint256 GenerateMixedQualityString(CPosProof const& posProof);
 
