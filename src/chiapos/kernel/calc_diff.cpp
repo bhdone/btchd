@@ -31,9 +31,6 @@ arith_uint256 lower_bits(uint256 const& quality_string, int bits) {
 using QualityBaseType = uint32_t;
 constexpr int QualityBaseBits = sizeof(QualityBaseType) * 8;
 
-constexpr double DIFFICULTY_CHANGE_MAX_FACTOR = 1.5;
-constexpr double UI_ACTUAL_SPACE_CONSTANT_FACTOR = 0.762;
-
 arith_uint256 Pow2(int bits) { return arith_uint256(1) << bits; }
 
 uint64_t AdjustDifficulty(uint64_t prev_block_difficulty, uint64_t curr_block_duration, uint64_t target_duration) {

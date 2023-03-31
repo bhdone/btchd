@@ -17,6 +17,9 @@ int const MAX_K = 50;
 int const NUMBER_OF_ZEROS_BITS_FOR_FILTER = 9;
 int const NUMBER_OF_ZEROS_BITS_FOR_FILTER_TESTNET = 5;
 
+constexpr double DIFFICULTY_CHANGE_MAX_FACTOR = 3;
+constexpr double UI_ACTUAL_SPACE_CONSTANT_FACTOR = 0.762;
+
 int const DIFFICULTY_CONSTANT_FACTOR_BITS = 35;
 
 arith_uint256 Pow2(int bits);

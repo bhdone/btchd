@@ -118,12 +118,11 @@ struct Params {
     int BHDIP009PlotSizeMin;
     int BHDIP009PlotSizeMax;
     int BHDIP009BaseIters;
-    int BHDIP009BaseItersEnableOnHeight;
     uint64_t BHDIP009MinNetspacePB;
     int BHDIP009TotalAmountUpgradeMultiply;
     int BHDIP009PledgeCalcWindow;
     int BHDIP009PledgeRetargetMinHeights;
-    int BHDIP009VdfMinPerSec;
+    double BHDIP009DifficultyChangeMaxFactor;
 
     std::array<PledgeTerm, 4> BHDIP009PledgeTerms;
 

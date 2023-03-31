@@ -148,8 +148,7 @@ public:
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
         consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
-        consensus.BHDIP009BaseItersEnableOnHeight = consensus.BHDIP009Height;
-        consensus.BHDIP009StartDifficulty = 6000000;
+        consensus.BHDIP009StartDifficulty = consensus.BHDIP009StartBlockIters / 2;
 
         int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 5, 8};
@@ -161,7 +160,7 @@ public:
         consensus.BHDIP009TotalAmountUpgradeMultiply = 3; // 21,000,000 * 3 = 63,000,000
         consensus.BHDIP009PledgeCalcWindow = 3360 * 4; // about 4 weeks
         consensus.BHDIP009PledgeRetargetMinHeights = (SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing) * 7; // minimal number to retarget a pledge is 7 days
-        consensus.BHDIP009VdfMinPerSec = 10000;
+        consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
@@ -424,27 +423,26 @@ public:
 
         consensus.BHDIP009SkipTestChainChecks = true; // Do not check on test-chain construction
         consensus.BHDIP009Height = 200000; // When reach the height the consensus will change to chiapos
-        consensus.BHDIP009FundAddresses = {"2NGWAccrksGM4TmefLN4qyW1kV7VpMngtBQ"};
+        consensus.BHDIP009FundAddresses = {"2N7mAbSHzAeCiY2WJzREPJYKTEJbKo7tYke"};
         consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
         consensus.BHDIP009StartBlockIters = AVERAGE_VDF_SPEED * consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009DifficultyConstantFactorBits = chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS;
         consensus.BHDIP009PlotIdBitsOfFilter = chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER_TESTNET;
-        consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 1000;
+        consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 200;
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K_TEST_NET;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
         consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
-        consensus.BHDIP009BaseItersEnableOnHeight = consensus.BHDIP009Height + 2000;
-        consensus.BHDIP009StartDifficulty = 6000000;
+        consensus.BHDIP009StartDifficulty = consensus.BHDIP009StartBlockIters / 2;
         int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 1, 8};
-        consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 3, 20};
-        consensus.BHDIP009PledgeTerms[2] = {nHeightsOfADay * 6, 50};
-        consensus.BHDIP009PledgeTerms[3] = {nHeightsOfADay * 9, 100};
+        consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 2, 20};
+        consensus.BHDIP009PledgeTerms[2] = {nHeightsOfADay * 3, 50};
+        consensus.BHDIP009PledgeTerms[3] = {nHeightsOfADay * 4, 100};
         consensus.BHDIP009MinNetspacePB = 1;
         consensus.BHDIP009TotalAmountUpgradeMultiply = 3; // 21,000,000 * 3 = 63,000,000
         consensus.BHDIP009PledgeCalcWindow = 3360; // about 1 week
         consensus.BHDIP009PledgeRetargetMinHeights = 10; // minimal number to retarget a pledge is 10 blocks in testnet3
-        consensus.BHDIP009VdfMinPerSec = 10000;
+        consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
