@@ -24,6 +24,14 @@ int const DIFFICULTY_CONSTANT_FACTOR_BITS = 35;
 
 arith_uint256 Pow2(int bits);
 
+template <typename Int>
+Int expected_plot_size(uint8_t k) {
+    Int a = 2;
+    a = a * k + 1;
+    Int b = (Int)1 << (k - 1);
+    return a * b;
+}
+
 uint64_t AdjustDifficulty(uint64_t prev_block_difficulty, uint64_t curr_block_duration, uint64_t target_duration);
 
 uint256 GenerateMixedQualityString(CPosProof const& posProof);

@@ -12,6 +12,7 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <versionbitsinfo.h>
+#include <arith_uint256.h>
 
 #include <limits>
 
@@ -148,7 +149,7 @@ public:
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
         consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
-        consensus.BHDIP009StartDifficulty = consensus.BHDIP009StartBlockIters / 2;
+        consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(32) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
 
         int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 5, 8};
@@ -432,7 +433,7 @@ public:
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K_TEST_NET;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
         consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
-        consensus.BHDIP009StartDifficulty = consensus.BHDIP009StartBlockIters / 2;
+        consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(32) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
         int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 1, 8};
         consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 2, 20};

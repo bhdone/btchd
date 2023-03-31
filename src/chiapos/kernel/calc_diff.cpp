@@ -14,14 +14,6 @@ namespace chiapos {
 
 namespace {
 
-template <typename Int>
-Int expected_plot_size(uint8_t k) {
-    Int a = 2;
-    a = a * k + 1;
-    Int b = (Int)1 << (k - 1);
-    return a * b;
-}
-
 arith_uint256 lower_bits(uint256 const& quality_string, int bits) {
     return UintToArith256(quality_string) & (Pow2(bits) - 1);
 }
