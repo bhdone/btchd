@@ -184,9 +184,6 @@ void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTx
         throw std::runtime_error("pblock is null, cannot release new block");
     }
     ReleaseBlock(pblock, params);
-
-    LogPrintf("%s: Initial challenge: %s, generated new block and now is releasing...\n", __func__,
-              initialChallenge.GetHex());
 }
 
 static UniValue submitProof(JSONRPCRequest const& request) {
