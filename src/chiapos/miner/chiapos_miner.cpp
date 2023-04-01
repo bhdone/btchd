@@ -169,7 +169,6 @@ int Miner::Run() {
     RPCClient::Challenge queried_challenge;
     chiapos::optional<RPCClient::PosProof> pos;
     chiapos::optional<RPCClient::VdfProof> vdf;
-    std::vector<RPCClient::VdfProof> void_block_vec;
     std::string curr_plot_path;
     uint64_t vdf_speed{100000};
     while (1) {
@@ -184,7 +183,6 @@ int Miner::Run() {
                 // Reset variables
                 pos.reset();
                 vdf.reset();
-                void_block_vec.clear();
                 m_current_challenge.SetNull();
                 m_current_iters = 0;
                 // Query challenge
@@ -224,9 +222,9 @@ int Miner::Run() {
                               << ", difficulty=" << chiapos::MakeNumberStr(queried_challenge.difficulty)
                               << ", dcf_bits=" << m_difficulty_constant_factor_bits;
                 } else {
-                    // Get the iters for next void block
+                    // the PoS cannot be found, need to wait for next round, here is just setup a very long VDF time...
                     PLOG_INFO << "PoS cannot be found";
-                    m_current_iters = queried_challenge.prev_vdf_iters / queried_challenge.prev_vdf_duration * 60 * 60;
+                    m_current_iters = queried_challenge.prev_vdf_iters / queried_challenge.prev_vdf_duration * 60 * 60 * 24;
                 }
                 m_state = State::WaitVDF;
             } else if (m_state == State::WaitVDF) {
@@ -271,8 +269,6 @@ int Miner::Run() {
                     m_state = State::SubmitProofs;
                 } else {
                     PLOG_INFO << "no valid PoS, trying to find another one";
-                    m_current_challenge = chiapos::MakeChallenge(m_current_challenge, vdf->proof);
-                    void_block_vec.push_back(*vdf);
                     m_state = State::FindPoS;
                 }
             } else if (m_state == State::SubmitProofs) {
@@ -282,7 +278,6 @@ int Miner::Run() {
                 pp.prev_block_height = queried_challenge.prev_block_height;
                 pp.pos = *pos;
                 pp.vdf = *vdf;
-                pp.void_block_vec = void_block_vec;
                 pp.farmer_sk = m_farmer_sk;
                 pp.reward_dest = m_reward_dest;
                 try {

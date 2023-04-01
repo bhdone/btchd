@@ -93,7 +93,6 @@ public:
         int prev_block_height;
         PosProof pos;
         VdfProof vdf;
-        std::vector<VdfProof> void_block_vec;
         chiapos::SecreKey farmer_sk;
         std::string reward_dest;
     };
