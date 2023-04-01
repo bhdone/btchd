@@ -125,8 +125,7 @@ bool RPCClient::SubmitVdf(VdfProof const& vdf) {
 
 void RPCClient::SubmitProof(ProofPack const& proof_pack) {
     SendMethod(m_no_proxy, "submitproof", proof_pack.prev_block_hash, proof_pack.prev_block_height,
-               proof_pack.pos.challenge, proof_pack.pos, proof_pack.farmer_sk, proof_pack.vdf,
-               proof_pack.void_block_vec, proof_pack.reward_dest);
+               proof_pack.pos.challenge, proof_pack.pos, proof_pack.farmer_sk, proof_pack.vdf, proof_pack.reward_dest);
 }
 
 chiapos::Bytes RPCClient::BindPlotter(std::string const& address, chiapos::SecreKey const& farmerSk) {

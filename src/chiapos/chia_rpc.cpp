@@ -216,7 +216,7 @@ static UniValue submitProof(JSONRPCRequest const& request) {
         throw std::runtime_error("duration is zero from vdf proof");
     }
     // Reward address
-    std::string strRewardDest = request.params[7].get_str();
+    std::string strRewardDest = request.params[6].get_str();
     CTxDestination rewardDest = DecodeDestination(strRewardDest);
     if (!IsValidDestination(rewardDest)) {
         throw std::runtime_error("The reward destination is invalid");
