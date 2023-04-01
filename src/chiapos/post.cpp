@@ -183,15 +183,6 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
                   nDuration, nDurationVDF, nAbsDuration);
     }
 
-    // Mix out the actual challenge
-    uint64_t nItersVoidBlock;
-    if (nTargetHeight == params.BHDIP009Height) {
-        nItersVoidBlock = 0;
-    } else {
-        nItersVoidBlock = pindexPrev->chiaposFields.vdfProof.nVdfIters /
-                          pindexPrev->chiaposFields.vdfProof.nVdfDuration * params.BHDIP008TargetSpacing;
-    }
-
     // Difficulty is important
     LogPrint(BCLog::POC, "%s: checking difficulty\n", __func__);
     uint64_t nDifficultyPrev;
