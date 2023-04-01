@@ -146,7 +146,9 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
     }
     // Version
     if (fields.nVersion != CHIAHEADER_VERSION) {
-        return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT, "invalid-version");
+        return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
+                             tinyformat::format("invalid-chia-header-version, block %x, req %x", fields.nVersion,
+                                                CHIAHEADER_VERSION));
     }
     uint256 initialChallenge;
     if (nTargetHeight == params.BHDIP009Height) {
