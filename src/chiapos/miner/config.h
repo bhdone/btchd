@@ -16,6 +16,7 @@ public:
         std::string url;
         std::string user;
         std::string passwd;
+        std::string wallet;
     };
 
     std::string ToJsonString() const;

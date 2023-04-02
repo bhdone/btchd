@@ -28,6 +28,7 @@ std::string Config::ToJsonString() const {
     rpc.pushKV("host", m_rpc.url);
     rpc.pushKV("user", m_rpc.user);
     rpc.pushKV("password", m_rpc.passwd);
+    rpc.pushKV("wallet", m_rpc.wallet);
 
     root.pushKV("rpc", rpc);
 
@@ -66,6 +67,9 @@ void Config::ParseFromJsonString(std::string const& json_str) {
         }
         if (rpc.exists("password") && rpc["password"].isStr()) {
             m_rpc.passwd = rpc["password"].get_str();
+        }
+        if (rpc.exists("wallet") && rpc["wallet"].isStr()) {
+            m_rpc.wallet = rpc["wallet"].get_str();
         }
     }
 

@@ -31,24 +31,29 @@ miner::Config ParseConfig(std::string const& config_path) {
     return config;
 }
 
-std::unique_ptr<miner::RPCClient> CreateRPCClient(bool no_proxy, std::string const& cookie_path,
-                                                  std::string const& url) {
-    return chiapos::MakeUnique<miner::RPCClient>(no_proxy, url, cookie_path);
+std::unique_ptr<miner::RPCClient> CreateRPCClient(bool no_proxy, std::string const& cookie_path, std::string const& url,
+                                                  std::string const& wallet) {
+    auto res = chiapos::MakeUnique<miner::RPCClient>(no_proxy, url, cookie_path);
+    res->SetWallet(wallet);
+    return res;
 }
 
 std::unique_ptr<miner::RPCClient> CreateRPCClient(bool no_proxy, std::string const& user, std::string const& passwd,
-                                                  std::string const& url) {
-    return chiapos::MakeUnique<miner::RPCClient>(no_proxy, url, user, passwd);
+                                                  std::string const& url, std::string const& wallet) {
+    auto res = chiapos::MakeUnique<miner::RPCClient>(no_proxy, url, user, passwd);
+    res->SetWallet(wallet);
+    return res;
 }
 
 std::unique_ptr<miner::RPCClient> CreateRPCClient(miner::Config const& config,
                                                   std::string const& cookie_path) {
     if (!config.GetRPC().user.empty() && !config.GetRPC().passwd.empty()) {
         PLOG_INFO << "Creating RPC client by using username/password...";
-        return CreateRPCClient(config.NoProxy(), config.GetRPC().user, config.GetRPC().passwd, config.GetRPC().url);
+        return CreateRPCClient(config.NoProxy(), config.GetRPC().user, config.GetRPC().passwd, config.GetRPC().url,
+                               config.GetRPC().wallet);
     } else {
         PLOG_INFO << "Creating RPC client by using cookie file: " << cookie_path;
-        return CreateRPCClient(config.NoProxy(), cookie_path, config.GetRPC().url);
+        return CreateRPCClient(config.NoProxy(), cookie_path, config.GetRPC().url, config.GetRPC().wallet);
     }
 }
 

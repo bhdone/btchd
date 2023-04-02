@@ -48,6 +48,8 @@ RPCClient::RPCClient(bool no_proxy, std::string url, std::string const& cookie_p
 RPCClient::RPCClient(bool no_proxy, std::string url, std::string user, std::string passwd)
         : m_no_proxy(no_proxy), m_url(std::move(url)), m_user(std::move(user)), m_passwd(std::move(passwd)) {}
 
+void RPCClient::SetWallet(std::string const& wallet_name) { m_wallet_name = wallet_name; }
+
 void RPCClient::LoadCookie() {
     fs::path cookie_path(m_cookie_path_str);
     std::ifstream cookie_reader(cookie_path.string());

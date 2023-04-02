@@ -140,6 +140,8 @@ public:
 
     RPCClient(bool no_proxy, std::string url, std::string user, std::string passwd);
 
+    void SetWallet(std::string const& wallet_name);
+
     void LoadCookie();
 
     std::string const& GetCookiePath() const;
@@ -225,7 +227,13 @@ private:
         BuildRPCJsonWithParams(params, std::forward<T>(vals)...);
         root.pushKV("params", params);
         // Invoke curl
-        HTTPClient client(m_url, m_user, m_passwd, no_proxy);
+        std::string url_with_wallet;
+        if (m_wallet_name.empty()) {
+            url_with_wallet = m_url;
+        } else {
+            url_with_wallet = m_url + "/wallet/" + m_wallet_name;
+        }
+        HTTPClient client(url_with_wallet, m_user, m_passwd, no_proxy);
         std::string send_str = root.write();
         PLOG_DEBUG << "sending: `" << send_str << "`";
         bool succ;
@@ -266,6 +274,7 @@ private:
 
 private:
     bool m_no_proxy;
+    std::string m_wallet_name;
     std::string m_cookie_path_str;
     std::string m_url;
     std::string m_user;
