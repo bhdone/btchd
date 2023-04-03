@@ -19,8 +19,6 @@
 #include "logging.h"
 #include "post.h"
 
-#include "newblock_watcher.hpp"
-
 #include "poc/poc.h"
 
 namespace chiapos {
@@ -240,31 +238,6 @@ static UniValue submitProof(JSONRPCRequest const& request) {
     return true;
 }
 
-static UniValue queryVdf(JSONRPCRequest const& request) {
-    RPCHelpMan(
-            "queryvdf", "Query Vdf proof that received from P2P network",
-            {{"challenge", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The challenge of the vdf proof"},
-             {"iters_limits", RPCArg::Type::NUM, RPCArg::Optional::NO, "The proof must reaches the number of iters"}},
-            RPCResult{"\"result\" (object) The vdf proof result"}, RPCExamples{HelpExampleCli("queryvdf", "xxxxxx")})
-            .Check(request);
-
-    uint256 challenge = ParseHashV(request.params[0], "challenge");
-    uint64_t nItersLimits = request.params[1].get_int64();
-
-    optional<CVdfProof> proof = QueryReceivedVdfProofPacket(challenge);
-    if (proof.has_value() && proof->nVdfIters >= nItersLimits) {
-        UniValue result(UniValue::VOBJ);
-        result.pushKV("challenge", proof->challenge.GetHex());
-        result.pushKV("iters", proof->nVdfIters);
-        result.pushKV("y", BytesToHex(proof->vchY));
-        result.pushKV("proof", BytesToHex(proof->vchProof));
-        result.pushKV("witness_type", proof->nWitnessType);
-        result.pushKV("duration", static_cast<uint64_t>(proof->nVdfDuration));
-        return result;
-    }
-    throw std::runtime_error("cannot find a valid vdf");
-}
-
 static UniValue queryNetspace(JSONRPCRequest const& request) {
     RPCHelpMan("querynetspace", "Query current netspace", {}, RPCResult{"\"result\" (uint64) The netspace in TB"},
                RPCExamples{HelpExampleCli("querynetspace", "")})
@@ -286,113 +259,6 @@ static UniValue queryNetspace(JSONRPCRequest const& request) {
     res.pushKV("netspace", chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())));
     res.pushKV("netspace_TB", chiapos::MakeNumberStr(chiapos::MakeNumberTB(netspace.GetLow64())));
     res.pushKV("netspace_PB", chiapos::MakeNumberStr(chiapos::MakeNumberTB(netspace.GetLow64()) / 1000));
-
-    return res;
-}
-
-static UniValue requireVdf(JSONRPCRequest const& request) {
-    RPCHelpMan("requirevdf", "Require a VDF proof",
-               {{"challenge", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The challenge of the vdf proof"},
-                {"iters", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of iters"}},
-               RPCResult{"\"succ\" (bool) True means the proof has been accepted successfully"},
-               RPCExamples{HelpExampleCli("requirevdf", "xxxxx,1000")})
-            .Check(request);
-
-    uint256 challenge = ParseHashV(request.params[0], "challenge");
-    uint64_t nIters = request.params[1].get_int64();
-
-    auto vdf = chiapos::QueryReceivedVdfProofPacket(challenge);
-    if (vdf.has_value() && vdf->nVdfIters >= nIters) {
-        LogPrintf("%s: the vdf proof has already found from current node, use `queryVdf' to retrieve it\n", __func__);
-        return true;
-    }
-
-    if (chiapos::IsTimelordRunning()) {
-        chiapos::UpdateChallengeToTimelord(challenge, nIters);
-    }
-
-    chiapos::SendRequireVdfOverP2PNetwork(g_connman.get(), challenge, nIters);
-    return true;
-}
-
-static UniValue submitVdf(JSONRPCRequest const& request) {
-    RPCHelpMan("submitvdf", "Submit a Vdf proof object to core",
-               {
-                       {"challenge", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The challenge of the vdf proof"},
-                       {"y", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "form y"},
-                       {"proof", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "proof"},
-                       {"witness_type", RPCArg::Type::NUM, RPCArg::Optional::NO, "witness_type"},
-                       {"iters", RPCArg::Type::NUM, RPCArg::Optional::NO, "number of iters for VDF proof"},
-                       {"duration", RPCArg::Type::NUM, RPCArg::Optional::NO, "how many seconds the computing takes"},
-               },
-               RPCResult{"\"succ\" (bool) True means the proof has been accepted successfully"},
-               RPCExamples{HelpExampleCli("submitvdf", "xxxx,xxxx,1000,xxxx,xxxx")})
-            .Check(request);
-
-    CVdfProof proof;
-    proof.challenge = ParseHashV(request.params[0], "challenge");
-    proof.vchY = ParseHexV(request.params[1], "y");
-    proof.vchProof = ParseHexV(request.params[2], "proof");
-    proof.nWitnessType = request.params[3].get_int();
-    proof.nVdfIters = request.params[4].get_int64();
-    proof.nVdfDuration = request.params[5].get_int64();
-    SubmitVdfProofPacket(proof);
-
-    // Send proof to P2P network
-    SendVdfProofOverP2PNetwork(g_connman.get(), proof);
-
-    return true;
-}
-
-static UniValue queryMinerNetspace(JSONRPCRequest const& request) {
-    RPCHelpMan("queryminernetspace", "Query the netspace those are reported from miner",
-               {{"clear", RPCArg::Type::BOOL, "false", "set to true will clear all in-memory netspace records"}},
-               RPCResult("\"{json}\" The netspace from miner in json format"),
-               RPCExamples(HelpExampleCli("queryminernetspace", "true")))
-            .Check(request);
-
-    if (request.params.size() > 0) {
-        ClearAllMinerGroups();
-        return true;
-    }
-
-    LOCK(cs_main);
-    auto const& view = ::ChainstateActive().CoinsDB();
-    uint64_t nNetSpace{0};
-    auto minerGroups = QueryAllMinerGroups();
-    UniValue res(UniValue::VOBJ);
-    for (auto const& entry : minerGroups) {
-        UniValue groupVal(UniValue::VOBJ);
-        CPlotterBindData bindData(CChiaFarmerPk(entry.first));
-        auto entries = view.GetBindPlotterEntries(bindData);
-        // accounts
-        UniValue accountsVal(UniValue::VARR);
-        for (auto const& entry : entries) {
-            std::string address_str = EncodeDestination((ScriptHash)entry.second.accountID);
-            accountsVal.push_back(address_str);
-        }
-        groupVal.pushKV("accounts", accountsVal);
-        // devices
-        UniValue devicesVal(UniValue::VARR);
-        uint64_t nTotalSize{0};
-        for (auto const& group : entry.second) {
-            if (MakeNumberTB(group.second) / 1000 < 100) {
-                UniValue deviceEntryVal(UniValue::VOBJ);
-                deviceEntryVal.pushKV("device", group.first.GetHex());
-                deviceEntryVal.pushKV("sizeTB", MakeNumberStr(MakeNumberTB(group.second)));
-                devicesVal.push_back(deviceEntryVal);
-                nTotalSize += group.second;
-            }
-        }
-        uint64_t nTotalSizeTB = MakeNumberTB(nTotalSize);
-        nNetSpace += nTotalSize;
-        groupVal.pushKV("sizeTB", MakeNumberStr(nTotalSizeTB));
-        groupVal.pushKV("devices", devicesVal);
-        res.pushKV(BytesToHex(entry.first), groupVal);
-    }
-    res.pushKV("netspace", MakeNumberStr(nNetSpace));
-    uint64_t nNetspaceTB = MakeNumberTB(nNetSpace);
-    res.pushKV("netspaceTB", MakeNumberStr(nNetspaceTB));
 
     return res;
 }
@@ -517,14 +383,9 @@ static UniValue generateBurstBlocks(JSONRPCRequest const& request) {
 static CRPCCommand const commands[] = {
         {"chia", "checkchiapos", &checkChiapos, {}},
         {"chia", "querychallenge", &queryChallenge, {}},
-        {"chia", "submitvdf", &submitVdf, {}},
-        {"chia", "requirevdf", &requireVdf, {}},
-        {"chia", "queryvdf", &queryVdf, {}},
         {"chia", "querynetspace", &queryNetspace, {}},
-        {"chia", "queryminernetspace", &queryMinerNetspace, {"clear"}},
         {"chia", "querychainvdfinfo", &queryChainVdfInfo, {"height"}},
         {"chia", "queryminingrequirement", &queryMiningRequirement, {"address", "farmer-pk"}},
-        // {"chia", "submitpos", &submitPos, {}},
         {"chia",
          "submitproof",
          &submitProof,

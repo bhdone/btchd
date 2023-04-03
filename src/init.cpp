@@ -92,8 +92,6 @@
 #include <plog/Formatters/TxtFormatter.h>
 #include <plog/Appenders/ColorConsoleAppender.h>
 
-#include <chiapos/newblock_watcher.hpp>
-
 static bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
@@ -206,11 +204,6 @@ void Shutdown(InitInterfaces& interfaces)
     util::ThreadRename("shutoff");
     mempool.AddTransactionsUpdated(1);
 
-	LogPrintf("%s: shutdown timelord...\n", __func__);
-    if (!chiapos::StopTimelord()) {
-		LogPrintf("%s: no way to shutdown timelord", __func__);
-	}
-    chiapos::StopBlockWatcher();
     StopPOC();
     StopHTTPRPC();
     StopREST();
@@ -583,8 +576,6 @@ void SetupServerArgs()
     gArgs.AddArg("-signprivkey", "Import private key for block signature", ArgsManager::ALLOW_ANY, OptionsCategory::POC);
 
     gArgs.AddArg("-chiatest", "Run chia test before start the server", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
-    gArgs.AddArg("-timelord", "Run timelord", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
-    gArgs.AddArg("-timelord-hosts", "The timelord service hosts", ArgsManager::ALLOW_STRING , OptionsCategory::POC);
     gArgs.AddArg("-skip-ibd", "Skip the checking procedure for `Initial block download`", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
 
 #ifdef ENABLE_OMNICORE
@@ -2040,23 +2031,6 @@ bool AppInitMain(InitInterfaces& interfaces)
     // PoC module dependency wallets
     if (!StartPOC())
         return false;
-
-    if (gArgs.GetBoolArg("-timelord", false)) {
-		std::string hosts = gArgs.GetArg("-timelord-hosts", "");
-        plog::init(plog::Severity::debug, &g_consoleAppender);
-        if (!chiapos::StartTimelord(hosts)) {
-            LogPrintf("%s: cannot start timelord\n", __func__);
-            return false;
-        }
-        // Install callback
-        chiapos::RegisterTimelordProofHandler([](chiapos::CVdfProof const& vdf) {
-            LogPrint(BCLog::POC, "Received proof for challenge (iters=%s)%s\n",
-                chiapos::FormatNumberStr(std::to_string(vdf.nVdfIters)), vdf.challenge.GetHex());
-            chiapos::SendVdfProofOverP2PNetwork(g_connman.get(), vdf);
-            chiapos::SubmitVdfProofPacket(vdf);
-        });
-        LogPrintf("%s: timelord proof handler is registered\n", __func__);
-    }
 
     // ********************************************************* Step 13: finished
 

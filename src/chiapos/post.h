@@ -38,52 +38,6 @@ bool ReleaseBlock(std::shared_ptr<CBlock> pblock, CChainParams const& params);
 
 bool IsTheChainReadyForChiapos(CBlockIndex const* pindex, Consensus::Params const& params);
 
-bool SubmitVdfProofPacket(CVdfProof const& vdf);
-
-optional<CVdfProof> QueryReceivedVdfProofPacket(uint256 const& challenge);
-
-using NodeChecker = std::function<bool(CNode* pnode)>;
-struct NodeIsAlwaysGood {
-    bool operator()(CNode*) const { return true; }
-};
-
-using SentHandler = std::function<void(CNode* pnode)>;
-
-// farmer-pk
-// map: <group-hash, size>
-using MinerGroups = std::map<Bytes, std::map<uint256, uint64_t>>;
-MinerGroups const& QueryAllMinerGroups();
-
-void ClearAllMinerGroups();
-
-void SendVdfProofOverP2PNetwork(CConnman* connman, CVdfProof const& vdf, CNode* pfrom = nullptr,
-                                NodeChecker checker = NodeIsAlwaysGood());
-
-void SendRequireVdfOverP2PNetwork(CConnman* connman, uint256 const& challenge, uint64_t nIters, CNode* pfrom = nullptr,
-                                  NodeChecker checker = NodeIsAlwaysGood(), SentHandler sentHandler = [](CNode*){});
-
-using TimelordProofCallback = std::function<void(CVdfProof const&)>;
-
-int RegisterTimelordProofHandler(TimelordProofCallback callback);
-
-void UnregisterTimelordProofHandler(int nIndex);
-
-bool IsTimelordRunning();
-
-bool StartTimelord(std::string const& hosts);
-
-bool StopTimelord();
-
-void UpdateChallengeToTimelord(uint256 challenge, uint64_t iters);
-
-bool IsBlockWatcherRunning();
-
-void StartBlockWatcher();
-
-NewBlockWatcher& GetBlockWatcher();
-
-void StopBlockWatcher();
-
 }  // namespace chiapos
 
 #endif
