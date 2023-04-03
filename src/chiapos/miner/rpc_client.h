@@ -153,12 +153,6 @@ public:
 
     PledgeParams QueryNetspace();
 
-    VdfProof QueryVdf(uint256 const& challenge, uint64_t iters_limits);
-
-    bool RequireVdf(uint256 const& challenge, uint64_t iters);
-
-    bool SubmitVdf(VdfProof const& vdf);
-
     void SubmitProof(ProofPack const& proof_pack);
 
     chiapos::Bytes BindPlotter(std::string const& address, chiapos::SecreKey const& farmerSk);

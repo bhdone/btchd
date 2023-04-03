@@ -102,29 +102,6 @@ RPCClient::PledgeParams RPCClient::QueryNetspace() {
     return params;
 }
 
-RPCClient::VdfProof RPCClient::QueryVdf(uint256 const& challenge, uint64_t iters_limits) {
-    Result res = SendMethod(m_no_proxy, "queryvdf", challenge, iters_limits);
-    VdfProof proof;
-    proof.challenge = uint256S(res.result["challenge"].get_str());
-    proof.iters = res.result["iters"].get_int64();
-    proof.y = chiapos::MakeArray<chiapos::VDF_FORM_SIZE>(chiapos::BytesFromHex(res.result["y"].get_str()));
-    proof.proof = chiapos::BytesFromHex(res.result["proof"].get_str());
-    proof.witness_type = res.result["witness_type"].get_int();
-    proof.duration = res.result["duration"].get_int();
-    return proof;
-}
-
-bool RPCClient::RequireVdf(uint256 const& challenge, uint64_t iters) {
-    Result res = SendMethod(m_no_proxy, "requirevdf", challenge, iters);
-    return res.result.getBool();
-}
-
-bool RPCClient::SubmitVdf(VdfProof const& vdf) {
-    Result res = SendMethod(m_no_proxy, "submitvdf", vdf.challenge, vdf.y, vdf.proof, vdf.witness_type, vdf.iters,
-                            vdf.duration);
-    return res.result.getBool();
-}
-
 void RPCClient::SubmitProof(ProofPack const& proof_pack) {
     SendMethod(m_no_proxy, "submitproof", proof_pack.prev_block_hash, proof_pack.prev_block_height,
                proof_pack.pos.challenge, proof_pack.pos, proof_pack.farmer_sk, proof_pack.vdf, proof_pack.reward_dest);

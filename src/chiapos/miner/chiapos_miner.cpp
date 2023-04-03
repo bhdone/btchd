@@ -236,9 +236,7 @@ int Miner::Run() {
                         chiapos::FormatTime(estimate_seconds), chiapos::MakeNumberStr(vdf_speed));
                 PLOG_INFO << "request VDF proof for challenge: " << m_current_challenge.GetHex()
                           << ", iters: " << chiapos::FormatNumberStr(std::to_string(m_current_iters));
-                PLOGI << "estimate time: " << estimate_time_str;
-                m_client.RequireVdf(m_current_challenge, m_current_iters);
-                PLOG_INFO << "waiting for VDF proofs...";
+                PLOGI << "estimate time: " << estimate_time_str << ", waiting for VDF proof...";
                 std::atomic_bool running{true};
                 BreakReason reason = CheckAndBreak(running, queried_challenge.target_duration * 1.5,
                                                    queried_challenge.challenge, m_current_challenge, m_current_iters,
@@ -411,10 +409,6 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
                     return BreakReason::VDFIsAcquired;
                 }
             }
-            // Query VDF and when the VDF is ready we break the VDF computer and use the VDF proof
-            RPCClient::VdfProof vdf = m_client.QueryVdf(current_challenge, iters);
-            // VDF is ready
-            out_vdf = vdf;
             return BreakReason::VDFIsAcquired;
         } catch (NetError const& e) {
             PLOGE << "NetError: " << e.what();

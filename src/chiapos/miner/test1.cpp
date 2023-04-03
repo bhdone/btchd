@@ -53,17 +53,6 @@ TEST_F(MinerTest, QueryChallenge) {
     });
 }
 
-TEST_F(MinerTest, QueryVdf) {
-    EXPECT_NO_THROW({
-        uint256 challenge = MakeChallenge();
-        miner::RPCClient::VdfProof vdf = m_pclient->QueryVdf(challenge, 0);
-        EXPECT_EQ(vdf.challenge, challenge);
-        EXPECT_TRUE(vdf.iters > 0);
-        bool verified = chiapos::VerifyVdf(vdf.challenge, chiapos::MakeZeroForm(), vdf.iters, vdf.y, vdf.proof,
-                                           vdf.witness_type);
-        EXPECT_TRUE(verified);
-    });
-}
 int HandleCommand_Test(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
