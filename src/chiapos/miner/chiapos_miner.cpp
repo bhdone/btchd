@@ -224,7 +224,8 @@ int Miner::Run() {
                 } else {
                     // the PoS cannot be found, need to wait for next round, here is just setup a very long VDF time...
                     PLOG_INFO << "PoS cannot be found";
-                    m_current_iters = queried_challenge.prev_vdf_iters / queried_challenge.prev_vdf_duration * 60 * 60 * 24;
+                    m_current_iters =
+                            queried_challenge.prev_vdf_iters / queried_challenge.prev_vdf_duration * 60 * 60 * 24;
                 }
                 m_state = State::WaitVDF;
             } else if (m_state == State::WaitVDF) {
@@ -239,9 +240,9 @@ int Miner::Run() {
                 m_client.RequireVdf(m_current_challenge, m_current_iters);
                 PLOG_INFO << "waiting for VDF proofs...";
                 std::atomic_bool running{true};
-                BreakReason reason =
-                        CheckAndBreak(running, queried_challenge.target_duration * 1.5, queried_challenge.challenge,
-                                      m_current_challenge, m_current_iters, vdf);
+                BreakReason reason = CheckAndBreak(running, queried_challenge.target_duration * 1.5,
+                                                   queried_challenge.challenge, m_current_challenge, m_current_iters,
+                                                   m_prover.GetGroupHash(), m_prover.GetTotalSize(), vdf);
                 if (reason == BreakReason::ChallengeIsChanged) {
                     PLOG_INFO << "!!!!! Challenge is changed !!!!!";
                     m_state = State::RequireChallenge;
@@ -318,7 +319,8 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
             return;
         }
         if (!m_current_challenge.IsNull()) {
-            ptimelord_client->Calc(m_current_challenge, m_current_iters);
+            ptimelord_client->Calc(m_current_challenge, m_current_iters, chiapos::MakeBytes(m_farmer_pk),
+                                   m_prover.GetGroupHash(), m_prover.GetTotalSize());
         }
     });
     ptimelord_client->SetErrorHandler(
@@ -365,14 +367,16 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
 
 Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_seconds,
                                         uint256 const& initial_challenge, uint256 const& current_challenge,
-                                        uint64_t iters, chiapos::optional<RPCClient::VdfProof>& out_vdf) {
+                                        uint64_t iters, uint256 const& group_hash, uint64_t total_size,
+                                        chiapos::optional<RPCClient::VdfProof>& out_vdf) {
     // before we get in the loop, we need to send the request to timelord if it is running
     if (m_pthread_timelord) {
         PLOGD << "request proof from timelord";
-        asio::post(m_ioc, [this, current_challenge, iters]() {
+        auto farmer_pk = chiapos::MakeBytes(m_farmer_pk);
+        asio::post(m_ioc, [this, current_challenge, iters, farmer_pk, group_hash, total_size]() {
             for (auto desc : m_timelords) {
                 if (!desc.second.reconnecting && desc.second.pclient) {
-                    desc.second.pclient->Calc(current_challenge, iters);
+                    desc.second.pclient->Calc(current_challenge, iters, farmer_pk, group_hash, total_size);
                 }
             }
         });

@@ -77,7 +77,8 @@ public:
 
     void SetProofReceiver(ProofReceiver proof_receiver);
 
-    bool Calc(uint256 const& challenge, uint64_t iters);
+    bool Calc(uint256 const& challenge, uint64_t iters, Bytes const& farmer_pk, uint256 const& group_hash,
+              uint64_t total_size);
 
     void Connect(std::string const& host, unsigned short port);
 
