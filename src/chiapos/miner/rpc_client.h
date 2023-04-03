@@ -121,6 +121,7 @@ public:
         CAmount supplied;
         CAmount accumulate;
         int height;
+        chiapos::Bytes farmer_pk;
     };
 
     struct PledgeRecord {

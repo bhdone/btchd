@@ -222,6 +222,7 @@ RPCClient::MiningRequirement RPCClient::QueryMiningRequirement(std::string const
     mining_requirement.supplied = res.result["supplied"].get_int64();
     mining_requirement.accumulate = res.result["accumulate"].get_int64();
     mining_requirement.height = res.result["height"].get_int();
+    mining_requirement.farmer_pk = chiapos::BytesFromHex(res.result["farmer-pk"].get_str());
     return mining_requirement;
 }
 

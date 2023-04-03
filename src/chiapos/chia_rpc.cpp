@@ -431,6 +431,7 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
     CAmount nAccumulate = GetBlockAccumulateSubsidy(pindex, params);
 
     UniValue res(UniValue::VOBJ);
+    res.pushKV("farmer-pk", chiapos::BytesToHex(vchFarmerPk));
     res.pushKV("require", nReq);
     res.pushKV("mined", nMinedCount);
     res.pushKV("count", nTotalCount);
