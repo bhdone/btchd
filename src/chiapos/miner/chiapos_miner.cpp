@@ -409,7 +409,7 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
                     return BreakReason::VDFIsAcquired;
                 }
             }
-            return BreakReason::VDFIsAcquired;
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
         } catch (NetError const& e) {
             PLOGE << "NetError: " << e.what();
             return BreakReason::Error;
