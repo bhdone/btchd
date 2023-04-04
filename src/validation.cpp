@@ -2208,15 +2208,15 @@ bool CheckChiaPledgeTx(CTransaction const& tx, CCoinsViewCache const& view, CVal
             } else if (DatacarrierTypeIsChiaPoint(payloadType)) {
                 // Do nothing?
             } else if (payloadType == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+                // check the distance
+                int nDistance = nHeight - prevCoin.nHeight;
+                if (nDistance <= params.BHDIP009PledgeRetargetMinHeights) {
+                    return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-retarget-early", "the retarget is too early");
+                }
                 if (!prevCoin.IsChiaPointRelated()) {
                     return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-invalid-retarget-prev", "previous coin is not chia point related");
                 }
                 auto prevPayloadType = prevCoin.GetExtraDataType();
-                // check the distance
-                int nDistance = nHeight - prevCoin.nHeight;
-                if (nDistance < params.BHDIP009PledgeRetargetMinHeights) {
-                    return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-retarget-early", "the retarget is too early");
-                }
                 auto retargetPayload = PointRetargetPayload::As(payload);
                 if (prevPayloadType == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
                     // compare the POINT record and ensure they are identical
