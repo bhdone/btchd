@@ -541,7 +541,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         assert(payload && payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET);
         titleString = tr("Confirm chia point");
         questionString = "<span style='color:#aa0000;'><b>" + tr("Are you sure you want to retarget a chia point?") + "</b></span>";
-        formatted.append(tr("The original target address will be revoked, the new address effects on next block."));
+        formatted.append(tr("The original target address will be revoked, the new address effects on next block. Tx: ") + QString::fromStdString(recipients[0].retargetTxid.GetHex()) + tr(" is the previous transaction id"));
     }
     else if (operateMethod == PayOperateMethod::ChiaBindFarmerPk) {
         assert(payload && payload->type == DATACARRIER_TYPE_BINDCHIAFARMER);
