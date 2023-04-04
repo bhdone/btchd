@@ -100,7 +100,7 @@ public:
     int plotterDataAliveHeight;
 
     // For retargeting
-    QString txid;
+    uint256 retargetTxid;
     DatacarrierType pointType;
     int pointHeight;
 
@@ -202,7 +202,7 @@ public:
     };
 
     // prepare transaction for getting txfee before sending coins
-    SendCoinsReturn prepareTransaction(PayOperateMethod payOperateMethod, WalletModelTransaction &transaction, const CCoinControl& coinControl);
+    SendCoinsReturn prepareTransaction(PayOperateMethod payOperateMethod, WalletModelTransaction &transaction, CCoinControl& coinControl);
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction);

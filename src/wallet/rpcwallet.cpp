@@ -175,6 +175,17 @@ static void WalletTxToJSON(interfaces::Chain& chain, interfaces::Chain::Lock& lo
     }
     entry.pushKV("bip125-replaceable", rbfStatus);
 
+    if (wtx.tx->IsUniform()) {
+        UniValue vin(UniValue::VARR);
+        for (auto const& i : wtx.tx->vin) {
+            UniValue in(UniValue::VOBJ);
+            in.pushKV("n", (uint64_t)i.prevout.n);
+            in.pushKV("tx", i.prevout.hash.GetHex());
+            vin.push_back(in);
+        }
+        entry.pushKV("vin", vin);
+    }
+
     for (const std::pair<const std::string, std::string>& item : wtx.mapValue)
         entry.pushKV(item.first, item.second);
 }

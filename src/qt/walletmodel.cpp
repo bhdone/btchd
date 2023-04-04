@@ -35,6 +35,9 @@
 #include <QSet>
 #include <QTimer>
 
+#include <chiapos/miner/keyman.h>
+#include <chiapos/kernel/utils.h>
+#include <chiapos/kernel/bls_key.h>
 
 WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces::Node& node, const PlatformStyle *platformStyle, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), m_wallet(std::move(wallet)), m_node(node), optionsModel(_optionsModel), addressTableModel(nullptr),
@@ -130,7 +133,7 @@ bool WalletModel::validateAddress(const QString &address)
     return IsValidDestinationString(address.toStdString());
 }
 
-WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod payOperateMethod, WalletModelTransaction &transaction, const CCoinControl& coinControl)
+WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod payOperateMethod, WalletModelTransaction &transaction, CCoinControl& coinControl)
 {
     CAmount total = 0;
     bool fSubtractFeeFromAmount = false;
@@ -235,6 +238,19 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod pa
             }
             nChangePosRet = 1;
             nTxVersion = CTransaction::UNIFORM_VERSION;
+        } else if (payOperateMethod == PayOperateMethod::ChiaBindFarmerPk) {
+            if (vecSend.size() != 1 || recipients[0].plotterPassphrase.isEmpty())
+                return TransactionCreationFailed;
+            const SendCoinsRecipient &rcp = recipients[0];
+            // Passphrase only
+            int nTipHeight = m_wallet->chain().lock()->getHeight().get_value_or(0);
+            std::string passphrase = rcp.plotterPassphrase.toStdString();
+            keyman::Wallet wallet(passphrase);
+            auto farmerPk = wallet.GetFarmerKey(0);
+            auto farmerSk = farmerPk.GetPrivateKey();
+            vecSend.push_back({GetBindChiaPlotterScriptForDestination(coinControl.m_pick_dest, chiapos::CKey(farmerSk), nTipHeight + rcp.plotterDataAliveHeight)});
+            nChangePosRet = 1;
+            nTxVersion = CTransaction::UNIFORM_VERSION;
         } else if (payOperateMethod == PayOperateMethod::ChiaPoint) {
             if (vecSend.size() != 1)
                 return TransactionCreationFailed;
@@ -263,23 +279,19 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod pa
             vecSend[0].scriptPubKey = GetScriptForDestination(coinControl.m_pick_dest);
             nChangePosRet = 1;
             nTxVersion = CTransaction::UNIFORM_VERSION;
-        } else if (payOperateMethod == PayOperateMethod::ChiaBindFarmerPk) {
-            if (vecSend.size() != 1 || recipients[0].plotterPassphrase.isEmpty())
-                return TransactionCreationFailed;
-            const SendCoinsRecipient &rcp = recipients[0];
-            // Passphrase only
-            int nTipHeight = m_wallet->chain().lock()->getHeight().get_value_or(0);
-            vecSend.push_back({GetBindPlotterScriptForDestination(coinControl.m_pick_dest, rcp.plotterPassphrase.toStdString(), nTipHeight + rcp.plotterDataAliveHeight), 0, false});
-            nChangePosRet = 1;
-            nTxVersion = CTransaction::UNIFORM_VERSION;
         } else if (payOperateMethod == PayOperateMethod::ChiaPointRetarget) {
             if (vecSend.size() != 1)
                 return TransactionCreationFailed;
-            // TODO matthew: complete these two arguments below, should be retrieved from ui layout
-            DatacarrierType pointType;
-            int nPointHeight;
+            // prepare COutPoint
+            COutPoint previousOutPoint(recipients[0].retargetTxid, 0);
+            coinControl.Select(previousOutPoint);
+            Coin const& coin = m_wallet->chain().accessCoin(previousOutPoint);
+            // prepare transaction
+            DatacarrierType pointType = recipients[0].pointType;
+            int nPointHeight = recipients[0].pointHeight;
             vecSend.push_back({GetPointRetargetScriptForDestination(ExtractDestination(vecSend[0].scriptPubKey), pointType, nPointHeight), 0, false});
-            vecSend[0].scriptPubKey = GetScriptForDestination(coinControl.m_pick_dest);
+            vecSend[0] = { GetScriptForDestination(coinControl.m_pick_dest), coin.out.nValue, false };
+            coinControl.fAllowOtherInputs = true;
             nChangePosRet = 1;
             nTxVersion = CTransaction::UNIFORM_VERSION;
         }

@@ -90,12 +90,13 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
     // Operate method
     ui->operateMethodComboBox->addItem(tr("Pay to"), (int)PayOperateMethod::Pay);
     ui->operateMethodComboBox->addItem(tr("Point to"), (int)PayOperateMethod::Point);
+    ui->operateMethodComboBox->addItem(tr("Bind to"), (int)PayOperateMethod::BindPlotter);
+    ui->operateMethodComboBox->addItem(tr("(chia) Bind farmer"), (int)PayOperateMethod::ChiaBindFarmerPk);
     ui->operateMethodComboBox->addItem(tr("(chia) Point to"), (int)PayOperateMethod::ChiaPoint);
     ui->operateMethodComboBox->addItem(tr("(chia) Point to (term1)"), (int)PayOperateMethod::ChiaPointT1);
     ui->operateMethodComboBox->addItem(tr("(chia) Point to (term2)"), (int)PayOperateMethod::ChiaPointT2);
     ui->operateMethodComboBox->addItem(tr("(chia) Point to (term3)"), (int)PayOperateMethod::ChiaPointT3);
     ui->operateMethodComboBox->addItem(tr("(chia) Point retarget"), (int)PayOperateMethod::ChiaPointRetarget);
-    ui->operateMethodComboBox->addItem(tr("Bind to"), (int)PayOperateMethod::BindPlotter);
     addEntry();
 
     connect(ui->addButton, &QPushButton::clicked, this, &SendCoinsDialog::addEntry);
@@ -257,12 +258,13 @@ void SendCoinsDialog::onOperateMethodComboBoxChanged(int index)
         switch ((PayOperateMethod)opMethodValue)
         {
         case PayOperateMethod::Point:
+        case PayOperateMethod::BindPlotter:
+        case PayOperateMethod::ChiaBindFarmerPk:
         case PayOperateMethod::ChiaPoint:
         case PayOperateMethod::ChiaPointT1:
         case PayOperateMethod::ChiaPointT2:
         case PayOperateMethod::ChiaPointT3:
         case PayOperateMethod::ChiaPointRetarget:
-        case PayOperateMethod::BindPlotter:
             ui->clearButton->setVisible(false);
             ui->addButton->setVisible(false);
             ui->frameCoinControl->setVisible(false);
@@ -282,8 +284,9 @@ void SendCoinsDialog::onOperateMethodComboBoxChanged(int index)
             break;
         }
 
-        ui->frameFee->setVisible((PayOperateMethod)opMethodValue != PayOperateMethod::BindPlotter);
-        ui->checkBindDataButton->setVisible((PayOperateMethod)opMethodValue == PayOperateMethod::BindPlotter);
+        bool isBindOperate = (PayOperateMethod)opMethodValue == PayOperateMethod::BindPlotter || (PayOperateMethod)opMethodValue == PayOperateMethod::ChiaBindFarmerPk;
+        ui->frameFee->setVisible(!isBindOperate);
+        ui->checkBindDataButton->setVisible(isBindOperate);
 
         clear();
         setBalance(model->wallet().getBalances());
@@ -322,6 +325,7 @@ void SendCoinsDialog::on_sendButton_clicked()
 
     if(!valid || recipients.isEmpty())
     {
+        QMessageBox::critical(this, tr("Error"), tr("Some input data is wrong or empty, cannot proceed."), QMessageBox::Ok);
         return;
     }
 
@@ -345,9 +349,8 @@ void SendCoinsDialog::on_sendButton_clicked()
     CCoinControl ctrl;
     if (operateMethod == PayOperateMethod::BindPlotter || operateMethod == PayOperateMethod::ChiaBindFarmerPk)
     {
-        if (model->node().isInitialBlockDownload()){
-            auto title = operateMethod == PayOperateMethod::BindPlotter ? tr("Bind plotter") : tr("Bind farmer pk");
-            QMessageBox msgBox(QMessageBox::Warning, title, tr("Please wait block sync!"), QMessageBox::Ok, this);
+        if (model->node().isInitialBlockDownload()) {
+            QMessageBox msgBox(QMessageBox::Warning, tr("Error"), tr("Please wait block sync!"), QMessageBox::Ok, this);
             msgBox.exec();
             return;
         }
@@ -394,33 +397,13 @@ void SendCoinsDialog::on_sendButton_clicked()
             nBindLimitHeight = bindPunishment.second;
         }
     }
-    else if (operateMethod == PayOperateMethod::Point)
+    else if (operateMethod == PayOperateMethod::Point ||
+             operateMethod == PayOperateMethod::ChiaPoint ||
+             operateMethod == PayOperateMethod::ChiaPointT1 ||
+             operateMethod == PayOperateMethod::ChiaPointT2 ||
+             operateMethod == PayOperateMethod::ChiaPointT3 ||
+             operateMethod == PayOperateMethod::ChiaPointRetarget)
     {
-        ctrl.m_coin_pick_policy = CoinControlDialog::coinControl()->m_coin_pick_policy;
-        ctrl.m_pick_dest = ctrl.destChange = CoinControlDialog::coinControl()->m_pick_dest;
-        updateCoinControlState(ctrl);
-    }
-    else if (operateMethod == PayOperateMethod::ChiaPoint) {
-        ctrl.m_coin_pick_policy = CoinControlDialog::coinControl()->m_coin_pick_policy;
-        ctrl.m_pick_dest = ctrl.destChange = CoinControlDialog::coinControl()->m_pick_dest;
-        updateCoinControlState(ctrl);
-    }
-    else if (operateMethod == PayOperateMethod::ChiaPointT1) {
-        ctrl.m_coin_pick_policy = CoinControlDialog::coinControl()->m_coin_pick_policy;
-        ctrl.m_pick_dest = ctrl.destChange = CoinControlDialog::coinControl()->m_pick_dest;
-        updateCoinControlState(ctrl);
-    }
-    else if (operateMethod == PayOperateMethod::ChiaPointT2) {
-        ctrl.m_coin_pick_policy = CoinControlDialog::coinControl()->m_coin_pick_policy;
-        ctrl.m_pick_dest = ctrl.destChange = CoinControlDialog::coinControl()->m_pick_dest;
-        updateCoinControlState(ctrl);
-    }
-    else if (operateMethod == PayOperateMethod::ChiaPointT3) {
-        ctrl.m_coin_pick_policy = CoinControlDialog::coinControl()->m_coin_pick_policy;
-        ctrl.m_pick_dest = ctrl.destChange = CoinControlDialog::coinControl()->m_pick_dest;
-        updateCoinControlState(ctrl);
-    }
-    else if (operateMethod == PayOperateMethod::ChiaPointRetarget) {
         ctrl.m_coin_pick_policy = CoinControlDialog::coinControl()->m_coin_pick_policy;
         ctrl.m_pick_dest = ctrl.destChange = CoinControlDialog::coinControl()->m_pick_dest;
         updateCoinControlState(ctrl);
@@ -432,6 +415,14 @@ void SendCoinsDialog::on_sendButton_clicked()
         updateCoinControlState(ctrl);
     }
 
+    if (operateMethod == PayOperateMethod::ChiaPointRetarget) {
+        if (recipients[0].retargetTxid.IsNull() || recipients[0].pointHeight == 0 ||
+                (recipients[0].pointType != DATACARRIER_TYPE_CHIA_POINT_RETARGET && !DatacarrierTypeIsChiaPoint(recipients[0].pointType))) {
+            QMessageBox::critical(this, tr("Error"), tr("You must select a tx before go next step"), QMessageBox::Ok);
+            return;
+        }
+    }
+
     prepareStatus = model->prepareTransaction(operateMethod, currentTransaction, ctrl);
 
     // Check special tx
@@ -441,18 +432,17 @@ void SendCoinsDialog::on_sendButton_clicked()
         if (operateMethod == PayOperateMethod::BindPlotter || operateMethod == PayOperateMethod::ChiaBindFarmerPk) {
             payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_BINDCHIAFARMER});
             if (!payload || (payload->type != DATACARRIER_TYPE_BINDPLOTTER && payload->type != DATACARRIER_TYPE_BINDCHIAFARMER)) {
-                QMessageBox msgBox(QMessageBox::Warning, tr("Bind plotter data"), tr("Invalid bind plotter data!"), QMessageBox::Close, this);
-                msgBox.exec();
+                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed, tr("Invalid bind plotter data"));
                 return;
             }
             if (operateMethod == PayOperateMethod::ChiaBindFarmerPk && nSpendHeight < params.BHDIP009Height) {
-                QMessageBox msgBox(QMessageBox::Warning, tr("Chia consensus doesn't activate"), tr("Cannot proceed the operator"), QMessageBox::Close, this);
-                msgBox.exec();
+                prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed, tr("Chia consensus doesn't activate"));
                 return;
             }
             if (chain.haveActiveBindPlotter(ExtractAccountID(ctrl.m_pick_dest), BindPlotterPayload::As(payload)->GetId())) {
                 prepareStatus = WalletModel::SendCoinsReturn(WalletModel::BindPlotterExist,
                     QString::fromStdString(BindPlotterPayload::As(payload)->GetId().ToString()) + "\n" + QString::fromStdString(EncodeDestination(ctrl.m_pick_dest)));
+                return;
             }
         } else {
             std::map<PayOperateMethod, DatacarrierType> checkingMethods;
@@ -462,17 +452,16 @@ void SendCoinsDialog::on_sendButton_clicked()
             checkingMethods[PayOperateMethod::ChiaPointT2] = DATACARRIER_TYPE_CHIA_POINT_TERM_2;
             checkingMethods[PayOperateMethod::ChiaPointT3] = DATACARRIER_TYPE_CHIA_POINT_TERM_3;
             checkingMethods[PayOperateMethod::ChiaPointRetarget] = DATACARRIER_TYPE_CHIA_POINT_RETARGET;
-            for (auto mth : checkingMethods) {
-                if (operateMethod == mth.first) {
-                    if (nSpendHeight < params.BHDIP009Height) {
-                        QMessageBox msgBox(QMessageBox::Warning, tr("Chia consensus doesn't activate"), tr("Cannot proceed the operator"), QMessageBox::Close, this);
-                        msgBox.exec();
-                        return;
-                    }
-                    payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{mth.second});
-                    if (!payload || payload->type != mth.second) {
-                        prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed);
-                    }
+            auto itMethod = checkingMethods.find(operateMethod);
+            if (itMethod != std::end(checkingMethods)) {
+                if (nSpendHeight < params.BHDIP009Height) {
+                    prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed, tr("Chia consensus doesn't activate"));
+                    return;
+                }
+                payload = ExtractTransactionDatacarrier(*currentTransaction.getWtx(), nSpendHeight, DatacarrierTypes{itMethod->second});
+                if (!payload || payload->type != itMethod->second) {
+                    prepareStatus = WalletModel::SendCoinsReturn(WalletModel::TransactionCreationFailed, tr("Previous tx payload type is invalid"));
+                    return;
                 }
             }
         }
@@ -620,7 +609,7 @@ void SendCoinsDialog::on_sendButton_clicked()
         questionString.append("</span><br />");
 
         // append bindplotter limit notice
-        if (operateMethod == PayOperateMethod::BindPlotter && nBindLimitHeight > 0) {
+        if ((operateMethod == PayOperateMethod::BindPlotter || operateMethod == PayOperateMethod::ChiaBindFarmerPk) && nBindLimitHeight > 0) {
             questionString.append("<span style='color:#aa0000;'>").
                 append(tr("This binding operation triggers anti-cheating mechanism and therefore requires a large transaction fee %1.").
                     arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), txFee))).

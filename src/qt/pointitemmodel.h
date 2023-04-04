@@ -25,8 +25,14 @@ public:
 
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
+    void reload();
+
+    TxPledge pledgeFromIndex(QModelIndex const& index) const;
+
 private:
-    CWallet* m_wallet;
+    QString PointTypeToTerm(TxPledge const& pledge) const;
+
+    CWallet* m_pwallet;
     std::vector<TxPledge> m_pledges;
 };
 
