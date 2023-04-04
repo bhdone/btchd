@@ -2214,6 +2214,7 @@ bool CheckChiaPledgeTx(CTransaction const& tx, CCoinsViewCache const& view, CVal
                     return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-retarget-early", "the retarget is too early");
                 }
                 if (!prevCoin.IsChiaPointRelated()) {
+                    LogPrintf("%s: prevCoin={%s}{%s}\n", __func__, tx.vin[0].prevout.hash.GetHex(), DatacarrierTypeToString(prevCoin.GetExtraDataType()));
                     return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-invalid-retarget-prev", "previous coin is not chia point related");
                 }
                 auto prevPayloadType = prevCoin.GetExtraDataType();
