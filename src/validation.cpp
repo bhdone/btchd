@@ -2169,8 +2169,15 @@ bool CheckChiaPledgeTx(CTransaction const& tx, CCoinsViewCache const& view, CVal
         return true;
     }
     Coin prevCoin;
-    if (!view.GetCoin(tx.vin[0].prevout, prevCoin)) {
-        return true;
+    for (auto const& in : tx.vin) {
+        if (!view.GetCoin(in.prevout, prevCoin)) {
+            return true;
+        }
+        if (prevCoin.IsChiaPointRelated()) {
+            // found one
+            // TODO matthew: We should check and ensure there are only 1 point/retarget input in this tx
+            break;
+        }
     }
     if (tx.IsUniform()) {
         auto payload = ExtractTransactionDatacarrier(tx, nHeight, {DATACARRIER_TYPE_POINT, DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1, DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3, DATACARRIER_TYPE_CHIA_POINT_RETARGET});
