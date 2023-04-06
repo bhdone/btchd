@@ -138,7 +138,6 @@ public:
                 ::Unserialize(s, payload->receiverID);
                 uint32_t pointType;
                 ::Unserialize(s, pointType);
-                assert(pointType <= static_cast<int>(DATACARRIER_TYPE_CHIA_POINT_TERM_3));
                 payload->pointType = static_cast<DatacarrierType>(pointType);
                 ::Unserialize(s, payload->nPointHeight);
             } else
