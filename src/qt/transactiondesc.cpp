@@ -183,6 +183,10 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     {
         strHTML += "<b>" + tr("Relevant transaction ID") + ":</b> " + QString::fromStdString(wtx.value_map["relevant_txid"]) + "<br>";
     }
+    else if (rec->type == TransactionRecord::RetargetPoint)
+    {
+        strHTML += "<b>" + tr("Relevant transaction ID") + ":</b> " + QString::fromStdString(wtx.value_map["txid"]) + "<br>";
+    }
 
     //
     // Amount

@@ -725,6 +725,22 @@ bool WalletModel::unfreezeTransaction(uint256 hash)
         if (confirmationDialog.exec() != QMessageBox::Yes) {
             return false;
         }
+    } else if (wtx.value_map["type"] == "retarget") {
+        QString questionString = tr("Are you sure you want to withdraw retarget point?");
+        questionString.append("<br />");
+        questionString.append("<table style=\"text-align: left;\">");
+        questionString.append("<tr><td width=100>").append(tr("From address:")).append("</td><td>").append(QString::fromStdString(wtx.value_map["from"]));
+        questionString.append("</td></tr>");
+        questionString.append("<tr><td>").append(tr("To address:")).append("</td><td>").append(QString::fromStdString(wtx.value_map["to"]));
+        questionString.append("</td></tr>");
+        questionString.append("<tr><td>").append(tr("Return amount:")).append("</td><td>").append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), mtx.vout[0].nValue)).append("</td></tr>");
+        questionString.append("<tr style='color:#aa0000;'><td>").append(tr("Transaction fee:")).append("</td><td>").append(BitcoinUnits::formatHtmlWithUnit(getOptionsModel()->getDisplayUnit(), total_fee)).append("</td></tr>");
+        questionString.append("</table>");
+
+        SendConfirmationDialog confirmationDialog(tr("Withdraw retarget point"), questionString);
+        if (confirmationDialog.exec() != QMessageBox::Yes) {
+            return false;
+        }
     } else {
         return false;
     }

@@ -128,6 +128,20 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
             parts.append(sub);
             return parts;
         }
+        else if (itType->second == "retarget")
+        {
+            isminetype senderIsmine = wtx.txout_is_mine[0];
+            isminetype receiverIsmine = wtx.tx_point_address_is_mine;
+            TransactionRecord sub(hash, nTime);
+            sub.credit = wtx.tx->vout[0].nValue;
+            sub.involvesWatchAddress = ((senderIsmine & ISMINE_WATCH_ONLY) || (receiverIsmine & ISMINE_WATCH_ONLY)) &&
+                (!(senderIsmine & ISMINE_SPENDABLE) && !(receiverIsmine & ISMINE_SPENDABLE));
+            sub.type = TransactionRecord::RetargetPoint;
+            sub.address = senderIsmine ? EncodeDestination(wtx.txout_address[0]) : EncodeDestination(wtx.tx_point_address);
+
+            parts.append(sub);
+            return parts;
+        }
     }
 
     if (nNet > 0 || wtx.is_coinbase)
