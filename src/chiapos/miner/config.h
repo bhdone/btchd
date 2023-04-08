@@ -4,6 +4,7 @@
 #include <chiapos/kernel/bls_key.h>
 #include <chiapos/kernel/chiapos_types.h>
 #include <chiapos/kernel/pos.h>
+
 #include <univalue.h>
 
 #include <string>
@@ -29,15 +30,11 @@ public:
 
     std::string GetRewardDest() const;
 
-    std::string GetSeed() const;
+    std::vector<std::string> GetSeeds() const;
 
     bool Testnet() const;
 
     bool NoProxy() const;
-
-    chiapos::SecreKey GetFarmerSk() const;
-
-    chiapos::PubKey GetFarmerPk() const;
 
     std::vector<std::string> GetTimelordEndpoints() const;
 
@@ -47,7 +44,7 @@ private:
     RPC m_rpc;
     std::string m_reward_dest;
     std::vector<std::string> m_plot_path_list;
-    std::string m_seed;
+    std::vector<std::string> m_seeds;
     bool m_testnet{true};
     bool m_no_proxy{true};
     std::vector<std::string> m_timelord_endpoints;

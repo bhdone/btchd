@@ -142,14 +142,12 @@ void TimelordClient::SetErrorHandler(ErrorHandler err_handler) { err_handler_ = 
 
 void TimelordClient::SetProofReceiver(ProofReceiver proof_receiver) { proof_receiver_ = std::move(proof_receiver); }
 
-bool TimelordClient::Calc(uint256 const& challenge, uint64_t iters, Bytes const& farmer_pk, uint256 const& group_hash,
-                          uint64_t total_size) {
+bool TimelordClient::Calc(uint256 const& challenge, uint64_t iters, uint256 const& group_hash, uint64_t total_size) {
     UniValue msg(UniValue::VOBJ);
     msg.pushKV("id", static_cast<int>(TimelordClientMsgs::CALC));
     msg.pushKV("challenge", challenge.GetHex());
     msg.pushKV("iters", iters);
     UniValue netspace(UniValue::VOBJ);
-    netspace.pushKV("farmer_pk", chiapos::BytesToHex(farmer_pk));
     netspace.pushKV("group_hash", group_hash.GetHex());
     netspace.pushKV("total_size", total_size);
     msg.pushKV("netspace", netspace);

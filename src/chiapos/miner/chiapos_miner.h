@@ -19,7 +19,8 @@ namespace miner {
 namespace pos {
 chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256 const& challenge, uint64_t difficulty,
                                                          int difficulty_constant_factor_bits, int filter_bits,
-                                                         int base_iters, std::string* out_plot_path = nullptr);
+                                                         int base_iters, chiapos::PubKey& out_farmer_pk,
+                                                         std::string* out_plot_path = nullptr);
 }
 
 using TimelordClientPtr = std::shared_ptr<TimelordClient>;
@@ -39,7 +40,7 @@ struct ClientDesc {
 /// Miner is a state machine
 class Miner {
 public:
-    Miner(RPCClient& client, Prover& prover, chiapos::SecreKey farmer_sk, chiapos::PubKey farmer_pk,
+    Miner(RPCClient& client, Prover& prover, std::map<chiapos::PubKey, chiapos::SecreKey> secre_keys,
           std::string reward_dest, int difficulty_constant_factor_bits);
 
     ~Miner();
@@ -72,8 +73,7 @@ private:
     // utilities
     RPCClient& m_client;
     Prover& m_prover;
-    chiapos::SecreKey m_farmer_sk;
-    chiapos::PubKey m_farmer_pk;
+    std::map<chiapos::PubKey, chiapos::SecreKey> m_secre_keys;
     std::string m_reward_dest;
     int m_difficulty_constant_factor_bits;
     // State

@@ -72,7 +72,7 @@ PlotId CPlotFile::GetPlotId() const {
     return m_cached_plotid;
 }
 
-bool CPlotFile::ReadMemo(PlotMemo& outMemo) {
+bool CPlotFile::ReadMemo(PlotMemo& outMemo) const {
     if (m_impl == nullptr) {
         return false;
     }

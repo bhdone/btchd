@@ -79,7 +79,8 @@ chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::Qualit
 
 chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256 const& challenge, uint64_t difficulty,
                                                          int difficulty_constant_factor_bits, int filter_bits,
-                                                         int base_iters, std::string* out_plot_path) {
+                                                         int base_iters, chiapos::PubKey& out_farmer_pk,
+                                                         std::string* out_plot_path) {
     auto qs_pack_vec = prover.GetQualityStrings(challenge, filter_bits);
     PLOG_INFO << "total " << qs_pack_vec.size() << " answer(s), filter_bits=" << filter_bits;
     if (qs_pack_vec.empty()) {
@@ -106,7 +107,7 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
     proof.plot_id = chiapos::MakeUint256(memo.plot_id);
     proof.pool_pk_or_hash = chiapos::MakePubKeyOrHash(memo.plot_id_type, memo.pool_pk_or_puzzle_hash);
     proof.local_pk = chiapos::MakeArray<chiapos::PK_LEN>(Prover::CalculateLocalPkBytes(memo.local_master_sk));
-    if (!Prover::QueryFullProof(qs_pack.plot_path, challenge, qs_pack.index, proof.proof)) {
+    if (!Prover::QueryFullProof(qs_pack.plot_path, challenge, qs_pack.index, proof.proof, out_farmer_pk)) {
         return {};
     }
     PLOGI << "iters=" << chiapos::FormatNumberStr(std::to_string(proof.iters)) << ", k=" << (int)proof.k
@@ -121,12 +122,11 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
 
 }  // namespace pos
 
-Miner::Miner(RPCClient& client, Prover& prover, chiapos::SecreKey farmer_sk, chiapos::PubKey farmer_pk,
+Miner::Miner(RPCClient& client, Prover& prover, std::map<chiapos::PubKey, chiapos::SecreKey> secre_keys,
              std::string reward_dest, int difficulty_constant_factor_bits)
         : m_client(client),
           m_prover(prover),
-          m_farmer_sk(std::move(farmer_sk)),
-          m_farmer_pk(std::move(farmer_pk)),
+          m_secre_keys(secre_keys),
           m_reward_dest(std::move(reward_dest)),
           m_difficulty_constant_factor_bits(difficulty_constant_factor_bits) {}
 
@@ -171,6 +171,8 @@ int Miner::Run() {
     chiapos::optional<RPCClient::VdfProof> vdf;
     std::string curr_plot_path;
     uint64_t vdf_speed{100000};
+    chiapos::PubKey farmer_pk;
+    chiapos::SecreKey farmer_sk;
     while (1) {
         try {
             std::this_thread::yield();
@@ -205,10 +207,22 @@ int Miner::Run() {
                           << ", filter_bits: " << queried_challenge.filter_bits;
                 pos = pos::QueryBestPosProof(m_prover, m_current_challenge, queried_challenge.difficulty,
                                              m_difficulty_constant_factor_bits, queried_challenge.filter_bits,
-                                             queried_challenge.base_iters, &curr_plot_path);
+                                             queried_challenge.base_iters, farmer_pk, &curr_plot_path);
                 if (pos.has_value()) {
+                    auto it_sk = m_secre_keys.find(farmer_pk);
+                    if (it_sk == std::end(m_secre_keys)) {
+                        // the key doesn't avaialble
+                        m_prover.RevokeByFarmerPk(farmer_pk);
+                        PLOGE << tinyformat::format(
+                                "No corresponding secure key can be found for farmer public-key: %s, the related plots "
+                                "are removed",
+                                chiapos::BytesToHex(chiapos::MakeBytes(farmer_pk)));
+                        m_state = State::FindPoS;
+                        continue;
+                    }
+                    farmer_sk = it_sk->second;
                     // Check plot-id
-                    chiapos::PlotId plot_id = chiapos::MakePlotId(pos->local_pk, m_farmer_pk, pos->pool_pk_or_hash);
+                    chiapos::PlotId plot_id = chiapos::MakePlotId(pos->local_pk, farmer_pk, pos->pool_pk_or_hash);
                     if (plot_id != pos->plot_id) {
                         // The provided mnemonic is invalid or it doesn't match to the farmer
                         PLOG_ERROR << "!!! Invalid mnemonic! Please check and fix your configure file! Plot path: "
@@ -277,7 +291,7 @@ int Miner::Run() {
                 pp.prev_block_height = queried_challenge.prev_block_height;
                 pp.pos = *pos;
                 pp.vdf = *vdf;
-                pp.farmer_sk = m_farmer_sk;
+                pp.farmer_sk = farmer_sk;
                 pp.reward_dest = m_reward_dest;
                 try {
                     m_client.SubmitProof(pp);
@@ -317,8 +331,8 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
             return;
         }
         if (!m_current_challenge.IsNull()) {
-            ptimelord_client->Calc(m_current_challenge, m_current_iters, chiapos::MakeBytes(m_farmer_pk),
-                                   m_prover.GetGroupHash(), m_prover.GetTotalSize());
+            ptimelord_client->Calc(m_current_challenge, m_current_iters, m_prover.GetGroupHash(),
+                                   m_prover.GetTotalSize());
         }
     });
     ptimelord_client->SetErrorHandler(
@@ -370,11 +384,10 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
     // before we get in the loop, we need to send the request to timelord if it is running
     if (m_pthread_timelord) {
         PLOGD << "request proof from timelord";
-        auto farmer_pk = chiapos::MakeBytes(m_farmer_pk);
-        asio::post(m_ioc, [this, current_challenge, iters, farmer_pk, group_hash, total_size]() {
+        asio::post(m_ioc, [this, current_challenge, iters, group_hash, total_size]() {
             for (auto desc : m_timelords) {
                 if (!desc.second.reconnecting && desc.second.pclient) {
-                    desc.second.pclient->Calc(current_challenge, iters, farmer_pk, group_hash, total_size);
+                    desc.second.pclient->Calc(current_challenge, iters, group_hash, total_size);
                 }
             }
         });

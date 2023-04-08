@@ -26,7 +26,10 @@ public:
 
     std::vector<chiapos::QualityStringPack> GetQualityStrings(uint256 const& challenge, int bits_of_filter) const;
 
-    static bool QueryFullProof(Path const& plot_path, uint256 const& challenge, int index, chiapos::Bytes& out);
+    void RevokeByFarmerPk(chiapos::PubKey const& farmer_pk);
+
+    static bool QueryFullProof(Path const& plot_path, uint256 const& challenge, int index, chiapos::Bytes& out,
+                               chiapos::PubKey& out_farmer_pk);
 
     static bool ReadPlotMemo(Path const& plot_file_path, chiapos::PlotMemo& out);
 

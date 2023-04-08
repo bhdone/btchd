@@ -158,8 +158,26 @@ std::vector<chiapos::QualityStringPack> Prover::GetQualityStrings(uint256 const&
     return res;
 }
 
-bool Prover::QueryFullProof(Path const& plot_path, uint256 const& challenge, int index, chiapos::Bytes& out) {
+void Prover::RevokeByFarmerPk(chiapos::PubKey const& farmer_pk) {
+    auto it_rm = std::remove_if(std::begin(m_plotter_files), std::end(m_plotter_files),
+                                [&farmer_pk](chiapos::CPlotFile const& plot_file) -> bool {
+                                    chiapos::PlotMemo memo;
+                                    plot_file.ReadMemo(memo);
+                                    assert(memo.farmer_pk.size() == farmer_pk.size());
+                                    return (chiapos::MakeArray<chiapos::PK_LEN>(memo.farmer_pk) == farmer_pk);
+                                });
+    m_plotter_files.erase(it_rm, std::end(m_plotter_files));
+}
+
+bool Prover::QueryFullProof(Path const& plot_path, uint256 const& challenge, int index, chiapos::Bytes& out,
+                            chiapos::PubKey& out_farmer_pk) {
     chiapos::CPlotFile plotFile(plot_path.string());
+    chiapos::PlotMemo memo;
+    if (!plotFile.ReadMemo(memo)) {
+        throw std::runtime_error(tinyformat::format("cannot read memo from plot file: %s", plot_path));
+    }
+    assert(memo.farmer_pk.size() == out_farmer_pk.size());
+    memcpy(out_farmer_pk.data(), memo.farmer_pk.data(), out_farmer_pk.size());
     return plotFile.GetFullProof(challenge, index, out);
 }
 

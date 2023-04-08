@@ -1,13 +1,12 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
-#include <chiapos/kernel/utils.h>
-#include <chiapos/kernel/vdf.h>
-#include <gtest/gtest.h>
+
 #include <plog/Appenders/ConsoleAppender.h>
 #include <plog/Appenders/RollingFileAppender.h>
 #include <plog/Formatters/TxtFormatter.h>
 #include <plog/Init.h>
 #include <plog/Log.h>
+
 #include <uint256.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
@@ -15,6 +14,7 @@
 #include <vdf_computer.h>
 
 #include <boost/asio.hpp>
+
 #include <chrono>
 #include <cstdint>
 #include <cxxopts.hpp>
@@ -31,16 +31,19 @@
 #include <subsidy_utils.h>
 
 #include <chiapos/bhd_types.h>
-
-#include "chiapos_miner.h"
-#include "config.h"
-#include "keyman.h"
-#include "prover.h"
-#include "rpc_client.h"
-#include "test1.h"
-#include "tools.h"
-
 #include <chiapos/timelord_cli/timelord_client.h>
+
+#include <chiapos/kernel/utils.h>
+#include <chiapos/kernel/vdf.h>
+#include <chiapos/kernel/calc_diff.h>
+
+#include <chiapos/miner/keyman.h>
+#include <chiapos/miner/rpc_client.h>
+#include <chiapos/miner/http_client.h>
+#include <chiapos/miner/config.h>
+#include <chiapos/miner/prover.h>
+#include <chiapos/miner/tools.h>
+#include <chiapos/miner/chiapos_miner.h>
 
 const std::function<std::string(char const*)> G_TRANSLATION_FUN = nullptr;
 
@@ -121,6 +124,7 @@ struct Arguments {
     // arguments for command `account`
     bool check;        // parameter to check status with commands `bind`, `deposit`
     int amount;        // set the amount to deposit
+    int index;         // the index for seed
     DepositTerm term;  // The term those BHD should be locked on chain
     chiapos::Bytes tx_id;
     std::string address;
@@ -131,6 +135,24 @@ struct Arguments {
 } g_args;
 
 miner::Config g_config;
+
+std::map<chiapos::PubKey, chiapos::SecreKey> ConvertSecureKeys(std::vector<std::string> const& seeds) {
+    std::map<chiapos::PubKey, chiapos::SecreKey> res;
+    for (std::string const& seed : seeds) {
+        keyman::Wallet wallet(seed);
+        auto sk = wallet.GetFarmerKey(0);
+        res[sk.GetPublicKey()] = sk.GetPrivateKey();
+    }
+    return res;
+}
+
+keyman::Key GetSelectedKeyFromSeeds() {
+    if (miner::g_args.index >= miner::g_config.GetSeeds().size()) {
+        throw std::runtime_error("arg `index` is out of range, check settings for your seeds to ensure it is correct");
+    }
+    keyman::Wallet wallet(miner::g_config.GetSeeds()[miner::g_args.index]);
+    return wallet.GetFarmerKey(0);
+}
 
 std::unique_ptr<CChainParams const> g_chainparams;
 
@@ -167,7 +189,7 @@ int HandleCommand_Mining() {
     miner::Prover prover(miner::StrListToPathList(miner::g_config.GetPlotPath()), miner::g_config.GetAllowedKs());
     std::unique_ptr<miner::RPCClient> pclient = tools::CreateRPCClient(miner::g_config, miner::g_args.cookie_path);
     // Start mining
-    miner::Miner miner(*pclient, prover, miner::g_config.GetFarmerSk(), miner::g_config.GetFarmerPk(),
+    miner::Miner miner(*pclient, prover, miner::ConvertSecureKeys(miner::g_config.GetSeeds()),
                        miner::g_config.GetRewardDest(), miner::g_args.difficulty_constant_factor_bits);
     // do we have timelord service
     auto timelord_endpoints = miner::g_config.GetTimelordEndpoints();
@@ -190,7 +212,8 @@ int HandleCommand_Bind() {
         }
         return 0;
     }
-    chiapos::Bytes tx_id = pclient->BindPlotter(miner::g_config.GetRewardDest(), miner::g_config.GetFarmerSk());
+    chiapos::Bytes tx_id =
+            pclient->BindPlotter(miner::g_config.GetRewardDest(), miner::GetSelectedKeyFromSeeds().GetPrivateKey());
     PLOG_INFO << "tx id: " << chiapos::BytesToHex(tx_id);
     return 0;
 }
@@ -272,7 +295,8 @@ int HandleCommand_Withdraw() {
 
 int HandleCommand_MiningRequirement() {
     std::unique_ptr<miner::RPCClient> pclient = tools::CreateRPCClient(miner::g_config, miner::g_args.cookie_path);
-    auto req = pclient->QueryMiningRequirement(miner::g_config.GetRewardDest(), miner::g_config.GetFarmerPk());
+    auto req = pclient->QueryMiningRequirement(miner::g_config.GetRewardDest(),
+                                               miner::GetSelectedKeyFromSeeds().GetPublicKey());
     int const PREFIX_WIDTH = 14;
     std::cout << std::setw(PREFIX_WIDTH) << "mined: " << std::setw(15)
               << tinyformat::format("%d/%d", req.mined_count, req.total_count) << " BLK" << std::endl;
@@ -456,8 +480,10 @@ int main(int argc, char** argv) {
             ("term", "The term of those BHD will be locked on chain (noterm, term1, term2, term3)",
              cxxopts::value<std::string>()->default_value("noterm"))  // --term
             ("txid", "The transaction id, it should be provided with command: withdraw, retarget",
-             cxxopts::value<std::string>()->default_value(""))                                          // --txid
-            ("amount", "The amount to be deposit", cxxopts::value<int>()->default_value("0"))           // --amount
+             cxxopts::value<std::string>()->default_value(""))                                 // --txid
+            ("amount", "The amount to be deposit", cxxopts::value<int>()->default_value("0"))  // --amount
+            ("index", "The index of the seed from seeds array parsed from config.json",
+             cxxopts::value<int>()->default_value("0"))                                                 // --index
             ("address", "The address for retarget or related commands", cxxopts::value<std::string>())  // --address
             ("dcf-bits", "Difficulty constant factor bits",
              cxxopts::value<int>()->default_value(
@@ -522,6 +548,7 @@ int main(int argc, char** argv) {
     miner::g_args.check = result["check"].as<bool>();
     miner::g_args.valid_only = result["valid"].as<bool>();
     miner::g_args.amount = result["amount"].as<int>();
+    miner::g_args.index = result["index"].as<int>();
     miner::g_args.term = miner::DepositTermFromString(result["term"].as<std::string>());
     if (result.count("txid")) {
         miner::g_args.tx_id = chiapos::BytesFromHex(result["txid"].as<std::string>());

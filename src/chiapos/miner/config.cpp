@@ -14,7 +14,11 @@ namespace miner {
 std::string Config::ToJsonString() const {
     UniValue root(UniValue::VOBJ);
     root.pushKV("reward", m_reward_dest);
-    root.pushKV("seed", m_seed);
+    UniValue seeds(UniValue::VARR);
+    for (std::string const& seed : m_seeds) {
+        seeds.push_back(seed);
+    }
+    root.pushKV("seed", seeds);
     root.pushKV("testnet", m_testnet);
     root.pushKV("noproxy", m_no_proxy);
 
@@ -105,11 +109,18 @@ void Config::ParseFromJsonString(std::string const& json_str) {
         }
     }
 
-    if (root.exists("seed") && root["seed"].isStr()) {
-        m_seed = root["seed"].get_str();
+    if (root.exists("seed")) {
+        if (root["seed"].isStr()) {
+            std::string seed = root["seed"].get_str();
+            m_seeds.push_back(std::move(seed));
+        } else if (root["seed"].isArray()) {
+            for (auto const& val : root["seed"].getValues()) {
+                m_seeds.push_back(val.get_str());
+            }
+        }
     }
 
-    if (m_seed.empty()) {
+    if (m_seeds.empty()) {
         throw std::runtime_error("field `seed` is empty");
     }
 
@@ -136,23 +147,11 @@ std::vector<std::string> const& Config::GetPlotPath() const { return m_plot_path
 
 std::string Config::GetRewardDest() const { return m_reward_dest; }
 
-std::string Config::GetSeed() const { return m_seed; }
+std::vector<std::string> Config::GetSeeds() const { return m_seeds; }
 
 bool Config::Testnet() const { return m_testnet; }
 
 bool Config::NoProxy() const { return m_no_proxy; }
-
-chiapos::SecreKey Config::GetFarmerSk() const {
-    keyman::Wallet wallet(m_seed, "");
-    keyman::Key key = wallet.GetFarmerKey(0);
-    return chiapos::MakeArray<chiapos::SK_LEN>(chiapos::MakeBytes(key.GetPrivateKey()));
-}
-
-chiapos::PubKey Config::GetFarmerPk() const {
-    keyman::Wallet wallet(m_seed, "");
-    keyman::Key key = wallet.GetFarmerKey(0);
-    return chiapos::MakeArray<chiapos::PK_LEN>(chiapos::MakeBytes(key.GetPublicKey()));
-}
 
 std::vector<std::string> Config::GetTimelordEndpoints() const { return m_timelord_endpoints; }
 

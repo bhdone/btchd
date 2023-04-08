@@ -56,7 +56,7 @@ public:
 
     PlotId GetPlotId() const;
 
-    bool ReadMemo(PlotMemo& outMemo);
+    bool ReadMemo(PlotMemo& outMemo) const;
 
     bool GetQualityString(uint256 const& challenge, std::vector<QualityStringPack>& out) const;
 
