@@ -24,6 +24,8 @@ public:
 
     uint256 GetGroupHash() const { return m_group_hash; }
 
+    int GetNumOfPlots() const { return m_plotter_files.size(); }
+
     std::vector<chiapos::QualityStringPack> GetQualityStrings(uint256 const& challenge, int bits_of_filter) const;
 
     void RevokeByFarmerPk(chiapos::PubKey const& farmer_pk);

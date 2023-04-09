@@ -244,8 +244,8 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod pa
             const SendCoinsRecipient &rcp = recipients[0];
             // Passphrase only
             int nTipHeight = m_wallet->chain().lock()->getHeight().get_value_or(0);
-            std::string passphrase = rcp.plotterPassphrase.toStdString();
-            keyman::Wallet wallet(passphrase);
+            std::string mnemonic = rcp.plotterPassphrase.toStdString();
+            keyman::Wallet wallet(mnemonic, "");
             auto farmerPk = wallet.GetFarmerKey(0);
             auto farmerSk = farmerPk.GetPrivateKey();
             vecSend.push_back({GetBindChiaPlotterScriptForDestination(coinControl.m_pick_dest, chiapos::CKey(farmerSk), nTipHeight + rcp.plotterDataAliveHeight)});

@@ -215,8 +215,8 @@ int Miner::Run() {
                         m_prover.RevokeByFarmerPk(farmer_pk);
                         PLOGE << tinyformat::format(
                                 "No corresponding secure key can be found for farmer public-key: %s, the related plots "
-                                "are removed",
-                                chiapos::BytesToHex(chiapos::MakeBytes(farmer_pk)));
+                                "are removed, total %d plot(s) remain",
+                                chiapos::BytesToHex(chiapos::MakeBytes(farmer_pk)), m_prover.GetNumOfPlots());
                         m_state = State::FindPoS;
                         continue;
                     }

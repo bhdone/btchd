@@ -139,9 +139,13 @@ miner::Config g_config;
 std::map<chiapos::PubKey, chiapos::SecreKey> ConvertSecureKeys(std::vector<std::string> const& seeds) {
     std::map<chiapos::PubKey, chiapos::SecreKey> res;
     for (std::string const& seed : seeds) {
-        keyman::Wallet wallet(seed);
+        keyman::Wallet wallet(seed, "");
         auto sk = wallet.GetFarmerKey(0);
         res[sk.GetPublicKey()] = sk.GetPrivateKey();
+    }
+    for (auto const& sk_pair : res) {
+        PLOGI << tinyformat::format("Read farmer public-key: %s",
+                                    chiapos::BytesToHex(chiapos::MakeBytes(sk_pair.first)));
     }
     return res;
 }
@@ -150,7 +154,7 @@ keyman::Key GetSelectedKeyFromSeeds() {
     if (miner::g_args.index >= miner::g_config.GetSeeds().size()) {
         throw std::runtime_error("arg `index` is out of range, check settings for your seeds to ensure it is correct");
     }
-    keyman::Wallet wallet(miner::g_config.GetSeeds()[miner::g_args.index]);
+    keyman::Wallet wallet(miner::g_config.GetSeeds()[miner::g_args.index], "");
     return wallet.GetFarmerKey(0);
 }
 

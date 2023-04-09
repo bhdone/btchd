@@ -179,8 +179,6 @@ Key Wallet::GetLocalKey(Key const& master_sk, uint32_t index) { return master_sk
 
 Key Wallet::GetBackupKey(Key const& master_sk, uint32_t index) { return master_sk.DerivePath({12381, 8444, 4, index}); }
 
-Wallet::Wallet(std::string passphrase) : mnemonic_(Mnemonic::GenerateNew()), passphrase_(passphrase) {}
-
 Wallet::Wallet(Mnemonic mnemonic, std::string passphrase) : mnemonic_(std::move(mnemonic)), passphrase_(passphrase) {}
 
 Wallet::Wallet(std::string words, std::string passphrase) : mnemonic_(words), passphrase_(passphrase) {}

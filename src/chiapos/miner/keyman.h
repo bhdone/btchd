@@ -116,9 +116,6 @@ public:
 
     static Key GetBackupKey(Key const& master_sk, uint32_t index);
 
-    /// Create a new empty wallet object
-    explicit Wallet(std::string passphrase);
-
     /// Create a wallet object by importing a mnemonic
     Wallet(Mnemonic mnemonic, std::string passphrase);
 
