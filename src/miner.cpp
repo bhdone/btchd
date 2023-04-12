@@ -34,6 +34,7 @@
 #include <inttypes.h>
 #include <subsidy_utils.h>
 
+#include <chiapos/post.h>
 #include <chiapos/kernel/calc_diff.h>
 #include <chiapos/block_fields.h>
 #include <chiapos/kernel/utils.h>
@@ -315,12 +316,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewChiaBlock(const CBlockI
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
-    uint64_t nDifficultyPrev;
-    if (nHeight == params.BHDIP009Height || nHeight == params.BHDIP009PlotIdBitsOfFilterEnableOnHeight + 1) {
-        nDifficultyPrev = params.BHDIP009StartDifficulty;
-    } else {
-        nDifficultyPrev = pindexPrev->chiaposFields.nDifficulty;
-    }
+    uint64_t nDifficultyPrev = chiapos::GetChiaBlockDifficulty(pindexPrev, params);
 
     pblock->chiaposFields.posProof = posProof;
     pblock->chiaposFields.vdfProof = vdfProof;
@@ -328,16 +324,16 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewChiaBlock(const CBlockI
         chiapos::AdjustDifficulty(nDifficultyPrev, pblock->chiaposFields.GetTotalDuration(), params.BHDIP008TargetSpacing,
                                   params.BHDIP009DifficultyChangeMaxFactor);
 
-    LogPrintf("%s: difficulty=%ld, farmer-pk: %s, duration: %ld, iters: %ld\n", __func__, pblock->chiaposFields.nDifficulty,
+    LogPrint(BCLog::POC, "%s: difficulty=%ld, farmer-pk: %s, duration: %ld, iters: %ld\n", __func__, pblock->chiaposFields.nDifficulty,
               chiapos::BytesToHex(pblock->chiaposFields.posProof.vchFarmerPk), pblock->chiaposFields.GetTotalDuration(),
               pblock->chiaposFields.GetTotalIters());
 
     // Make a signature by using farmer private-key for the block
     uint256 unsignedHash = pblock->GetUnsignaturedHash();
-    LogPrintf("%s: making signature hash: %s\n", __func__, unsignedHash.GetHex());
+    LogPrint(BCLog::POC, "%s: making signature hash: %s\n", __func__, unsignedHash.GetHex());
     pblock->chiaposFields.vchFarmerSignature = chiapos::MakeBytes(farmerSk.Sign(chiapos::MakeBytes(unsignedHash)));
 
-    LogPrintf("CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx,
+    LogPrint(BCLog::POC, "CreateNewBlock(): block weight: %u txs: %u fees: %ld sigops %d\n", GetBlockWeight(*pblock), nBlockTx,
         nFees, nBlockSigOpsCost);
 
     int64_t nTime2 = GetTimeMicros();

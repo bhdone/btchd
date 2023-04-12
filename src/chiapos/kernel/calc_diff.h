@@ -15,7 +15,7 @@ int const MIN_K = 25;
 int const MAX_K = 50;
 
 int const NUMBER_OF_ZEROS_BITS_FOR_FILTER = 9;
-int const NUMBER_OF_ZEROS_BITS_FOR_FILTER_TESTNET = 5;
+int const NUMBER_OF_ZEROS_BITS_FOR_FILTER_TESTNET = 2;
 
 constexpr double DIFFICULTY_CHANGE_MAX_FACTOR = 3;
 constexpr double UI_ACTUAL_SPACE_CONSTANT_FACTOR = 0.762;
@@ -37,12 +37,12 @@ uint64_t AdjustDifficulty(uint64_t prev_block_difficulty, uint64_t curr_block_du
 
 uint256 GenerateMixedQualityString(CPosProof const& posProof);
 
-uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_t difficulty,
+uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_t difficulty, int bits_filter,
                                     int difficulty_constant_factor_bits, uint8_t k, uint64_t base_iters,
                                     double* quality_in_plot = nullptr, arith_uint256* quality = nullptr);
 
 arith_uint256 CalculateNetworkSpace(uint64_t difficulty, uint64_t iters, int difficulty_constant_factor_bits,
-                                    int bits_of_filter);
+                                    int bits_filter);
 
 }  // namespace chiapos
 

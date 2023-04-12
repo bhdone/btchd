@@ -71,22 +71,16 @@ static UniValue queryChallenge(JSONRPCRequest const& request) {
 
     UniValue res(UniValue::VOBJ);
     int nTargetHeight = pindexPrev->nHeight + 1;
-    if (nTargetHeight == params.BHDIP009Height || nTargetHeight == params.BHDIP009PlotIdBitsOfFilterEnableOnHeight + 1) {
-        if (nTargetHeight == params.BHDIP009Height) {
-            Bytes initialVdfProof(100, 0);
-            res.pushKV("challenge", MakeChallenge(pindexPrev->GetBlockHash(), initialVdfProof).GetHex());
-        } else {
-            uint256 challenge = MakeChallenge(pindexPrev->GetBlockHash(), pindexPrev->chiaposFields.vdfProof.vchProof);
-            res.pushKV("challenge", challenge.GetHex());
-        }
-        res.pushKV("difficulty", params.BHDIP009StartDifficulty);
+    res.pushKV("difficulty", GetDifficultyForNextIterations(pindexPrev, params));
+    if (nTargetHeight == params.BHDIP009Height) {
+        Bytes initialVdfProof(100, 0);
+        res.pushKV("challenge", MakeChallenge(pindexPrev->GetBlockHash(), initialVdfProof).GetHex());
         res.pushKV("prev_vdf_iters", params.BHDIP009StartBlockIters);
         res.pushKV("prev_vdf_duration", params.BHDIP008TargetSpacing);
     } else {
         // We need to read the challenge from last block
         uint256 challenge = MakeChallenge(pindexPrev->GetBlockHash(), pindexPrev->chiaposFields.vdfProof.vchProof);
         res.pushKV("challenge", challenge.GetHex());
-        res.pushKV("difficulty", pindexPrev->chiaposFields.nDifficulty);
         res.pushKV("prev_vdf_iters", pindexPrev->chiaposFields.vdfProof.nVdfIters);
         res.pushKV("prev_vdf_duration", pindexPrev->chiaposFields.vdfProof.nVdfDuration);
     }
@@ -94,11 +88,7 @@ static UniValue queryChallenge(JSONRPCRequest const& request) {
     res.pushKV("prev_block_height", pindexPrev->nHeight);
     res.pushKV("target_height", nTargetHeight);
     res.pushKV("target_duration", params.BHDIP008TargetSpacing);
-    if (nTargetHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight) {
-        res.pushKV("filter_bits", 0);
-    } else {
-        res.pushKV("filter_bits", params.BHDIP009PlotIdBitsOfFilter);
-    }
+    res.pushKV("filter_bits", nTargetHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter);
     res.pushKV("base_iters", params.BHDIP009BaseIters);
     return res;
 }
@@ -227,7 +217,7 @@ static UniValue submitProof(JSONRPCRequest const& request) {
         LOCK(cs_main);
 
         CBlockIndex* pindexPrev = LookupBlockIndex(hashPrevBlock);
-        nDifficulty = AdjustDifficulty(pindexPrev->chiaposFields.nDifficulty, nTotalDuration,
+        nDifficulty = AdjustDifficulty(GetChiaBlockDifficulty(pindexPrev, params), nTotalDuration,
                                        params.BHDIP008TargetSpacing, params.BHDIP009DifficultyChangeMaxFactor);
     }
 

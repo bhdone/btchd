@@ -395,7 +395,6 @@ public:
     }
 };
 
-arith_uint256 CalcChiaBlockWork(chiapos::CBlockFields const& fields);
 arith_uint256 GetBlockWork(const CBlockHeader& header, const Consensus::Params&);
 arith_uint256 GetBlockWork(const CBlockIndex& block, const Consensus::Params&);
 /** Return the time it would take to redo the work difference between from and to, assuming the current hashrate corresponds to the difficulty at tip, in seconds. */

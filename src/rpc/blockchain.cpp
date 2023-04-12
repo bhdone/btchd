@@ -50,6 +50,7 @@
 #include <mutex>
 #include <map>
 
+#include <chiapos/post.h>
 #include <chiapos/kernel/utils.h>
 #include <chiapos/kernel/pos.h>
 
@@ -222,7 +223,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
         result.pushKV("chia_totalIters", blockindex->chiaposFields.GetTotalIters());
         result.pushKV("chia_duration", blockindex->chiaposFields.GetTotalDuration());
         result.pushKV("chia_difficulty", blockindex->chiaposFields.nDifficulty);
-        result.pushKV("chia_blockWork", CalcChiaBlockWork(blockindex->chiaposFields).GetLow64());
+        result.pushKV("chia_blockWork", chiapos::GetChiaBlockDifficulty(blockindex, params));
         result.pushKV("chia_farmerSignature", chiapos::BytesToHex(blockindex->chiaposFields.vchFarmerSignature));
     }
 

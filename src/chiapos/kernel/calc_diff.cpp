@@ -47,14 +47,14 @@ uint256 GenerateMixedQualityString(CPosProof const& posProof) {
                                            posProof.challenge, posProof.vchProof);
 }
 
-uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_t difficulty,
+uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_t difficulty, int bits_filter,
                                     int difficulty_constant_factor_bits, uint8_t k, uint64_t base_iters,
                                     double* quality_in_plot, arith_uint256* quality) {
     assert(difficulty > 0);
     auto l = lower_bits(mixed_quality_string, QualityBaseBits);
     auto h = Pow2(QualityBaseBits);
     auto size = expected_plot_size<arith_uint256>(k);
-    auto iters = difficulty * Pow2(difficulty_constant_factor_bits) * l / (size * h) + base_iters;
+    auto iters = difficulty * Pow2(difficulty_constant_factor_bits) * l / Pow2(bits_filter) / (size * h) + base_iters;
     if (quality_in_plot) {
         *quality_in_plot = static_cast<double>(l.GetLow64()) / static_cast<double>(h.GetLow64());
     }
@@ -68,10 +68,10 @@ uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_
 }
 
 arith_uint256 CalculateNetworkSpace(uint64_t difficulty, uint64_t iters, int difficulty_constant_factor_bits,
-                                    int bits_of_filter) {
+                                    int bits_filter) {
     arith_uint256 diff_iters = static_cast<double>(difficulty) / iters * UI_ACTUAL_SPACE_CONSTANT_FACTOR;
     arith_uint256 additional_difficulty_constant = Pow2(difficulty_constant_factor_bits);
-    arith_uint256 eligible_plots_filter_multiplier = Pow2(bits_of_filter);
+    arith_uint256 eligible_plots_filter_multiplier = Pow2(bits_filter);
     return diff_iters * additional_difficulty_constant * eligible_plots_filter_multiplier;
 }
 

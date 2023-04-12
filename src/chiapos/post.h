@@ -38,6 +38,10 @@ bool ReleaseBlock(std::shared_ptr<CBlock> pblock, CChainParams const& params);
 
 bool IsTheChainReadyForChiapos(CBlockIndex const* pindex, Consensus::Params const& params);
 
+uint64_t GetChiaBlockDifficulty(CBlockIndex const* pindex, Consensus::Params const& params);
+
+uint64_t GetDifficultyForNextIterations(CBlockIndex const* pindex, Consensus::Params const& params);
+
 }  // namespace chiapos
 
 #endif

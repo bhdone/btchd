@@ -112,6 +112,7 @@ struct Params {
     int BHDIP009FundRoyaltyForLowMortgage;
     uint64_t BHDIP009StartDifficulty;
     uint64_t BHDIP009StartBlockIters;
+    int BHDIP009DifficultyEvalWindow;
     int BHDIP009DifficultyConstantFactorBits;
     int BHDIP009PlotIdBitsOfFilter;
     int BHDIP009PlotIdBitsOfFilterEnableOnHeight;

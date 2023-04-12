@@ -43,7 +43,7 @@ bool IsZeroBytes(Bytes const& bytes) {
 }
 
 chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::QualityStringPack> const& qs_pack_vec,
-                                                     uint256 const& challenge, uint64_t difficulty,
+                                                     uint256 const& challenge, uint64_t difficulty, int bits_filter,
                                                      int difficulty_constant_factor_bits, int base_iters) {
     assert(!qs_pack_vec.empty());
     chiapos::QualityStringPack res;
@@ -56,9 +56,9 @@ chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::Qualit
         uint256 mixed_quality_string = chiapos::GetMixedQualityString(quality_string, challenge);
         double quality_in_plot;
         arith_uint256 quality;
-        uint64_t iters =
-                chiapos::CalculateIterationsQuality(mixed_quality_string, difficulty, difficulty_constant_factor_bits,
-                                                    qs_pack.k, base_iters, &quality_in_plot, &quality);
+        uint64_t iters = chiapos::CalculateIterationsQuality(mixed_quality_string, difficulty, bits_filter,
+                                                             difficulty_constant_factor_bits, qs_pack.k, base_iters,
+                                                             &quality_in_plot, &quality);
         PLOGD << tinyformat::format("checking pos, quality_in_plot=%1.3f, quality=%e, iters=%lld, k=%d",
                                     quality_in_plot, quality.getdouble(), chiapos::MakeNumberStr(iters),
                                     (int)qs_pack.k);
@@ -78,17 +78,17 @@ chiapos::QualityStringPack QueryTheBestQualityString(std::vector<chiapos::Qualit
 }
 
 chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256 const& challenge, uint64_t difficulty,
-                                                         int difficulty_constant_factor_bits, int filter_bits,
+                                                         int difficulty_constant_factor_bits, int bits_filter,
                                                          int base_iters, chiapos::PubKey& out_farmer_pk,
                                                          std::string* out_plot_path) {
-    auto qs_pack_vec = prover.GetQualityStrings(challenge, filter_bits);
-    PLOG_INFO << "total " << qs_pack_vec.size() << " answer(s), filter_bits=" << filter_bits;
+    auto qs_pack_vec = prover.GetQualityStrings(challenge, bits_filter);
+    PLOG_INFO << "total " << qs_pack_vec.size() << " answer(s), filter_bits=" << bits_filter;
     if (qs_pack_vec.empty()) {
         // No prove can pass the filter
         return {};
     }
-    chiapos::QualityStringPack qs_pack =
-            QueryTheBestQualityString(qs_pack_vec, challenge, difficulty, difficulty_constant_factor_bits, base_iters);
+    chiapos::QualityStringPack qs_pack = QueryTheBestQualityString(qs_pack_vec, challenge, difficulty, bits_filter,
+                                                                   difficulty_constant_factor_bits, base_iters);
     Bytes quality_string = qs_pack.quality_str.ToBytes();
     uint256 mixed_quality_string = chiapos::GetMixedQualityString(quality_string, challenge);
     if (out_plot_path) {
@@ -100,8 +100,8 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
     }
     RPCClient::PosProof proof;
     proof.mixed_quality_string = mixed_quality_string;
-    proof.iters = chiapos::CalculateIterationsQuality(mixed_quality_string, difficulty, difficulty_constant_factor_bits,
-                                                      qs_pack.k, base_iters);
+    proof.iters = chiapos::CalculateIterationsQuality(mixed_quality_string, difficulty, bits_filter,
+                                                      difficulty_constant_factor_bits, qs_pack.k, base_iters);
     proof.challenge = challenge;
     proof.k = qs_pack.k;
     proof.plot_id = chiapos::MakeUint256(memo.plot_id);
@@ -114,7 +114,7 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
           << ", farmer-pk: " << chiapos::BytesToHex(memo.farmer_pk);
 #ifdef DEBUG
     bool verified = chiapos::VerifyPos(challenge, proof.local_pk, chiapos::MakeArray<chiapos::PK_LEN>(memo.farmer_pk),
-                                       proof.pool_pk_or_hash, proof.k, proof.proof, nullptr, filter_bits);
+                                       proof.pool_pk_or_hash, proof.k, proof.proof, nullptr, bits_filter);
     assert(verified);
 #endif
     return proof;

@@ -9,7 +9,9 @@
 #include <poc/poc.h>
 #include <script/standard.h>
 #include <validation.h>
-#include "arith_uint256.h"
+#include <arith_uint256.h>
+
+#include <chiapos/post.h>
 
 /**
  * CChain implementation
@@ -190,13 +192,6 @@ void CBlockIndex::BuildSkip()
         pskip = pprev->GetAncestor(GetSkipHeight(nHeight));
 }
 
-int const WORK_FACTOR = 10000000;
-
-arith_uint256 CalcChiaBlockWork(chiapos::CBlockFields const& fields)
-{
-    return fields.nDifficulty;
-}
-
 arith_uint256 GetBlockWork(const CBlockHeader& header, const Consensus::Params& params)
 {
     AssertLockHeld(cs_main);
@@ -208,7 +203,7 @@ arith_uint256 GetBlockWork(const CBlockHeader& header, const Consensus::Params& 
         }
         return (poc::TWO64 / header.nBaseTarget) * 100 + (header.vchSignature.empty() ? 0 : header.vchSignature.back()) % 100;
     }
-    return CalcChiaBlockWork(header.chiaposFields);
+    return pindex->chiaposFields.nDifficulty;
 }
 
 arith_uint256 GetBlockWork(const CBlockIndex& block, const Consensus::Params& params)
@@ -220,7 +215,7 @@ arith_uint256 GetBlockWork(const CBlockIndex& block, const Consensus::Params& pa
         }
         return (poc::TWO64 / block.nBaseTarget) * 100 + (block.vchSignature.empty() ? 0 : block.vchSignature.back()) % 100;
     }
-    return CalcChiaBlockWork(block.chiaposFields);
+    return block.chiaposFields.nDifficulty;
 }
 
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params& params)

@@ -177,7 +177,7 @@ TEST(Consensus, SteadyQualities) {
     uint256 qs = MakeRandUint256(0x55);
     uint64_t vdf_speed = 100000;
     for (int i = 0; i < N; ++i) {
-        uint64_t iters = CalculateIterationsQuality(qs, diff, DIFFICULTY_CONSTANT_FACTOR_BITS, 32, 0);
+        uint64_t iters = CalculateIterationsQuality(qs, diff, 0, DIFFICULTY_CONSTANT_FACTOR_BITS, 32, 0);
         // adjust difficulty
         uint64_t du = std::max<uint64_t>(iters / vdf_speed, 1);
         diff = AdjustDifficulty(diff, du, 60 * 3, 3.0);
@@ -195,7 +195,7 @@ TEST(Consensus, RandomQualities) {
         uint256 qs = MakeRandUint256();
         double q_in_plot;
         arith_uint256 quality;
-        uint64_t iters = CalculateIterationsQuality(qs, diff, DIFFICULTY_CONSTANT_FACTOR_BITS, 32, vdf_speed * 60,
+        uint64_t iters = CalculateIterationsQuality(qs, diff, 0, DIFFICULTY_CONSTANT_FACTOR_BITS, 32, vdf_speed * 60,
                                                     &q_in_plot, &quality);
         // adjust difficulty
         uint64_t du = std::max<uint64_t>(iters / vdf_speed, 1);
