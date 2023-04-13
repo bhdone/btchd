@@ -121,7 +121,6 @@ struct Params {
     int BHDIP009BaseIters;
     uint64_t BHDIP009MinNetspacePB;
     int BHDIP009TotalAmountUpgradeMultiply;
-    int BHDIP009PledgeCalcWindow;
     int BHDIP009PledgeRetargetMinHeights;
     double BHDIP009DifficultyChangeMaxFactor;
 
