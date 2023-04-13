@@ -12,6 +12,7 @@
 #include <key_io.h>
 #include <logging.h>
 #include <miner.h>
+#include <poc/poc.h>
 #include <rpc/protocol.h>
 #include <rpc/request.h>
 #include <threadinterrupt.h>
@@ -806,8 +807,9 @@ arith_uint256 CalculateAverageNetworkSpace(CBlockIndex *pindexCurr, Consensus::P
     arith_uint256 result;
     while (nCount > 0 && pindex->nHeight >= params.BHDIP009Height) {
         int nBitsOfFilter = pindex->nHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter;
-        auto netspace = chiapos::CalculateNetworkSpace(chiapos::GetChiaBlockDifficulty(pindex, params), pindex->chiaposFields.GetTotalIters(),
-                params.BHDIP009DifficultyConstantFactorBits, nBitsOfFilter);
+        auto netspace = chiapos::CalculateNetworkSpace(chiapos::GetChiaBlockDifficulty(pindex, params),
+                pindex->chiaposFields.GetTotalIters(), params.BHDIP009BaseIters, params.BHDIP009DifficultyConstantFactorBits,
+                nBitsOfFilter);
         LogPrint(BCLog::POC, "%s: calculated netspace %s on height %ld\n", __func__, chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())), pindex->nHeight);
         ++nActual;
         result += netspace;
@@ -820,54 +822,6 @@ arith_uint256 CalculateAverageNetworkSpace(CBlockIndex *pindexCurr, Consensus::P
         return 0;
     }
     return result / nActual;
-}
-
-int GetHeightForCurrentCalcWindow(int nMiningHeight, Consensus::Params const& params)
-{
-    assert(nMiningHeight > params.BHDIP009Height);
-    int nHeight = nMiningHeight - 1;
-    int lastCalcHeight = (nHeight - params.BHDIP009Height) / params.BHDIP009PledgeCalcWindow * params.BHDIP009PledgeCalcWindow + params.BHDIP009Height;
-    return lastCalcHeight;
-}
-
-PledgeParams CalculatePledgeParams(int nMiningHeight, Consensus::Params const& params) {
-    AssertLockHeld(cs_main);
-    if (nMiningHeight < params.BHDIP009Height) {
-        throw std::runtime_error("Invalid nHeight for calculating the pledge params!");
-    }
-    PledgeParams result;
-    result.nMiningHeight = nMiningHeight;
-    if (nMiningHeight == params.BHDIP009Height) {
-        result.nNetCapacityTB = params.BHDIP009MinNetspacePB * 1024;
-        result.supplied = GetTotalSupplyBeforeHeight(nMiningHeight, params);
-        return result;
-    }
-    result.nCalcHeight = GetHeightForCurrentCalcWindow(nMiningHeight, params);
-    static std::map<int, PledgeParams> cachedPledgeParams;
-    auto i = cachedPledgeParams.find(result.nCalcHeight);
-    if (i != std::end(cachedPledgeParams)) {
-        // Found
-        return i->second;
-    }
-    // the height is larger than the height of BHDIP009 hard-fork
-    CBlockIndex* pindexCurr = ChainActive()[result.nCalcHeight];
-    if (pindexCurr == nullptr) {
-        // the block index cannot be found, the chain is invalid or it is still synchronizing
-        throw std::runtime_error("invalid chain or it is still synchronizing, cannot calculate pledge params.");
-    }
-    auto netspace = CalculateAverageNetworkSpace(pindexCurr, params);
-    result.nNetCapacityTB = (netspace / 1024 / 1024 / 1024 / 1024).GetLow64();
-    // Fix the netspace to minimal netspace when it is smaller than minimal
-    if (result.nNetCapacityTB < params.BHDIP009MinNetspacePB * 1024) {
-        result.nNetCapacityTB = params.BHDIP009MinNetspacePB * 1024;
-    }
-    result.supplied = GetTotalSupplyBeforeHeight(result.nCalcHeight + 1, params);
-    // Fix the amount of total supplied
-    if (result.nCalcHeight >= params.BHDIP009Height) {
-        result.supplied += GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
-    }
-    cachedPledgeParams[result.nCalcHeight] = result; // Save the calculated params to cache
-    return result;
 }
 
 CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlotterBindData& bindData, int nMiningHeight, const CCoinsViewCache& view, int64_t* pMinerCapacity, CAmount* pOldMiningRequireBalance, CAmount nBurned, const Consensus::Params& params, int* pnMinedBlocks, int* pnTotalBlocks)
@@ -957,17 +911,16 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
 
     if (nMiningHeight >= params.BHDIP009Height) {
         CBlockIndex* pindex = ::ChainActive().Tip();
-        PledgeParams pledgeParams = CalculatePledgeParams(nMiningHeight, params);
-        pledgeParams.supplied -= nBurned;
-        LogPrint(BCLog::POC, "%s: Average network space %1.6f(Tib) from height: %ld, total supplied: %s BHD (burned: %s BHD), params(difficulty=%ld, iters=%ld, DCF(bits)=%ld, Filter(bits)=%ld)\n", __func__,
-                chiapos::FormatNumberStr(std::to_string(pledgeParams.nNetCapacityTB)),
-                pledgeParams.nCalcHeight,
-                chiapos::FormatNumberStr(std::to_string(pledgeParams.supplied / COIN)),
+        CAmount nTotalSupplied = GetTotalSupplyBeforeBHDIP009(params) - nBurned;
+        auto netspace = poc::CalculateAverageNetworkSpace(pindex, params);
+        LogPrint(BCLog::POC, "%s: Average network space %1.6f(Tib), total supplied: %s BHD (burned: %s BHD), params(difficulty=%ld, iters=%ld, DCF(bits)=%ld, Filter(bits)=%ld)\n", __func__,
+                chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())),
+                chiapos::FormatNumberStr(std::to_string(nTotalSupplied / COIN)),
                 chiapos::FormatNumberStr(std::to_string(nBurned / COIN)),
                 chiapos::GetChiaBlockDifficulty(pindex, params),
                 chiapos::FormatNumberStr(std::to_string(pindex->chiaposFields.GetTotalIters())),
                 params.BHDIP009DifficultyConstantFactorBits, params.BHDIP009PlotIdBitsOfFilter);
-        nNetCapacityTB = pledgeParams.nNetCapacityTB;
+        nNetCapacityTB = chiapos::MakeNumberTB(netspace.GetLow64());
         // Restrict fund addresses will not be able to do a full mortgage
         std::string generatorAddress = EncodeDestination(CTxDestination((ScriptHash)generatorAccountID));
         auto it_fund = std::find(std::begin(params.BHDIP009FundAddresses), std::end(params.BHDIP009FundAddresses), generatorAddress);
@@ -981,7 +934,7 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
             nMinerCapacityTB = std::max((nNetCapacityTB * nMinedCount) / nBlockCount, (int64_t) 1);
         }
         if (pMinerCapacity != nullptr) *pMinerCapacity = nMinerCapacityTB;
-        auto reqBalance = arith_uint256(pledgeParams.supplied) * nMinedCount / nBlockCount;
+        auto reqBalance = arith_uint256(nTotalSupplied) * nMinedCount / nBlockCount;
         assert(reqBalance <= std::numeric_limits<int64_t>::max());
         CAmount nMiningRequireBalance = reqBalance.GetLow64();
         LogPrint(BCLog::POC, "%s: mining require balance=%ld (%s BHD), miner capacity=%s TB, mined=%ld/%ld, isFoundationAddr=%s\n", __func__, nMiningRequireBalance, chiapos::FormatNumberStr(std::to_string(nMiningRequireBalance / COIN)), chiapos::FormatNumberStr(std::to_string(nMinerCapacityTB)), nMinedCount, nBlockCount, (isFoundationAddr ? "yes" : "no"));

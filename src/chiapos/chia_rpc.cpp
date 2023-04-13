@@ -7,6 +7,7 @@
 #include <rpc/util.h>
 #include <util/strencodings.h>
 #include <validation.h>
+#include <subsidy_utils.h>
 
 #include <cstdint>
 #include <stdexcept>
@@ -236,19 +237,16 @@ static UniValue queryNetspace(JSONRPCRequest const& request) {
     LOCK(cs_main);
 
     auto params = Params().GetConsensus();
-    auto pledgeParams = poc::CalculatePledgeParams(::ChainActive().Height(), params);
+    CAmount nTotalSupplied = GetTotalSupplyBeforeBHDIP009(params);
 
     CBlockIndex* pindex = ::ChainActive().Tip();
     auto netspace = poc::CalculateAverageNetworkSpace(pindex, params);
-    auto netspaceTB = netspace / 1000 / 1000 / 1000 / 1000;
 
     UniValue res(UniValue::VOBJ);
-    res.pushKV("netCapacityTB", pledgeParams.nNetCapacityTB);
-    res.pushKV("calculatedOnHeight", pledgeParams.nCalcHeight);
-    res.pushKV("supplied", pledgeParams.supplied / COIN);
-    res.pushKV("netspace", chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())));
-    res.pushKV("netspace_TB", chiapos::MakeNumberStr(chiapos::MakeNumberTB(netspace.GetLow64())));
-    res.pushKV("netspace_PB", chiapos::MakeNumberStr(chiapos::MakeNumberTB(netspace.GetLow64()) / 1000));
+    res.pushKV("supplied", nTotalSupplied);
+    res.pushKV("supplied(BHD)", MakeNumberStr(nTotalSupplied / COIN));
+    res.pushKV("netspace", netspace.GetLow64());
+    res.pushKV("netspace(Bytes)", chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())));
 
     return res;
 }
@@ -283,8 +281,8 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
     CAmount nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &params.BHDIP009PledgeTerms);
     int nMinedCount, nTotalCount, nTargetHeight = pindex->nHeight + 1;
     CAmount nReq = poc::GetMiningRequireBalance(accountID, bindData, nTargetHeight, view, nullptr, nullptr, nBurned, params, &nMinedCount, &nTotalCount);
-    auto pledgeParams = poc::CalculatePledgeParams(nTargetHeight, params);
     CAmount nAccumulate = GetBlockAccumulateSubsidy(pindex, params);
+    CAmount nTotalSupplied = GetTotalSupplyBeforeBHDIP009(params);
 
     UniValue res(UniValue::VOBJ);
     res.pushKV("farmer-pk", chiapos::BytesToHex(vchFarmerPk));
@@ -293,7 +291,7 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
     res.pushKV("count", nTotalCount);
     res.pushKV("burned", nBurned);
     res.pushKV("accumulate", nAccumulate);
-    res.pushKV("supplied", pledgeParams.supplied);
+    res.pushKV("supplied", nTotalSupplied);
     res.pushKV("height", nTargetHeight);
 
     return res;

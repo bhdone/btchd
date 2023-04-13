@@ -229,14 +229,6 @@ CTxDestination AddMiningSignaturePrivkey(const CKey& key);
  */
 std::vector<CTxDestination> GetMiningSignatureAddresses();
 
-struct PledgeParams {
-    int nMiningHeight;
-    int nCalcHeight;
-    uint64_t nNetCapacityTB;
-    CAmount supplied;
-};
-PledgeParams CalculatePledgeParams(int nMiningHeight, Consensus::Params const& params);
-
 arith_uint256 CalculateAverageNetworkSpace(CBlockIndex *pindexCurr, Consensus::Params const& params);
 
 }
