@@ -808,8 +808,7 @@ arith_uint256 CalculateAverageNetworkSpace(CBlockIndex *pindexCurr, Consensus::P
     while (nCount > 0 && pindex->nHeight >= params.BHDIP009Height) {
         int nBitsOfFilter = pindex->nHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter;
         auto netspace = chiapos::CalculateNetworkSpace(chiapos::GetChiaBlockDifficulty(pindex, params),
-                pindex->chiaposFields.GetTotalIters(), params.BHDIP009BaseIters, params.BHDIP009DifficultyConstantFactorBits,
-                nBitsOfFilter);
+                pindex->chiaposFields.GetTotalIters(), params.BHDIP009DifficultyConstantFactorBits, nBitsOfFilter);
         LogPrint(BCLog::POC, "%s: calculated netspace %s on height %ld\n", __func__, chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())), pindex->nHeight);
         ++nActual;
         result += netspace;
