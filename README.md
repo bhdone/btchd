@@ -5,22 +5,23 @@ https://bhd.one
 
 The Crypto Currency System Based on CPoC.
 
-Pay Tribute to Cryptocurrency Pioneers [Bitcoin](https://bitcoincore.org)
-and [Burst](https://www.burst-coin.org)!
+Pay Tribute to Cryptocurrency Pioneers [Bitcoin](https://bitcoincore.org),
+[Burst](https://www.burst-coin.org) and [Chia](https://chia.net)!
 
 About BitcoinHD
 ---------------
 
-- BitcoinHD is a new type of crypto currency based on Proof of Capacity.
+- BitcoinHD is a new type of crypto currency based on Proof of Capacity and Proof of Space and Time(Chia).
 - BitcoinHD uses an upgraded version of cPOC mining (Conditioned Proof of Capacity), with a perfect economic model and consensus algorithm.
+- BitcoinHD uses Chia's PoST consensus protocol after upgrade
 - BitcoinHD uses hard disk as the participant of consensus, which reduces power consumption.
 - BitcoinHD mining lowers the entry barriers, and makes the coin generation process more decentralized, secure and reliable.
-- Compared with POW mining, cPOC mining saves energy, consumes much less power, has lower noise, no heat, and is anti-ASIC. cPOC-mining-based BitcoinHD can realize the original intention of Satoshi Nakamoto ---- everyone can become a miner.
+- Compared with POW mining, cPOC and PoST mining saves energy, consumes much less power, has lower noise, no heat, and is anti-ASIC. cPOC-mining-based BitcoinHD can realize the original intention of Satoshi Nakamoto ---- everyone can become a miner.
 - Lowered the cost of credit, increased the strength and breadth of consensus, and improved the security of the consensus architecture
 
 For more information, as well as an immediately useable, binary version of
 the BitcoinHD Core software, see https://bhd.one/#wallet, or read the
-[original whitepaper](https://bhd.one/BHD-Whitepaper2.0.pdf).
+[original whitepaper](https://github.com/bhdone/white-paper).
 
 License
 -------
@@ -32,7 +33,7 @@ Development Process
 -------------------
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
-completely stable. [Tags](https://github.com/btchd/btchd/tags) are created
+completely stable. [Tags](https://github.com/bhdone/btchd/tags) are created
 regularly to indicate new official, stable release versions of BitcoinHD Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
