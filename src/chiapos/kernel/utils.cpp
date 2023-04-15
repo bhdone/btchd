@@ -122,8 +122,6 @@ std::string FormatNumberStr(std::string const& num_str) {
     return res;
 }
 
-uint64_t MakeNumberTB(uint64_t value) { return value / 1000 / 1000 / 1000 / 1000; }
-
 std::string MakeNumberStr(uint64_t value) { return FormatNumberStr(std::to_string(value)); }
 
 std::tuple<HostEntry, bool> ParseHostEntryStr(std::string const& entry_str, uint16_t default_port) {

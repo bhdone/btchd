@@ -114,7 +114,10 @@ Bytes MakeSHA256(T&&... params) {
 
 std::string FormatNumberStr(std::string const& num_str);
 
-uint64_t MakeNumberTB(uint64_t value);
+template <typename T>
+T MakeNumberTB(T const& value) {
+    return value / 1000 / 1000 / 1000 / 1000;
+}
 
 std::string MakeNumberStr(uint64_t value);
 
