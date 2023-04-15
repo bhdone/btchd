@@ -3,13 +3,12 @@
 #include <chiapos/kernel/calc_diff.h>
 #include <chiapos/kernel/pos.h>
 #include <chiapos/kernel/utils.h>
+#include <chiapos/kernel/bls_key.h>
 
 #include <plog/Log.h>
 #include <tinyformat.h>
 
 #include <algorithm>
-
-#include "keyman.h"
 
 #ifdef _WIN32
 
@@ -147,9 +146,9 @@ bool Prover::ReadPlotMemo(Path const& plot_file_path, chiapos::PlotMemo& out) {
 }
 
 chiapos::Bytes Prover::CalculateLocalPkBytes(chiapos::Bytes const& local_master_sk) {
-    keyman::Key sk(chiapos::MakeArray<keyman::Key::PRIV_KEY_LEN>(local_master_sk));
-    auto local_sk = keyman::Wallet::GetLocalKey(sk, 0);
-    return chiapos::MakeBytes(local_sk.GetPublicKey());
+    chiapos::CWallet wallet(chiapos::CKey(chiapos::MakeArray<chiapos::SK_LEN>(local_master_sk)));
+    auto local_key = wallet.GetLocalKey(0);
+    return chiapos::MakeBytes(local_key.GetPubKey());
 }
 
 bool Prover::VerifyProof(chiapos::Bytes const& plot_id, uint8_t k, uint256 const& challenge,

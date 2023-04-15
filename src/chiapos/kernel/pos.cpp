@@ -150,7 +150,7 @@ PlotPubKeyType GetType(PubKeyOrHash const& val) { return boost::apply_visitor(Ge
 CKey GenerateTapRootSk(PubKey const& localPk, PubKey const& farmerPk) {
     PubKey aggPk = AggregatePubkeys({localPk, farmerPk});
     Bytes vchSeed = MakeSHA256(BytesConnector::Connect(MakeBytes(aggPk), MakeBytes(localPk), MakeBytes(farmerPk)));
-    return CKey::Generate(vchSeed);
+    return CKey::CreateKeyWithRandomSeed(vchSeed);
 }
 
 PubKey MakePlotPubkey(PubKey const& localPk, PubKey const& farmerPk, PlotPubKeyType type) {
@@ -160,7 +160,7 @@ PubKey MakePlotPubkey(PubKey const& localPk, PubKey const& farmerPk, PlotPubKeyT
     } else if (type == PlotPubKeyType::PooledPlots) {
         // Make taproot_sk by generating a new private key
         CKey tapRootSk = GenerateTapRootSk(localPk, farmerPk);
-        PubKey tapRootPk = tapRootSk.GetPubkey();
+        PubKey tapRootPk = tapRootSk.GetPubKey();
         return AggregatePubkeys({localPk, farmerPk, tapRootPk});
     }
     throw std::runtime_error("unknown type detected during the procedure of making a plot public-key");

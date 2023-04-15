@@ -5,9 +5,10 @@
 
 #include <algorithm>
 
-#include "tinyformat.h"
+#include <boost/filesystem.hpp>
+namespace fs = boost::filesystem;
 
-#include "keyman.h"
+#include "tinyformat.h"
 
 namespace miner {
 

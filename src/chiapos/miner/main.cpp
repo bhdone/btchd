@@ -34,10 +34,10 @@
 #include <chiapos/timelord_cli/timelord_client.h>
 
 #include <chiapos/kernel/utils.h>
+#include <chiapos/kernel/bls_key.h>
 #include <chiapos/kernel/vdf.h>
 #include <chiapos/kernel/calc_diff.h>
 
-#include <chiapos/miner/keyman.h>
 #include <chiapos/miner/rpc_client.h>
 #include <chiapos/miner/http_client.h>
 #include <chiapos/miner/config.h>
@@ -139,9 +139,9 @@ miner::Config g_config;
 std::map<chiapos::PubKey, chiapos::SecreKey> ConvertSecureKeys(std::vector<std::string> const& seeds) {
     std::map<chiapos::PubKey, chiapos::SecreKey> res;
     for (std::string const& seed : seeds) {
-        keyman::Wallet wallet(seed, "");
+        chiapos::CWallet wallet(chiapos::CKey::CreateKeyWithMnemonicWords(seed, ""));
         auto sk = wallet.GetFarmerKey(0);
-        res[sk.GetPublicKey()] = sk.GetPrivateKey();
+        res[sk.GetPubKey()] = sk.GetSecreKey();
     }
     for (auto const& sk_pair : res) {
         PLOGI << tinyformat::format("Read farmer public-key: %s",
@@ -150,11 +150,12 @@ std::map<chiapos::PubKey, chiapos::SecreKey> ConvertSecureKeys(std::vector<std::
     return res;
 }
 
-keyman::Key GetSelectedKeyFromSeeds() {
+chiapos::CKey GetSelectedKeyFromSeeds() {
     if (miner::g_args.index >= miner::g_config.GetSeeds().size()) {
         throw std::runtime_error("arg `index` is out of range, check settings for your seeds to ensure it is correct");
     }
-    keyman::Wallet wallet(miner::g_config.GetSeeds()[miner::g_args.index], "");
+    chiapos::CWallet wallet(
+            chiapos::CKey::CreateKeyWithMnemonicWords(miner::g_config.GetSeeds()[miner::g_args.index], ""));
     return wallet.GetFarmerKey(0);
 }
 
@@ -217,7 +218,7 @@ int HandleCommand_Bind() {
         return 0;
     }
     chiapos::Bytes tx_id =
-            pclient->BindPlotter(miner::g_config.GetRewardDest(), miner::GetSelectedKeyFromSeeds().GetPrivateKey());
+            pclient->BindPlotter(miner::g_config.GetRewardDest(), miner::GetSelectedKeyFromSeeds().GetSecreKey());
     PLOG_INFO << "tx id: " << chiapos::BytesToHex(tx_id);
     return 0;
 }
@@ -300,7 +301,7 @@ int HandleCommand_Withdraw() {
 int HandleCommand_MiningRequirement() {
     std::unique_ptr<miner::RPCClient> pclient = tools::CreateRPCClient(miner::g_config, miner::g_args.cookie_path);
     auto req = pclient->QueryMiningRequirement(miner::g_config.GetRewardDest(),
-                                               miner::GetSelectedKeyFromSeeds().GetPublicKey());
+                                               miner::GetSelectedKeyFromSeeds().GetPubKey());
     int const PREFIX_WIDTH = 14;
     std::cout << std::setw(PREFIX_WIDTH) << "mined: " << std::setw(15)
               << tinyformat::format("%d/%d", req.mined_count, req.total_count) << " BLK" << std::endl;

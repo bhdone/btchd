@@ -286,7 +286,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewChiaBlock(const CBlockI
     coinbaseTx.vin.resize(1);
     coinbaseTx.vin[0].prevout.SetNull();
 
-    chiapos::PubKey farmerPk = farmerSk.GetPubkey();
+    chiapos::PubKey farmerPk = farmerSk.GetPubKey();
     chiapos::Bytes vchFarmerPk = chiapos::MakeBytes(farmerPk);
 
     coinbaseTx.vin[0].scriptSig = (CScript() << nHeight << vchFarmerPk) + COINBASE_FLAGS;

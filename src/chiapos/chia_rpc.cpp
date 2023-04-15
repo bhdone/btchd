@@ -197,7 +197,7 @@ static UniValue submitProof(JSONRPCRequest const& request) {
     Bytes vchFarmerSk = ParseHexV(request.params[4], "farmer_sk");
     // Generate Farmer public-key
     CKey farmerSk(MakeArray<SK_LEN>(vchFarmerSk));
-    posProof.vchFarmerPk = MakeBytes(farmerSk.GetPubkey());
+    posProof.vchFarmerPk = MakeBytes(farmerSk.GetPubKey());
     // VDF proof
     CVdfProof vdfProof = ParseVdfProof(request.params[5]);
     uint64_t nTotalDuration = vdfProof.nVdfDuration;

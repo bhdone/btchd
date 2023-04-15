@@ -29,7 +29,7 @@
 #include <ui_interface.h>
 #include <validation.h>
 
-#include <chiapos/miner/keyman.h>
+#include <chiapos/kernel/bls_key.h>
 #include <chiapos/kernel/utils.h>
 
 #include <functional>
@@ -381,9 +381,9 @@ void SendCoinsDialog::on_sendButton_clicked()
             }
             bindPunishment = chain.getBindPlotterPunishment(nSpendHeight, CPlotterBindData(plotterId));
         } else if (operateMethod == PayOperateMethod::ChiaBindFarmerPk) {
-            keyman::Wallet wallet(recipients[0].plotterPassphrase.toStdString(), "");
-            keyman::Key key = wallet.GetFarmerKey(0);
-            Bytes farmerPk = chiapos::MakeBytes(key.GetPublicKey());
+            chiapos::CWallet wallet(chiapos::CKey::CreateKeyWithMnemonicWords(recipients[0].plotterPassphrase.toStdString(), ""));
+            auto key = wallet.GetFarmerKey(0);
+            auto farmerPk = chiapos::MakeBytes(key.GetPubKey());
             bindPunishment = chain.getBindPlotterPunishment(nSpendHeight, CPlotterBindData(CChiaFarmerPk(farmerPk)));
         }
         if (bindPunishment.first > 0) {

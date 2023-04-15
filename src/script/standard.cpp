@@ -452,7 +452,7 @@ CScript GetBindChiaPlotterScriptForDestination(const CTxDestination &dest,
         .Finalize(vchMessage.data());
 
     chiapos::Signature signature = farmerSk.Sign(vchMessage);
-    chiapos::PubKey farmerPk = farmerSk.GetPubkey();
+    chiapos::PubKey farmerPk = farmerSk.GetPubKey();
 
     assert(chiapos::VerifySignature(farmerPk, signature, vchMessage));
 

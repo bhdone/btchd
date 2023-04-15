@@ -3,8 +3,8 @@
 #include <chiapos/post.h>
 #include <chiapos/kernel/calc_diff.h>
 #include <chiapos/kernel/utils.h>
+#include <chiapos/kernel/bls_key.h>
 
-#include <chiapos/miner/keyman.h>
 #include <chiapos/miner/prover.h>
 
 #include <key_io.h>
@@ -217,13 +217,12 @@ char const* SZ_POOL_PK = "97e034b18cdd88c5a9193ab731c12a6804ebe189583d44196a4072
 } // namespace mnemonic_test
 
 TEST(BIP39, Decode) {
-    keyman::Mnemonic mnemonic(mnemonic_test::SZ_PASSPHRASE);
-    keyman::Wallet wallet(mnemonic, "");
-    keyman::Key sk = wallet.GetMainKey();
-    EXPECT_EQ(BytesToHex(MakeBytes(sk.GetPrivateKey())), mnemonic_test::SZ_SK);
-    EXPECT_EQ(BytesToHex(MakeBytes(sk.GetPublicKey())), mnemonic_test::SZ_PK);
-    EXPECT_EQ(BytesToHex(MakeBytes(wallet.GetFarmerKey(0).GetPublicKey())), mnemonic_test::SZ_FARMER_PK);
-    EXPECT_EQ(BytesToHex(MakeBytes(wallet.GetPoolKey(0).GetPublicKey())), mnemonic_test::SZ_POOL_PK);
+    chiapos::CKey sk = chiapos::CKey::CreateKeyWithMnemonicWords(mnemonic_test::SZ_PASSPHRASE, "");
+    EXPECT_EQ(BytesToHex(MakeBytes(sk.GetSecreKey())), mnemonic_test::SZ_SK);
+    EXPECT_EQ(BytesToHex(MakeBytes(sk.GetPubKey())), mnemonic_test::SZ_PK);
+    chiapos::CWallet wallet(std::move(sk));
+    EXPECT_EQ(BytesToHex(MakeBytes(wallet.GetFarmerKey(0).GetPubKey())), mnemonic_test::SZ_FARMER_PK);
+    EXPECT_EQ(BytesToHex(MakeBytes(wallet.GetPoolKey(0).GetPubKey())), mnemonic_test::SZ_POOL_PK);
 }
 
 int RunAllTests() {

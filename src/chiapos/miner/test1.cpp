@@ -13,7 +13,6 @@
 #include "chiapos/kernel/chiapos_types.h"
 #include "chiapos/kernel/pos.h"
 #include "chiapos/kernel/utils.h"
-#include "chiapos/miner/keyman.h"
 #include "chiapos/miner/prover.h"
 #include "chiapos_miner.h"
 #include "plog/Log.h"

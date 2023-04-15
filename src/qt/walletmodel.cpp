@@ -35,7 +35,6 @@
 #include <QSet>
 #include <QTimer>
 
-#include <chiapos/miner/keyman.h>
 #include <chiapos/kernel/utils.h>
 #include <chiapos/kernel/bls_key.h>
 
@@ -245,10 +244,9 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod pa
             // Passphrase only
             int nTipHeight = m_wallet->chain().lock()->getHeight().get_value_or(0);
             std::string mnemonic = rcp.plotterPassphrase.toStdString();
-            keyman::Wallet wallet(mnemonic, "");
-            auto farmerPk = wallet.GetFarmerKey(0);
-            auto farmerSk = farmerPk.GetPrivateKey();
-            vecSend.push_back({GetBindChiaPlotterScriptForDestination(coinControl.m_pick_dest, chiapos::CKey(farmerSk), nTipHeight + rcp.plotterDataAliveHeight)});
+            chiapos::CWallet wallet(chiapos::CKey::CreateKeyWithMnemonicWords(mnemonic, ""));
+            auto farmerSk = wallet.GetFarmerKey(0);
+            vecSend.push_back({GetBindChiaPlotterScriptForDestination(coinControl.m_pick_dest, farmerSk, nTipHeight + rcp.plotterDataAliveHeight)});
             nChangePosRet = 1;
             nTxVersion = CTransaction::UNIFORM_VERSION;
         } else if (payOperateMethod == PayOperateMethod::ChiaPoint) {

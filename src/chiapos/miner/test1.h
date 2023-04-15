@@ -5,7 +5,6 @@
 #include <chiapos/kernel/calc_diff.h>
 #include <chiapos/kernel/utils.h>
 #include <chiapos/kernel/vdf.h>
-#include <chiapos/miner/keyman.h>
 #include <gtest/gtest.h>
 #include <uint256.h>
 #include <vdf_computer.h>
@@ -60,18 +59,18 @@ protected:
 
     std::string GetRewardAddress() const { return SZ_REWARD_ADDRESS; }
 
-    keyman::Mnemonic GetMnemonic() const { return keyman::Mnemonic(SZ_MNEMONIC); }
+    std::string GetMnemonic() const { return SZ_MNEMONIC; }
 
     chiapos::SecreKey GetFarmerSk() const {
-        keyman::Key key(GetMnemonic(), "");
-        auto farmer_sk = keyman::Wallet::GetFarmerKey(key, 0);
-        return farmer_sk.GetPrivateKey();
+        chiapos::CWallet wallet(chiapos::CKey::CreateKeyWithMnemonicWords(GetMnemonic(), ""));
+        auto farmer_sk = wallet.GetFarmerKey(0);
+        return farmer_sk.GetSecreKey();
     }
 
     chiapos::PubKey GetFarmerPk() const {
-        keyman::Key key(GetMnemonic(), "");
-        auto farmer_sk = keyman::Wallet::GetFarmerKey(key, 0);
-        return farmer_sk.GetPublicKey();
+        chiapos::CWallet wallet(chiapos::CKey::CreateKeyWithMnemonicWords(GetMnemonic(), ""));
+        auto farmer_sk = wallet.GetFarmerKey(0);
+        return farmer_sk.GetPubKey();
     }
 
     std::unique_ptr<miner::Prover> CreateProver() const {

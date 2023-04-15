@@ -63,7 +63,6 @@ CHIAPOS_KERNEL_INCLUDES = \
   chiapos/kernel/vdf.h \
   chiapos/kernel/bls_key.h \
   chiapos/kernel/calc_diff.h \
-  chiapos/miner/keyman.h \
   chiapos/utils.h
 
 CHIAPOS_KERNEL_CPPS = \
@@ -71,7 +70,6 @@ CHIAPOS_KERNEL_CPPS = \
   chiapos/kernel/vdf.cpp \
   chiapos/kernel/bls_key.cpp \
   chiapos/kernel/calc_diff.cpp \
-  chiapos/miner/keyman.cpp \
   chiapos/kernel/utils.cpp
 
 CHIAPOS_H = \
@@ -701,7 +699,7 @@ btchd_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-btchd_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS)
+btchd_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS) $(UTF8PROC_LIBS)
 #
 
 # bitcoin-wallet binary #
@@ -728,7 +726,7 @@ btchd_wallet_LDADD = \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE)
 
-btchd_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS)
+btchd_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS) $(UTF8PROC_LIBS)
 #
 
 # bitcoin-miner binary #
