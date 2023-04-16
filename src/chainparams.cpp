@@ -158,7 +158,6 @@ public:
         consensus.BHDIP009PledgeTerms[2] = {nHeightsOfADay * 365 * 2, 50};
         consensus.BHDIP009PledgeTerms[3] = {nHeightsOfADay * 365 * 3, 100};
 
-        consensus.BHDIP009MinNetspacePB = 100;
         consensus.BHDIP009TotalAmountUpgradeMultiply = 3; // 21,000,000 * 3 = 63,000,000
         consensus.BHDIP009PledgeRetargetMinHeights = (SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing) * 7; // minimal number to retarget a pledge is 7 days
         consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
@@ -440,7 +439,6 @@ public:
         consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 2, 20};
         consensus.BHDIP009PledgeTerms[2] = {nHeightsOfADay * 3, 50};
         consensus.BHDIP009PledgeTerms[3] = {nHeightsOfADay * 4, 100};
-        consensus.BHDIP009MinNetspacePB = 1;
         consensus.BHDIP009TotalAmountUpgradeMultiply = 3; // 21,000,000 * 3 = 63,000,000
         consensus.BHDIP009PledgeRetargetMinHeights = 10; // minimal number to retarget a pledge is 10 blocks in testnet3
         consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
