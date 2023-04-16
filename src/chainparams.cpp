@@ -138,7 +138,7 @@ public:
         assert(consensus.BHDIP008FundRoyaltyForLowMortgage > consensus.BHDIP001FundRoyaltyForFullMortgage);
 
         consensus.BHDIP009SkipTestChainChecks = false; // Do not check validation for blocks of burst consensus
-        consensus.BHDIP009Height = 9999999; // TODO When reach the height the consensus will change to chiapos
+        consensus.BHDIP009Height = 830100; // 2023/4/17 15:00
         // The reward address should be filled
         consensus.BHDIP009FundAddresses = { "34QSZXwx354rXUZ7W3mJnwfCiomJpHQApp" };
         consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
@@ -146,7 +146,7 @@ public:
         consensus.BHDIP009DifficultyConstantFactorBits = chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS;
         consensus.BHDIP009DifficultyEvalWindow = 1000;
         consensus.BHDIP009PlotIdBitsOfFilter = chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER;
-        consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 500;
+        consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 200;
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
         consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 120;
