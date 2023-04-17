@@ -179,6 +179,8 @@ int Miner::Run() {
             PLOG_INFO << "==== Status: " << ToString(m_state) << " ====";
             if (m_state == State::RequireChallenge) {
                 if (!m_client.CheckChiapos()) {
+                    PLOGE << "chiapos is not ready!";
+                    std::this_thread::sleep_for(std::chrono::seconds(3));
                     continue;
                 }
                 PLOG_INFO << "chia pos is ready";
