@@ -20,21 +20,61 @@ namespace miner {
 
 using MatchFunc = std::function<bool(std::string const&)>;
 
+#ifdef _WIN32
+
+std::tuple<std::vector<std::string>, uint64_t> EnumFilesFromDir(std::string const& dir, MatchFunc accept_func) {
+    std::vector<std::string> res;
+    std::string dir_mask = dir + "\\*.*";
+    uint64_t total_size{0};
+
+    WIN32_FIND_DATA wfd;
+
+    HANDLE hFind = FindFirstFile(dir_mask.c_str(), &wfd);
+    if (hFind == INVALID_HANDLE_VALUE) {
+        return std::make_tuple(res, 0);
+    }
+
+    do {
+        if (((wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) && accept_func(wfd.cFileName)) {
+            // Not a directory
+            res.push_back(dir + "\\" + wfd.cFileName);
+            total_size += wfd.nFileSizeLow;
+            uint64_t hi_size = wfd.nFileSizeHigh;
+            if (hi_size > 0) {
+                hi_size <<= 32;
+                total_size += hi_size;
+            }
+        }
+    } while (FindNextFile(hFind, &wfd) != 0);
+
+    DWORD dwError = GetLastError();
+    if (dwError != ERROR_NO_MORE_FILES) {
+        // TODO find next file reports error
+    }
+
+    FindClose(hFind);
+    return std::make_tuple(res, total_size);
+}
+
+#else
+
 std::tuple<std::vector<std::string>, uint64_t> EnumFilesFromDir(std::string const& dir, MatchFunc accept_func) {
     std::vector<std::string> res;
     uint64_t total_size{0};
     try {
         for (auto const& dir_entry : fs::directory_iterator(fs::path(dir))) {
-            if (!fs::is_directory(dir_entry.path()) && accept_func(dir_entry.path().string())) {
+            if (fs::is_regular_file(dir_entry.path()) && accept_func(dir_entry.path().string())) {
                 res.push_back(dir_entry.path().string());
                 total_size += fs::file_size(dir_entry.path());
             }
         }
     } catch (std::exception& e) {
-        PLOGE << tinyformat::format("cannot read dir: %s", dir);
+        PLOGE << tinyformat::format("cannot read dir: %s, reason: %s", dir, e.what());
     }
     return std::make_tuple(res, total_size);
 }
+
+#endif
 
 bool ExtractExtName(std::string const& filename, std::string& out_ext_name) {
     auto pos = filename.find_last_of('.');
@@ -68,6 +108,7 @@ std::vector<Path> StrListToPathList(std::vector<std::string> const& str_list) {
 
 Prover::Prover(std::vector<Path> const& path_list, std::vector<uint8_t> const& allowed_k_vec) {
     CSHA256 generator;
+    PLOGI << tinyformat::format("total %d paths found from config", path_list.size());
     for (auto const& path : path_list) {
         std::vector<std::string> files;
         uint64_t total_size;
