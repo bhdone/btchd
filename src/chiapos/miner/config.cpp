@@ -95,9 +95,6 @@ void Config::ParseFromJsonString(std::string const& json_str) {
         auto plot_path_list = root["plotPath"].getValues();
         for (UniValue const& val : plot_path_list) {
             std::string path_str = val.get_str();
-            if (!fs::exists(path_str) || !fs::is_directory(path_str)) {
-                continue;
-            }
             m_plot_path_list.push_back(std::move(path_str));
         }
     }
