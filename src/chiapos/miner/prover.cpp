@@ -23,12 +23,15 @@ using MatchFunc = std::function<bool(std::string const&)>;
 std::tuple<std::vector<std::string>, uint64_t> EnumFilesFromDir(std::string const& dir, MatchFunc accept_func) {
     std::vector<std::string> res;
     uint64_t total_size{0};
-    fs::directory_iterator i(fs::path(dir.c_str())), end;
-    for (auto const& dir_entry : fs::directory_iterator(fs::path(dir))) {
-        if (!fs::is_directory(dir_entry.path()) && accept_func(dir_entry.path().string())) {
-            res.push_back(dir_entry.path().string());
-            total_size += fs::file_size(dir_entry.path());
+    try {
+        for (auto const& dir_entry : fs::directory_iterator(fs::path(dir))) {
+            if (!fs::is_directory(dir_entry.path()) && accept_func(dir_entry.path().string())) {
+                res.push_back(dir_entry.path().string());
+                total_size += fs::file_size(dir_entry.path());
+            }
         }
+    } catch (std::exception& e) {
+        PLOGE << tinyformat::format("cannot read dir: %s", dir);
     }
     return std::make_tuple(res, total_size);
 }
