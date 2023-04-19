@@ -2831,6 +2831,64 @@ static void AppendWarning(std::string& res, const std::string& warn)
     res += warn;
 }
 
+class UpdateTipLogHelper {
+public:
+    UpdateTipLogHelper(CBlockIndex const* pindex, CChainParams const& chainParams) : m_pindex(pindex) {
+        AddLogEntry("new best", m_pindex->GetBlockHash().GetHex());
+        AddLogEntry("height", m_pindex->nHeight);
+        AddLogEntry(tinyformat::format("version=0x%08x", m_pindex->nVersion));
+        AddLogEntry("tx", m_pindex->nTx);
+        AddLogEntry("tx-chain", m_pindex->nChainTx);
+        AddLogEntry("date", FormatISO8601DateTime(m_pindex->GetBlockTime()));
+        AddLogEntry(tinyformat::format("progress=%1.2f", GuessVerificationProgress(chainParams.TxData(), m_pindex)));
+        // For BHDIP009?
+        auto const& params = chainParams.GetConsensus();
+        if (m_pindex->nHeight >= params.BHDIP009Height) {
+            // vdf related
+            std::string strVdfSpeed = chiapos::FormatNumberStr(std::to_string(m_pindex->chiaposFields.GetTotalIters() / m_pindex->chiaposFields.GetTotalDuration()));
+            AddLogEntry(tinyformat::format("vdf=%s(%s ips)", chiapos::MakeNumberStr(m_pindex->chiaposFields.GetTotalIters()), strVdfSpeed));
+            // challenge
+            uint256 challenge = chiapos::MakeChallenge(m_pindex, params);
+            AddLogEntry("challenge", challenge.GetHex());
+            // difficulty
+            AddLogEntry("difficulty", chiapos::GetChiaBlockDifficulty(m_pindex, params));
+            AddLogEntry("k", m_pindex->chiaposFields.posProof.nPlotK);
+            AddLogEntry("farmer-pk", chiapos::BytesToHex(m_pindex->chiaposFields.posProof.vchFarmerPk));
+            // netspace
+            auto netspace = chiapos::CalculateNetworkSpace(chiapos::GetChiaBlockDifficulty(m_pindex, params), m_pindex->chiaposFields.GetTotalIters(), params.BHDIP009DifficultyConstantFactorBits, m_pindex->nHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter);
+            AddLogEntry("netspace", netspace.GetLow64());
+        }
+    }
+
+    void PrintLog(std::string const& strFuncName) {
+        LogPrintf("%s:%s\n", strFuncName, GetLogStr());
+    }
+
+    void AddLogEntry(std::string const& name, std::string const& value) {
+        m_logVec.push_back(tinyformat::format("%s=%s", name, value));
+    }
+
+    void AddLogEntry(std::string const& name, uint64_t value) {
+        AddLogEntry(name, chiapos::MakeNumberStr(value));
+    }
+
+    void AddLogEntry(std::string strEntry) {
+        m_logVec.push_back(std::move(strEntry));
+    }
+
+private:
+    std::string GetLogStr() const {
+        std::stringstream ss;
+        for (auto const& str : m_logVec) {
+            ss << " " << str;
+        }
+        return ss.str();
+    }
+
+    CBlockIndex const* m_pindex;
+    std::vector<std::string> m_logVec;
+};
+
 /** Check warning conditions and do some notifications on new chain tip set. */
 void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainParams)
     EXCLUSIVE_LOCKS_REQUIRED(::cs_main)
@@ -2873,35 +2931,9 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
             AppendWarning(warningMessages, strprintf(_("%d of last 100 blocks have unexpected version").translated, nUpgraded));
     }
 
-    auto params = Params().GetConsensus();
-    std::string vdf_speed_str;
-    uint256 challenge;
-    if (pindexNew->nHeight >= params.BHDIP009Height) {
-        vdf_speed_str = chiapos::FormatNumberStr(std::to_string(pindexNew->chiaposFields.GetTotalIters() / pindexNew->chiaposFields.GetTotalDuration()));
-        challenge = chiapos::MakeChallenge(pindexNew, params);
-        auto netspace = chiapos::CalculateNetworkSpace(chiapos::GetChiaBlockDifficulty(pindexNew, params), pindexNew->chiaposFields.GetTotalIters(), params.BHDIP009DifficultyConstantFactorBits, pindexNew->nHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter);
-        LogPrintf(
-                "%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx-chain=%lu tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s,"
-                " chia-work=%s, vdf=%s(%s ips), challenge=%s, difficulty=%s, pos_k=%d, netspace=%s (TB)\n", __func__,
-                pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
-                log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx, pindexNew->nTx,
-                FormatISO8601DateTime(pindexNew->GetBlockTime()),
-                GuessVerificationProgress(chainParams.TxData(), pindexNew), ::ChainstateActive().CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)), ::ChainstateActive().CoinsTip().GetCacheSize(),
-                (!warningMessages.empty() ? strprintf(" warning='%s'", warningMessages) : ""), chiapos::MakeNumberStr(chiapos::GetChiaBlockDifficulty(pindexNew, params)),
-                chiapos::MakeNumberStr(pindexNew->chiaposFields.GetTotalIters()),
-                vdf_speed_str, challenge.GetHex(),
-                chiapos::MakeNumberStr(chiapos::GetDifficultyForNextIterations(pindexNew, params)),
-                (int)pindexNew->chiaposFields.posProof.nPlotK, chiapos::MakeNumberStr(chiapos::MakeNumberTB(netspace).GetLow64())
-                );
-    } else {
-        LogPrintf(
-                "%s: new best=%s height=%d version=0x%08x log2_work=%.8g tx-chain=%lu tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n", __func__,
-                pindexNew->GetBlockHash().ToString(), pindexNew->nHeight, pindexNew->nVersion,
-                log(pindexNew->nChainWork.getdouble())/log(2.0), (unsigned long)pindexNew->nChainTx, pindexNew->nTx,
-                FormatISO8601DateTime(pindexNew->GetBlockTime()),
-                GuessVerificationProgress(chainParams.TxData(), pindexNew), ::ChainstateActive().CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)), ::ChainstateActive().CoinsTip().GetCacheSize(),
-                (!warningMessages.empty() ? strprintf(" warning='%s'", warningMessages) : ""));
-    }
+    UpdateTipLogHelper logHelper(pindexNew, chainParams);
+    logHelper.AddLogEntry(tinyformat::format("cache=%.1fMiB(%utxo)%s", ::ChainstateActive().CoinsTip().DynamicMemoryUsage() * (1.0 / (1<<20)), ::ChainstateActive().CoinsTip().GetCacheSize(), (!warningMessages.empty() ? strprintf(" warning='%s'", warningMessages) : "")));
+    logHelper.PrintLog(__func__);
 }
 
 /** Disconnect m_chain's tip.
