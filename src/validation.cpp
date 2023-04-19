@@ -2841,17 +2841,23 @@ public:
         AddLogEntry("tx-chain", m_pindex->nChainTx);
         AddLogEntry("date", FormatISO8601DateTime(m_pindex->GetBlockTime()));
         AddLogEntry(tinyformat::format("progress=%1.2f", GuessVerificationProgress(chainParams.TxData(), m_pindex)));
-        // For BHDIP009?
         auto const& params = chainParams.GetConsensus();
+        AddLogEntry("work", GetBlockWork(*m_pindex, params).GetLow64());
+        // For BHDIP009?
         if (m_pindex->nHeight >= params.BHDIP009Height) {
+            int nBlockDuration = m_pindex->GetBlockTime() - m_pindex->pprev->GetBlockTime();
+            AddLogEntry("block-time", chiapos::FormatTime(nBlockDuration));
             // vdf related
+            AddLogEntry("vdf-time", chiapos::FormatTime(pindex->chiaposFields.vdfProof.nVdfDuration));
             std::string strVdfSpeed = chiapos::FormatNumberStr(std::to_string(m_pindex->chiaposFields.GetTotalIters() / m_pindex->chiaposFields.GetTotalDuration()));
             AddLogEntry(tinyformat::format("vdf=%s(%s ips)", chiapos::MakeNumberStr(m_pindex->chiaposFields.GetTotalIters()), strVdfSpeed));
             // challenge
             uint256 challenge = chiapos::MakeChallenge(m_pindex, params);
             AddLogEntry("challenge", challenge.GetHex());
+            AddLogEntry("challenge-diff", chiapos::GetDifficultyForNextIterations(m_pindex, params));
             // difficulty
-            AddLogEntry("difficulty", chiapos::GetChiaBlockDifficulty(m_pindex, params));
+            AddLogEntry("block-difficulty", chiapos::GetChiaBlockDifficulty(m_pindex, params));
+            AddLogEntry("min-difficulty", chiapos::MakeNumberStr(params.BHDIP009StartDifficulty));
             AddLogEntry("k", m_pindex->chiaposFields.posProof.nPlotK);
             AddLogEntry("farmer-pk", chiapos::BytesToHex(m_pindex->chiaposFields.posProof.vchFarmerPk));
             // netspace
