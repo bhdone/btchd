@@ -2851,6 +2851,8 @@ public:
             AddLogEntry("vdf-time", chiapos::FormatTime(pindex->chiaposFields.vdfProof.nVdfDuration));
             std::string strVdfSpeed = chiapos::FormatNumberStr(std::to_string(m_pindex->chiaposFields.GetTotalIters() / m_pindex->chiaposFields.GetTotalDuration()));
             AddLogEntry(tinyformat::format("vdf=%s(%s ips)", chiapos::MakeNumberStr(m_pindex->chiaposFields.GetTotalIters()), strVdfSpeed));
+            // filter bits
+            AddLogEntry("filter-bit", m_pindex->nHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter);
             // challenge
             uint256 challenge = chiapos::MakeChallenge(m_pindex, params);
             AddLogEntry("challenge", challenge.GetHex());
