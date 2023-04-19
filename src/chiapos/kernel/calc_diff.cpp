@@ -26,13 +26,10 @@ constexpr int QualityBaseBits = sizeof(QualityBaseType) * 8;
 arith_uint256 Pow2(int bits) { return arith_uint256(1) << bits; }
 
 uint64_t AdjustDifficulty(uint64_t prev_block_difficulty, uint64_t curr_block_duration, uint64_t target_duration,
-                          double max_factor) {
+                          double max_factor, uint64_t min_difficulty) {
     assert(curr_block_duration > 0);
-    uint64_t n = prev_block_difficulty / curr_block_duration;
-    if (n == 0) {
-        n = 1;
-    }
-    uint64_t new_difficulty = n * target_duration;
+    uint64_t n = std::max<uint64_t>(prev_block_difficulty / curr_block_duration, 1);
+    uint64_t new_difficulty = std::max(n * target_duration, min_difficulty);
     if (new_difficulty > prev_block_difficulty) {
         uint64_t max_difficulty = prev_block_difficulty * max_factor;
         new_difficulty = std::min(new_difficulty, max_difficulty);
