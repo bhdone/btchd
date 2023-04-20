@@ -183,7 +183,7 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
 
     // Difficulty is important
     LogPrint(BCLog::POC, "%s: checking difficulty\n", __func__);
-    uint64_t nDifficultyPrev = GetChiaBlockDifficulty(pindexPrev, params);
+    uint64_t nDifficultyPrev = GetDifficultyForNextIterations(pindexPrev, params);
     if (nDifficultyPrev == 0) {
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
                              "the value of previous difficulty is zero");

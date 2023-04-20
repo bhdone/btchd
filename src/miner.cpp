@@ -316,7 +316,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewChiaBlock(const CBlockI
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
-    uint64_t nDifficultyPrev = chiapos::GetChiaBlockDifficulty(pindexPrev, params);
+    uint64_t nDifficultyPrev = chiapos::GetDifficultyForNextIterations(pindexPrev, params);
 
     pblock->chiaposFields.posProof = posProof;
     pblock->chiaposFields.vdfProof = vdfProof;
