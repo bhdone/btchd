@@ -285,6 +285,7 @@ BITCOIN_CORE_H = \
   util/translation.h \
   util/url.h \
   util/validation.h \
+  updatetip_log_helper.hpp \
   validation.h \
   subsidy_utils.h \
   validationinterface.h \

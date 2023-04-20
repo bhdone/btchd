@@ -1,0 +1,102 @@
+#ifndef UPDATETIP_LOG_HELPER
+#define UPDATETIP_LOG_HELPER
+
+#include <univalue.h>
+#include <chiapos/post.h>
+
+class UpdateTipLogHelper {
+public:
+    UpdateTipLogHelper(CBlockIndex const* pindex, CChainParams const& chainParams) : m_pindex(pindex), m_chainParams(chainParams) {
+        ApplyLogFromCurrIndex();
+    }
+
+    bool MoveToPrevIndex() {
+        if (m_pindex->pprev == nullptr) {
+            return false;
+        }
+        m_pindex = m_pindex->pprev;
+        ApplyLogFromCurrIndex();
+        return true;
+    }
+
+    void PrintLog(std::string const& strFuncName) const {
+        LogPrintf("%s:%s\n", strFuncName, GetLogStr());
+    }
+
+    UniValue PrintJson() const {
+        return GetJson();
+    }
+
+    void AddLogEntry(std::string const& name, std::string const& value) {
+        m_logVec.push_back(tinyformat::format("%s=%s", name, value));
+    }
+
+    void AddLogEntry(std::string const& name, uint64_t value) {
+        AddLogEntry(name, chiapos::MakeNumberStr(value));
+    }
+
+    void AddLogEntry(std::string strEntry) {
+        m_logVec.push_back(std::move(strEntry));
+    }
+
+private:
+    void ApplyLogFromCurrIndex() {
+        AddLogEntry("new best", m_pindex->GetBlockHash().GetHex());
+        AddLogEntry("height", m_pindex->nHeight);
+        AddLogEntry(tinyformat::format("version=0x%08x", m_pindex->nVersion));
+        AddLogEntry("tx", m_pindex->nTx);
+        AddLogEntry("tx-chain", m_pindex->nChainTx);
+        AddLogEntry("date", FormatISO8601DateTime(m_pindex->GetBlockTime()));
+        AddLogEntry(tinyformat::format("progress=%1.2f", GuessVerificationProgress(m_chainParams.TxData(), m_pindex)));
+        auto const& params = m_chainParams.GetConsensus();
+        AddLogEntry("work", GetBlockWork(*m_pindex, params).GetLow64());
+        // For BHDIP009?
+        if (m_pindex->nHeight >= params.BHDIP009Height) {
+            int nBlockDuration = m_pindex->GetBlockTime() - m_pindex->pprev->GetBlockTime();
+            AddLogEntry("block-time", chiapos::FormatTime(nBlockDuration));
+            // vdf related
+            AddLogEntry("vdf-time", chiapos::FormatTime(m_pindex->chiaposFields.vdfProof.nVdfDuration));
+            std::string strVdfSpeed = chiapos::FormatNumberStr(std::to_string(m_pindex->chiaposFields.GetTotalIters() / m_pindex->chiaposFields.GetTotalDuration()));
+            AddLogEntry(tinyformat::format("vdf=%s(%s ips)", chiapos::MakeNumberStr(m_pindex->chiaposFields.GetTotalIters()), strVdfSpeed));
+            // filter bits
+            AddLogEntry("filter-bit", m_pindex->nHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter);
+            // challenge
+            uint256 challenge = chiapos::MakeChallenge(m_pindex, params);
+            AddLogEntry("challenge", challenge.GetHex());
+            AddLogEntry("challenge-diff", chiapos::GetDifficultyForNextIterations(m_pindex, params));
+            // difficulty
+            AddLogEntry("block-difficulty", chiapos::GetChiaBlockDifficulty(m_pindex, params));
+            AddLogEntry("min-difficulty", chiapos::MakeNumberStr(params.BHDIP009StartDifficulty));
+            AddLogEntry("k", m_pindex->chiaposFields.posProof.nPlotK);
+            AddLogEntry("farmer-pk", chiapos::BytesToHex(m_pindex->chiaposFields.posProof.vchFarmerPk));
+            // netspace
+            auto netspace = chiapos::CalculateNetworkSpace(chiapos::GetChiaBlockDifficulty(m_pindex, params), m_pindex->chiaposFields.GetTotalIters(), params.BHDIP009DifficultyConstantFactorBits, m_pindex->nHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter);
+            AddLogEntry("netspace", netspace.GetLow64());
+        }
+    }
+
+    std::string GetLogStr() const {
+        std::stringstream ss;
+        for (auto const& str : m_logVec) {
+            ss << " " << str;
+        }
+        return ss.str();
+    }
+
+    UniValue GetJson() const {
+        UniValue res(UniValue::VOBJ);
+        for (auto const& val : m_logVec) {
+            auto p = val.find_first_of('=');
+            if (p != std::string::npos) {
+                res.pushKV(val.substr(0, p), val.substr(p + 1));
+            }
+        }
+        return res;
+    }
+
+    CBlockIndex const* m_pindex;
+    CChainParams const& m_chainParams;
+    std::vector<std::string> m_logVec;
+};
+
+#endif

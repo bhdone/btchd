@@ -16,7 +16,10 @@
 #include "chiapos/kernel/calc_diff.h"
 #include "chiapos/kernel/pos.h"
 #include "chiapos/kernel/utils.h"
+
 #include "consensus/params.h"
+
+#include "updatetip_log_helper.hpp"
 #include "logging.h"
 #include "post.h"
 
@@ -368,18 +371,40 @@ static UniValue generateBurstBlocks(JSONRPCRequest const& request) {
     return true;
 }
 
+static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
+    RPCHelpMan("queryupdatetiphistory", "Query update tip logs",
+            {
+                {"count", RPCArg::Type::NUM, RPCArg::Optional::NO, "how many logs want to be generated"}
+            },
+            RPCResult{"\"succ\" (result) The update tips history"},
+            RPCExamples{HelpExampleCli("queryupdatetiphistory", "")}).Check(request);
+
+    int nCount = atoi(request.params[0].get_str());
+
+    LOCK(cs_main);
+    auto pindex = ::ChainActive().Tip();
+    UpdateTipLogHelper helper(pindex, Params());
+    UniValue res(UniValue::VARR);
+
+    for (int i = 0; i < nCount; ++i) {
+        res.push_back(helper.PrintJson());
+        if (!helper.MoveToPrevIndex()) {
+            break;
+        }
+    }
+
+    return res;
+}
+
 static CRPCCommand const commands[] = {
         {"chia", "checkchiapos", &checkChiapos, {}},
         {"chia", "querychallenge", &queryChallenge, {}},
         {"chia", "querynetspace", &queryNetspace, {}},
         {"chia", "querychainvdfinfo", &queryChainVdfInfo, {"height"}},
         {"chia", "queryminingrequirement", &queryMiningRequirement, {"address", "farmer-pk"}},
-        {"chia",
-         "submitproof",
-         &submitProof,
-         {"challenge", "quality_string", "pos_proof", "k", "pool_pk", "local_pk", "farmer_pk", "farmer_sk", "plot_id",
-          "vdf_proof_vec", "reward_dest"}},
-        {"chia", "generateburstblocks", &generateBurstBlocks, {}},
+        {"chia", "submitproof", &submitProof, {"challenge", "quality_string", "pos_proof", "k", "pool_pk", "local_pk", "farmer_pk", "farmer_sk", "plot_id", "vdf_proof_vec", "reward_dest"}},
+        {"chia", "generateburstblocks", &generateBurstBlocks, {"count"}},
+        {"chia", "queryupdatetiphistory", &queryUpdateTipHistory, {"count"}}
 };
 
 void RegisterChiaRPCCommands(CRPCTable& t) {
