@@ -25,7 +25,7 @@
 #include <chiapos/kernel/calc_diff.h>
 
 const uint32_t SECONDS_OF_A_DAY = 60 * 60 * 24;
-const int AVERAGE_VDF_SPEED = 200 * 1000;
+const int AVERAGE_VDF_SPEED = 100 * 1000;
 
 static CBlock CreateGenesisBlock(char const* pszTimestamp, CScript const& genesisOutputScript, uint32_t nTime,
                                  uint64_t nNonce, uint64_t nBaseTarget, int32_t nVersion,
@@ -432,7 +432,7 @@ public:
         consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 200;
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K_TEST_NET;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
-        consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 120;
+        consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
         consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(32) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
         int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 1, 8};
