@@ -11,7 +11,7 @@
 
 namespace chiapos {
 
-const uint64_t CHIAHEADER_VERSION = 0x106;
+const uint64_t CHIAHEADER_VERSION = 0x107;
 
 class CPosProof {
 public:
