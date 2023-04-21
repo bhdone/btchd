@@ -1,13 +1,24 @@
 #ifndef UPDATETIP_LOG_HELPER
 #define UPDATETIP_LOG_HELPER
 
+#include <util/time.h>
+
 #include <univalue.h>
 #include <chiapos/post.h>
+
+#include <chainparams.h>
+#include <interfaces/chain.h>
+
+double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pindex);
 
 class UpdateTipLogHelper {
 public:
     UpdateTipLogHelper(CBlockIndex const* pindex, CChainParams const& chainParams) : m_pindex(pindex), m_chainParams(chainParams) {
         ApplyLogFromCurrIndex();
+    }
+
+    CBlockIndex const* GetBlockIndex() const {
+        return m_pindex;
     }
 
     bool MoveToPrevIndex() {

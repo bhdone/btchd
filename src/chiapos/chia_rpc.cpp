@@ -380,6 +380,7 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
             RPCExamples{HelpExampleCli("queryupdatetiphistory", "")}).Check(request);
 
     int nCount = atoi(request.params[0].get_str());
+    auto params = Params().GetConsensus();
 
     LOCK(cs_main);
     auto pindex = ::ChainActive().Tip();
@@ -387,7 +388,34 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
     UniValue res(UniValue::VARR);
 
     for (int i = 0; i < nCount; ++i) {
-        res.push_back(helper.PrintJson());
+        UniValue entryVal = helper.PrintJson();
+        // query the block
+        CBlockIndex const* pindex = helper.GetBlockIndex();
+        if (IsBlockPruned(pindex)) {
+            entryVal.pushKV("error", "block is pruned");
+        } else {
+            CBlock block;
+            if (!ReadBlockFromDisk(block, pindex, params)) {
+                entryVal.pushKV("error", "cannot read block from disk");
+            } else {
+                CAccountID generatorAccountID;
+                for (auto const& tx : block.vtx) {
+                    if (tx->IsCoinBase()) {
+                        generatorAccountID = ExtractAccountID(tx->vout[0].scriptPubKey);
+                        UniValue minerVal(UniValue::VOBJ);
+                        minerVal.pushKV("address", EncodeDestination(CTxDestination((ScriptHash)generatorAccountID)));
+                        minerVal.pushKV("reward", static_cast<double>(tx->vout[0].nValue) / COIN);
+                        // accumulate
+                        CAmount nAccumulate = GetBlockAccumulateSubsidy(pindex, params);
+                        minerVal.pushKV("accumulate", static_cast<double>(nAccumulate) / COIN);
+                        // save to entry
+                        entryVal.pushKV("miner", minerVal);
+                    }
+                }
+            }
+        }
+        res.push_back(entryVal);
+        // next
         if (!helper.MoveToPrevIndex()) {
             break;
         }
