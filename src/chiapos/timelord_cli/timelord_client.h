@@ -77,7 +77,8 @@ public:
 
     void SetProofReceiver(ProofReceiver proof_receiver);
 
-    bool Calc(uint256 const& challenge, uint64_t iters, uint256 const& group_hash, uint64_t total_size);
+    void Calc(uint256 const& challenge, uint64_t iters, uint256 const& group_hash, uint64_t total_size,
+              int interval_secs);
 
     void Connect(std::string const& host, unsigned short port);
 
@@ -97,6 +98,7 @@ private:
     asio::io_context& ioc_;
     FrontEndClient client_;
     std::map<int, MessageHandler> msg_handlers_;
+    std::shared_ptr<asio::steady_timer> ptimer_sender_;
     asio::steady_timer timer_pingpong_;
     std::unique_ptr<asio::steady_timer> ptimer_waitpong_;
     ConnectionHandler conn_handler_;

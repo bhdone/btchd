@@ -142,7 +142,8 @@ void TimelordClient::SetErrorHandler(ErrorHandler err_handler) { err_handler_ = 
 
 void TimelordClient::SetProofReceiver(ProofReceiver proof_receiver) { proof_receiver_ = std::move(proof_receiver); }
 
-bool TimelordClient::Calc(uint256 const& challenge, uint64_t iters, uint256 const& group_hash, uint64_t total_size) {
+void TimelordClient::Calc(uint256 const& challenge, uint64_t iters, uint256 const& group_hash, uint64_t total_size,
+                          int interval_secs) {
     UniValue msg(UniValue::VOBJ);
     msg.pushKV("id", static_cast<int>(TimelordClientMsgs::CALC));
     msg.pushKV("challenge", challenge.GetHex());
@@ -151,7 +152,23 @@ bool TimelordClient::Calc(uint256 const& challenge, uint64_t iters, uint256 cons
     netspace.pushKV("group_hash", group_hash.GetHex());
     netspace.pushKV("total_size", total_size);
     msg.pushKV("netspace", netspace);
-    return client_.SendMessage(msg);
+    client_.SendMessage(msg);
+    if (interval_secs != 0) {
+        if (ptimer_sender_) {
+            boost::system::error_code ignored_ec;
+            ptimer_sender_->cancel(ignored_ec);
+        }
+        // create a new timer
+        ptimer_sender_ = std::make_shared<asio::steady_timer>(ioc_);
+        ptimer_sender_->expires_from_now(std::chrono::seconds(interval_secs));
+        ptimer_sender_->async_wait(
+                [this, challenge, iters, group_hash, total_size, interval_secs](boost::system::error_code const& ec) {
+                    if (ec) {
+                        return;
+                    }
+                    Calc(challenge, iters, group_hash, total_size, interval_secs);
+                });
+    }
 }
 
 void TimelordClient::Connect(std::string const& host, unsigned short port) {

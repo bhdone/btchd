@@ -122,6 +122,8 @@ chiapos::optional<RPCClient::PosProof> QueryBestPosProof(Prover& prover, uint256
 
 }  // namespace pos
 
+static int const CHECKING_VDF_INTERVAL_SECS = 22;
+
 Miner::Miner(RPCClient& client, Prover& prover, std::map<chiapos::PubKey, chiapos::SecreKey> secre_keys,
              std::string reward_dest, int difficulty_constant_factor_bits)
         : m_client(client),
@@ -334,7 +336,7 @@ TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsi
         }
         if (!m_current_challenge.IsNull()) {
             ptimelord_client->Calc(m_current_challenge, m_current_iters, m_prover.GetGroupHash(),
-                                   m_prover.GetTotalSize());
+                                   m_prover.GetTotalSize(), CHECKING_VDF_INTERVAL_SECS);
         }
     });
     ptimelord_client->SetErrorHandler(
@@ -389,7 +391,8 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
         asio::post(m_ioc, [this, current_challenge, iters, group_hash, total_size]() {
             for (auto desc : m_timelords) {
                 if (!desc.second.reconnecting && desc.second.pclient) {
-                    desc.second.pclient->Calc(current_challenge, iters, group_hash, total_size);
+                    desc.second.pclient->Calc(current_challenge, iters, group_hash, total_size,
+                                              CHECKING_VDF_INTERVAL_SECS);
                 }
             }
         });
