@@ -63,8 +63,8 @@ case $host in
      lt_cv_deplibs_check_method="pass_all"
   ;;
 esac
-dnl Require C++11 compiler (no GNU extensions)
-AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory], [nodefault])
+dnl Require C++14 compiler (no GNU extensions)
+AX_CXX_COMPILE_STDCXX([14], [noext], [mandatory], [nodefault])
 dnl Check if -latomic is required for <std::atomic>
 CHECK_ATOMIC
 
@@ -1159,13 +1159,13 @@ if test x$use_boost = xyes; then
 BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB $BOOST_THREAD_LIB $BOOST_CHRONO_LIB $BOOST_PROCESS_LIB"
 
 
-dnl If boost (prior to 1.57) was built without c++11, it emulated scoped enums
+dnl If boost (prior to 1.57) was built without c++14, it emulated scoped enums
 dnl using c++98 constructs. Unfortunately, this implementation detail leaked into
 dnl the abi. This was fixed in 1.57.
 
-dnl When building against that installed version using c++11, the headers pick up
-dnl on the native c++11 scoped enum support and enable it, however it will fail to
-dnl link. This can be worked around by disabling c++11 scoped enums if linking will
+dnl When building against that installed version using c++14, the headers pick up
+dnl on the native c++14 scoped enum support and enable it, however it will fail to
+dnl link. This can be worked around by disabling c++14 scoped enums if linking will
 dnl fail.
 dnl BOOST_NO_SCOPED_ENUMS was changed to BOOST_NO_CXX11_SCOPED_ENUMS in 1.51.
 
@@ -1173,7 +1173,7 @@ TEMP_LIBS="$LIBS"
 LIBS="$BOOST_LIBS $LIBS"
 TEMP_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
-AC_MSG_CHECKING([for mismatched boost c++11 scoped enums])
+AC_MSG_CHECKING([for mismatched boost c++14 scoped enums])
 AC_LINK_IFELSE([AC_LANG_PROGRAM([[
   #include <boost/config.hpp>
   #include <boost/version.hpp>
