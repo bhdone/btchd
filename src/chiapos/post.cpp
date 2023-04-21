@@ -170,10 +170,6 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
 
     int64_t nDuration = nTimeOfTheBlock - pindexPrev->GetBlockTime();
     int64_t nDurationVDF = fields.GetTotalDuration();
-    if (nDurationVDF > nDuration) {
-        return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
-                             "duration between blocks is too short");
-    }
     int64_t nAbsDuration = nDuration - nDurationVDF;
     if (nAbsDuration > 30) {
         // should we mark this issue as a failure?
