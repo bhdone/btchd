@@ -398,10 +398,10 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
             if (!ReadBlockFromDisk(block, pindex, params)) {
                 entryVal.pushKV("error", "cannot read block from disk");
             } else {
-                CAccountID generatorAccountID;
+                UniValue txVal(UniValue::VARR);
                 for (auto const& tx : block.vtx) {
                     if (tx->IsCoinBase()) {
-                        generatorAccountID = ExtractAccountID(tx->vout[0].scriptPubKey);
+                        CAccountID generatorAccountID = ExtractAccountID(tx->vout[0].scriptPubKey);
                         UniValue minerVal(UniValue::VOBJ);
                         minerVal.pushKV("address", EncodeDestination(CTxDestination((ScriptHash)generatorAccountID)));
                         minerVal.pushKV("reward", static_cast<double>(tx->vout[0].nValue) / COIN);
@@ -409,9 +409,51 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
                         CAmount nAccumulate = GetBlockAccumulateSubsidy(pindex, params);
                         minerVal.pushKV("accumulate", static_cast<double>(nAccumulate) / COIN);
                         // save to entry
-                        entryVal.pushKV("miner", minerVal);
+                        txVal.push_back(minerVal);
+                    } else {
+                        auto payload = ExtractTransactionDatacarrier(*tx, pindex->nHeight,
+                                {DATACARRIER_TYPE_BINDPLOTTER,
+                                 DATACARRIER_TYPE_BINDCHIAFARMER,
+                                 DATACARRIER_TYPE_CHIA_POINT,
+                                 DATACARRIER_TYPE_CHIA_POINT_TERM_1,
+                                 DATACARRIER_TYPE_CHIA_POINT_TERM_2,
+                                 DATACARRIER_TYPE_CHIA_POINT_TERM_3,
+                                 DATACARRIER_TYPE_CHIA_POINT_RETARGET});
+                        if (payload) {
+                            UniValue payloadVal(UniValue::VOBJ);
+                            if (payload->type == DATACARRIER_TYPE_BINDPLOTTER || payload->type == DATACARRIER_TYPE_BINDCHIAFARMER) {
+                                auto p = BindPlotterPayload::As(payload);
+                                CAccountID accountID = ExtractAccountID(tx->vout[0].scriptPubKey);
+                                std::string strAddress = EncodeDestination(static_cast<ScriptHash>(accountID));
+                                payloadVal.pushKV("action", "bind");
+                                payloadVal.pushKV("address", strAddress);
+                                if (payload->type == DATACARRIER_TYPE_BINDPLOTTER) {
+                                    payloadVal.pushKV("plotter", p->GetId().GetBurstPlotterId());
+                                } else {
+                                    payloadVal.pushKV("farmer", p->GetId().GetChiaFarmerPk().ToString());
+                                }
+                            } else if (payload->type == DATACARRIER_TYPE_CHIA_POINT ||
+                                       payload->type == DATACARRIER_TYPE_CHIA_POINT_TERM_1 ||
+                                       payload->type == DATACARRIER_TYPE_CHIA_POINT_TERM_2 ||
+                                       payload->type == DATACARRIER_TYPE_CHIA_POINT_TERM_3) {
+                                auto p = PointPayload::As(payload);
+                                payloadVal.pushKV("action", "point");
+                                payloadVal.pushKV("type", DatacarrierTypeToString(payload->type));
+                                payloadVal.pushKV("amount", static_cast<double>(tx->vout[0].nValue) / COIN);
+                                payloadVal.pushKV("address", EncodeDestination(CTxDestination(static_cast<ScriptHash>(p->GetReceiverID()))));
+                            } else if (payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+                                auto p = PointRetargetPayload::As(payload);
+                                payloadVal.pushKV("action", "retarget");
+                                payloadVal.pushKV("amount", static_cast<double>(tx->vout[0].nValue) / COIN);
+                                payloadVal.pushKV("address", EncodeDestination(CTxDestination(static_cast<ScriptHash>(p->GetReceiverID()))));
+                                payloadVal.pushKV("type", DatacarrierTypeToString(p->GetPointType()));
+                                payloadVal.pushKV("height", p->GetPointHeight());
+                            }
+                            txVal.push_back(payloadVal);
+                        }
                     }
                 }
+                entryVal.pushKV("txs", txVal);
             }
         }
         res.push_back(entryVal);
