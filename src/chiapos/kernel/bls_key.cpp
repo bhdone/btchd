@@ -1,7 +1,5 @@
 #include "bls_key.h"
 
-#include <bip39/bip39.h>
-
 #ifdef __APPLE__
 #include <gmp.h>
 #endif

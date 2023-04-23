@@ -2152,14 +2152,14 @@ bool CheckWithdrawTx(CTransaction const& tx, int nLockHeight, CAmount nPointValu
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-wrong-vout", "tx vout size should be 2");
         }
         if (tx.vout[1].scriptPubKey != burnToScriptPubKey) {
-            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-wrong-burn-to-addr", "the addres is invalid to burn coins");
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-wrong-burn-to-addr", "the address is invalid to burn coins");
         }
         if (tx.vout[1].nValue < nBurnAmount) {
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-wrong-burn-to-value", "the amount to burn is invalid");
         }
     } else {
         if (tx.vout.size() != 1) {
-            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-wrong-vout", "tx vout size should be 1 when no coins will be burned");
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-wrong-vout", "tx vout size should be 1 when there is no coin to be burned");
         }
     }
     return true;
@@ -2177,7 +2177,7 @@ bool CheckChiaPledgeTx(CTransaction const& tx, CCoinsViewCache const& view, CVal
         }
         if (prevCoin.IsChiaPointRelated()) {
             // found one
-            // TODO matthew: We should check and ensure there are only 1 point/retarget input in this tx
+            // TODO matthew: We should check and ensure there is only 1 point/retarget input in this tx
             break;
         }
     }

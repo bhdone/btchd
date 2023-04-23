@@ -26,19 +26,6 @@ BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 UTF8PROC_LIBS = -lutf8proc
 
-BIP39_INCLUDES = -I$(srcdir)/bip39/include -I$(srcdir)/bip39 -I$(srcdir)/bip39/lib/PicoSHA2
-BIP39_SRCS = \
-  bip39/util.cpp \
-  bip39/bip39.cpp
-
-LIBBIP39 = libbip39.a
-
-libbip39_a_CPPFLAGS = $(AM_CPPFLAGS) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) $(BIP39_INCLUDES)
-libbip39_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-libbip39_a_SOURCES = $(BIP39_SRCS)
-
-BITCOIN_INCLUDES += $(BIP39_INCLUDES)
-
 GTEST_INCLUDES = -I$(srcdir)/googletest/googletest/include
 GTEST_INCLUDES += -I$(srcdir)/googletest/googletest
 
@@ -125,7 +112,6 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(w
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
 EXTRA_LIBRARIES += \
-  $(LIBBIP39) \
   $(LIBCHIA_COMMON) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBBITCOIN_UTIL) \
@@ -803,7 +789,6 @@ btchd_miner_LDADD = \
   $(CURL_LIBS) \
   $(TOOLBOX_LIBS) \
   $(UNIVALUE_LIBS) \
-  $(LIBBIP39) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
