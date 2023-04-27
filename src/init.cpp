@@ -31,7 +31,6 @@
 #include <netbase.h>
 #include <poc/poc.h>
 #include <chiapos/post.h>
-#include <chiapos/test/chia_test.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -574,8 +573,6 @@ void SetupServerArgs()
     // BitcoinHD
     gArgs.AddArg("-forcecheckdeadline", strprintf("Force check every block work (default: %u)", DEFAULT_CHECKWORK_ENABLED), ArgsManager::ALLOW_ANY, OptionsCategory::POC);
     gArgs.AddArg("-signprivkey", "Import private key for block signature", ArgsManager::ALLOW_ANY, OptionsCategory::POC);
-
-    gArgs.AddArg("-chiatest", "Run chia test before start the server", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
     gArgs.AddArg("-skip-ibd", "Skip the checking procedure for `Initial block download`", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
 
 #ifdef ENABLE_OMNICORE
@@ -1309,11 +1306,6 @@ bool AppInitMain(InitInterfaces& interfaces)
     if (!LogInstance().StartLogging()) {
             return InitError(strprintf("Could not open debug log file %s",
                 LogInstance().m_file_path.string()));
-    }
-
-    // ********************************************************* Step 4b: chiapos test
-    if (gArgs.GetBoolArg("-chiatest", false)) {
-        return chiapos::RunAllTests();
     }
 
     if (!LogInstance().m_log_timestamps)

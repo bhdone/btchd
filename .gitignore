@@ -12,6 +12,7 @@ src/btchd-cli
 src/btchd-tx
 src/btchd-wallet
 src/btchd-miner
+src/btchd-test
 src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt

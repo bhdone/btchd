@@ -3,7 +3,6 @@
 #include <chainparams.h>
 #include <chiapos/block_fields.h>
 #include <chiapos/kernel/bls_key.h>
-#include <chiapos/timelord_cli/timelord_client.h>
 
 #include <consensus/validation.h>
 #include <logging.h>

@@ -19,6 +19,7 @@ BITCOIN_DAEMON_NAME=btchdd
 BITCOIN_GUI_NAME=btchd-qt
 BITCOIN_CLI_NAME=btchd-cli
 BITCOIN_MINER_NAME=btchd-miner
+BITCOIN_TEST_NAME=btchd-test
 BITCOIN_TX_NAME=btchd-tx
 BITCOIN_WALLET_TOOL_NAME=btchd-wallet
 
@@ -1328,7 +1329,7 @@ fi
 AC_CHECK_HEADER([mpir.h],,AC_MSG_ERROR(mpir headers missing),)
 AC_CHECK_LIB([mpir],[main],MPIR_LIBS=-lmpir,AC_MSG_ERROR(libmpir missing))
 
-AC_CHECK_HEADER([vdf_computer.h],,AC_MSG_ERROR(mpir headers missing),)
+AC_CHECK_HEADER([vdf_computer.h],,AC_MSG_ERROR(vdf headers missing),)
 AC_CHECK_LIB([bhd_vdf],[main],BHD_VDF_LIBS=-lbhd_vdf,AC_MSG_ERROR(libbhd_vdf missing))
 
 save_CXXFLAGS="${CXXFLAGS}"
@@ -1423,6 +1424,10 @@ AC_MSG_RESULT($build_bitcoin_tx)
 AC_MSG_CHECKING([whether to build btchd-miner])
 AM_CONDITIONAL([BUILD_BITCOIN_MINER], [test x$build_bitcoin_miner = xyes])
 AC_MSG_RESULT($build_bitcoin_miner)
+
+AC_MSG_CHECKING([whether to build btchd-test])
+AM_CONDITIONAL([BUILD_BITCOIN_TEST], [test x$build_bitcoin_test = xyes])
+AC_MSG_RESULT($build_bitcoin_test)
 
 AC_MSG_CHECKING([whether to build btchd-wallet])
 AM_CONDITIONAL([BUILD_BITCOIN_WALLET], [test x$build_bitcoin_wallet = xyes])

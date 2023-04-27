@@ -26,13 +26,6 @@ BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 UTF8PROC_LIBS = -lutf8proc
 
-GTEST_INCLUDES = -I$(srcdir)/googletest/googletest/include
-GTEST_INCLUDES += -I$(srcdir)/googletest/googletest
-
-GTEST_SRCS = $(srcdir)/googletest/googletest/src/gtest-all.cc
-
-BITCOIN_INCLUDES += $(GTEST_INCLUDES)
-
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
 LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
@@ -564,8 +557,6 @@ libbitcoin_common_a_SOURCES = \
   script/standard.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
-  chiapos/test/chia_test.cpp \
-  $(GTEST_SRCS) \
   $(CHIAPOS_CPPS) \
   $(BITCOIN_CORE_H)
 
@@ -647,7 +638,7 @@ btchdd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-btchdd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS) $(LIBBIP39) $(UTF8PROC_LIBS)
+btchdd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS) $(UTF8PROC_LIBS)
 
 # bitcoin-cli binary #
 btchd_cli_SOURCES = bitcoin-cli.cpp compat/byteswap.cpp
@@ -737,11 +728,10 @@ CHIAPOS_MINER_CPPS = \
   chiapos/miner/http_client.cpp \
   chiapos/miner/main.cpp \
   chiapos/miner/tools.cpp \
-  chiapos/miner/test1.cpp \
   chiapos/timelord_cli/timelord_client.cpp
 
 btchd_miner_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DCURL_STATICLIB
-btchd_miner_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(GTEST_INCLUDES)
+btchd_miner_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 btchd_miner_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 btchd_miner_SOURCES = \
   chainparams.cpp \
@@ -774,8 +764,7 @@ btchd_miner_SOURCES = \
   $(CHIAPOS_KERNEL_INCLUDES) \
   $(CHIAPOS_KERNEL_CPPS) \
   $(CHIAPOS_MINER_H) \
-  $(CHIAPOS_MINER_CPPS) \
-  $(GTEST_SRCS)
+  $(CHIAPOS_MINER_CPPS)
 
 CURL_LIBS = -lcurl
 
@@ -791,7 +780,8 @@ btchd_miner_LDADD = \
   $(UNIVALUE_LIBS) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CRYPTO)
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBBITCOIN_CONSENSUS)
 
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
@@ -888,6 +878,45 @@ endif
 #if ENABLE_TESTS
 #include Makefile.test.include
 #endif
+
+if ENABLE_TESTS
+
+GTEST_INCLUDES = -I$(srcdir)/googletest/googletest/include
+GTEST_INCLUDES += -I$(srcdir)/googletest/googletest
+
+GTEST_SRCS = \
+  $(srcdir)/googletest/googletest/src/gtest-all.cc \
+  $(srcdir)/googletest/googletest/src/gtest_main.cc
+
+bin_PROGRAMS += btchd-test
+
+btchd_test_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DCURL_STATICLIB
+btchd_test_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(GTEST_INCLUDES)
+
+btchd_test_LDFLAGS = \
+  $(RELDFLAGS) \
+  $(AM_LDFLAGS) \
+  $(LIBTOOL_APP_LDFLAGS)
+
+btchd_test_SOURCES = \
+  arith_uint256.cpp \
+  uint256.cpp \
+  crypto/sha256.cpp \
+  util/strencodings.cpp \
+  chiapos/kernel/utils.cpp \
+  chiapos/kernel/bls_key.cpp \
+  chiapos/kernel/pos.cpp \
+  chiapos/test/utils_test.cpp \
+  chiapos/test/farmerkey_test.cpp \
+  $(GTEST_SRCS)
+
+btchd_test_LDADD = \
+  $(LIBBITCOIN_CRYPTO) \
+  $(CHIAPOS_LIBS) \
+  $(CRYPTO_LIBS) \
+  $(UTF8PROC_LIBS)
+
+endif
 
 # TODO enable bench
 #if ENABLE_BENCH

@@ -2,7 +2,6 @@
 #include <chiapos/kernel/calc_diff.h>
 #include <chiapos/kernel/pos.h>
 #include <crypto/sha256.h>
-#include <logging.h>
 
 #include <chiapos/lib/include/picosha2.hpp>
 #include <chiapos/src/prover_disk.hpp>
@@ -118,8 +117,8 @@ bool CPlotFile::GetQualityString(uint256 const& challenge, std::vector<QualitySt
         }
         out = qs_pack_vec;
         return true;
-    } catch (std::exception const& e) {
-        LogPrintf("%s: cannot get quality string from plot=%s\n", __func__, m_path);
+    } catch (std::exception const&) {
+        // TODO: need to process this exception
     }
     return false;
 }
@@ -135,8 +134,8 @@ bool CPlotFile::GetFullProof(uint256 const& challenge, int index, Bytes& out) co
         proof.ToBytes(proof_data.data());
         out = proof_data;
         return true;
-    } catch (std::exception const& e) {
-        LogPrintf("%s: cannot read full proof from plot=%s\n", __func__, m_path);
+    } catch (std::exception const&) {
+        // TODO: need to process this exception
     }
     return false;
 }
