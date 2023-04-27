@@ -37,16 +37,40 @@ TEST(UTILS, MakeUint256) {
     EXPECT_EQ(challenge, challenge2);
 }
 
-TEST(UTILS, Test_MakeUint256_R) {
+TEST(UTILS, MakeUint256AndReverse) {
     uint256 val = chiapos::MakeUint256(chiapos::BytesFromHex(SZ_PREVIOUSE_BLOCK_HASH));
     EXPECT_EQ(val.ToString(), chiapos::BytesToHex(chiapos::BytesFromHex(val.ToString())));
 }
 
-TEST(UTILS, Test_MakeBytes) {
+TEST(UTILS, MakeBytesToUint256) {
     chiapos::Bytes challenge = chiapos::BytesFromHex(SZ_CHALLENGE);
 
     uint256 u256 = chiapos::MakeUint256(challenge);
     EXPECT_EQ(chiapos::MakeBytes(u256), challenge);
+}
+
+TEST(UTILS, BytesConnection) {
+    char const* SZ_A = "aa";
+    char const* SZ_B = "bb";
+    auto bytes_a = chiapos::BytesFromHex(SZ_A);
+    auto bytes_b = chiapos::BytesFromHex(SZ_B);
+    auto bytes_c = chiapos::BytesConnector::Connect(bytes_a, bytes_b);
+    EXPECT_EQ(bytes_c, chiapos::BytesFromHex("aabb"));
+}
+
+TEST(UTILS, BytesConnection2) {
+    auto bytes_a = chiapos::BytesFromHex(SZ_LOCAL_PK);
+    auto bytes_b = chiapos::BytesFromHex(SZ_POOL_PK);
+    auto bytes = chiapos::BytesConnector::Connect(bytes_a, bytes_b);
+    EXPECT_EQ(chiapos::BytesToHex(bytes), std::string(SZ_LOCAL_PK) + std::string(SZ_POOL_PK));
+}
+
+TEST(UTILS, SubBytes) {
+    auto bytes = chiapos::BytesFromHex("aabb");
+    auto bytes_a = chiapos::SubBytes(bytes, 0, 1);
+    auto bytes_b = chiapos::SubBytes(bytes, 1, 1);
+    EXPECT_EQ(bytes_a, chiapos::BytesFromHex("aa"));
+    EXPECT_EQ(bytes_b, chiapos::BytesFromHex("bb"));
 }
 
 TEST(UTILS, ParseHosts) {
