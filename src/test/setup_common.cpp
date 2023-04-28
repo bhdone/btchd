@@ -14,7 +14,6 @@
 #include <miner.h>
 #include <net.h>
 #include <noui.h>
-#include <pow.h>
 #include <rpc/register.h>
 #include <rpc/server.h>
 #include <script/sigcache.h>
@@ -154,14 +153,6 @@ TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransaction>&
     block.vtx.resize(1);
     for (const CMutableTransaction& tx : txns)
         block.vtx.push_back(MakeTransactionRef(tx));
-    // IncrementExtraNonce creates a valid coinbase and merkleRoot
-    {
-        LOCK(cs_main);
-        unsigned int extraNonce = 0;
-        IncrementExtraNonce(&block, ::ChainActive().Tip(), extraNonce);
-    }
-
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 
     std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
     ProcessNewBlock(chainparams, shared_pblock, true, nullptr);

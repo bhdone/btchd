@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <net.h>
 #include <validation.h>
+#include <subsidy_utils.h>
 
 #include <test/setup_common.h>
 

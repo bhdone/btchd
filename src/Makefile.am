@@ -874,11 +874,6 @@ if EMBEDDED_LEVELDB
 include Makefile.leveldb.include
 endif
 
-# TODO enable tests
-#if ENABLE_TESTS
-#include Makefile.test.include
-#endif
-
 if ENABLE_TESTS
 
 GTEST_INCLUDES = -I$(srcdir)/googletest/googletest/include
@@ -916,6 +911,11 @@ btchd_test_LDADD = \
   $(CRYPTO_LIBS) \
   $(UTF8PROC_LIBS)
 
+endif
+
+# TODO enable tests
+if ENABLE_TESTS
+include Makefile.test.include
 endif
 
 # TODO enable bench
