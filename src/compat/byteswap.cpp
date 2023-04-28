@@ -1,5 +1,7 @@
 #include <compat/byteswap.h>
 
+#ifndef HAVE_BYTESWAP_H
+
 uint16_t __bswap_16(uint16_t x) { return (x >> 8) | (x << 8); }
 
 uint32_t __bswap_32(uint32_t x)
@@ -15,3 +17,5 @@ uint64_t __bswap_64(uint64_t x)
             ((x & 0x00000000ff000000ull) << 8) | ((x & 0x0000000000ff0000ull) << 24) |
             ((x & 0x000000000000ff00ull) << 40) | ((x & 0x00000000000000ffull) << 56));
 }
+
+#endif

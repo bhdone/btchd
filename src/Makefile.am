@@ -874,48 +874,8 @@ if EMBEDDED_LEVELDB
 include Makefile.leveldb.include
 endif
 
-# TODO enable tests
-#if ENABLE_TESTS
-#include Makefile.test.include
-#endif
-
 if ENABLE_TESTS
-
-GTEST_INCLUDES = -I$(srcdir)/googletest/googletest/include
-GTEST_INCLUDES += -I$(srcdir)/googletest/googletest
-
-GTEST_SRCS = \
-  $(srcdir)/googletest/googletest/src/gtest-all.cc \
-  $(srcdir)/googletest/googletest/src/gtest_main.cc
-
-bin_PROGRAMS += btchd-test
-
-btchd_test_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DCURL_STATICLIB
-btchd_test_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(GTEST_INCLUDES)
-
-btchd_test_LDFLAGS = \
-  $(RELDFLAGS) \
-  $(AM_LDFLAGS) \
-  $(LIBTOOL_APP_LDFLAGS)
-
-btchd_test_SOURCES = \
-  arith_uint256.cpp \
-  uint256.cpp \
-  crypto/sha256.cpp \
-  util/strencodings.cpp \
-  chiapos/kernel/utils.cpp \
-  chiapos/kernel/bls_key.cpp \
-  chiapos/kernel/pos.cpp \
-  chiapos/test/utils_test.cpp \
-  chiapos/test/farmerkey_test.cpp \
-  $(GTEST_SRCS)
-
-btchd_test_LDADD = \
-  $(LIBBITCOIN_CRYPTO) \
-  $(CHIAPOS_LIBS) \
-  $(CRYPTO_LIBS) \
-  $(UTF8PROC_LIBS)
-
+include Makefile.test.include
 endif
 
 # TODO enable bench

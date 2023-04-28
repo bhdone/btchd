@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(blockfilters_json_test)
         BOOST_CHECK(ParseHashStr(test[pos++].get_str(), block_hash));
 
         CBlock block;
-        BOOST_REQUIRE(DecodeHexBlk(block, test[pos++].get_str()));
+        BOOST_REQUIRE(DecodeHexBlk(block, test[pos++].get_str(), false));
 
         CBlockUndo block_undo;
         block_undo.vtxundo.emplace_back();

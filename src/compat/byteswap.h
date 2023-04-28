@@ -7,6 +7,10 @@
 
 #include <stdint.h>
 
+#include <config/bitcoin-config.h>
+
+#ifndef HAVE_BYTESWAP_H
+
 // Note: The byteorder functions are replaced by using the byte order functions from library `chiapos`
 // the following 3 functions are just a backup
 
@@ -15,5 +19,11 @@ uint16_t __bswap_16(uint16_t x);
 uint32_t __bswap_32(uint32_t x);
 
 uint64_t __bswap_64(uint64_t x);
+
+#else
+
+#include <byteswap.h>
+
+#endif
 
 #endif // BITCOIN_COMPAT_BYTESWAP_H
