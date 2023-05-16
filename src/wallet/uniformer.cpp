@@ -116,7 +116,7 @@ Result CreateBindPlotterTransaction(CWallet* wallet, CTxDestination const& dest,
     if (CAmount punishmentReward = wallet->chain().getBindPlotterPunishment(nSpendHeight, bindData).first) { // Calculate bind transaction fee
         realCoinControl.m_min_txfee = std::max(realCoinControl.m_min_txfee, punishmentReward + PROTOCOL_BINDPLOTTER_MINFEE);
         if (!fAllowHighFee) {
-            errors.push_back(strprintf("This binding operation triggers a pledge anti-cheating mechanism and therefore requires a large bind plotter fee %s BHD", FormatMoney(realCoinControl.m_min_txfee)));
+            errors.push_back(strprintf("This binding operation triggers a pledge anti-cheating mechanism and therefore requires a large bind plotter fee %s BHD1", FormatMoney(realCoinControl.m_min_txfee)));
             return Result::BIND_HIGHFEE_ERROR;
         }
     }
@@ -165,7 +165,7 @@ Result CreatePointTransaction(CWallet* wallet, CTxDestination const& senderDest,
         errors.push_back("Invalid amount");
         return Result::INVALID_PARAMETER;
     } if (nAmount < PROTOCOL_POINT_AMOUNT_MIN) {
-        errors.push_back(strprintf("Point amount too minimal, require more than %s BHD", FormatMoney(PROTOCOL_POINT_AMOUNT_MIN)));
+        errors.push_back(strprintf("Point amount too minimal, require more than %s BHD1", FormatMoney(PROTOCOL_POINT_AMOUNT_MIN)));
         return Result::INVALID_PARAMETER;
     }
 
@@ -332,7 +332,7 @@ Result CreateUnfreezeTransaction(CWallet* wallet, COutPoint const& outpoint, CCo
         nBurnAmount = 0;
     }
     assert(nWithdrawAmount <= coin.out.nValue);
-    LogPrintf("%s: pledge %s BHD, withdraw %s BHD, burn %s BHD, point %s BHD, calculated on height: %ld\n", __func__, chiapos::FormatNumberStr(std::to_string(coin.out.nValue / COIN)), chiapos::FormatNumberStr(std::to_string(nWithdrawAmount / COIN)), chiapos::FormatNumberStr(std::to_string(nBurnAmount / COIN)), chiapos::FormatNumberStr(std::to_string(coin.out.nValue)), nSpendHeight);
+    LogPrintf("%s: pledge %s BHD1, withdraw %s BHD1, burn %s BHD1, point %s BHD1, calculated on height: %ld\n", __func__, chiapos::FormatNumberStr(std::to_string(coin.out.nValue / COIN)), chiapos::FormatNumberStr(std::to_string(nWithdrawAmount / COIN)), chiapos::FormatNumberStr(std::to_string(nBurnAmount / COIN)), chiapos::FormatNumberStr(std::to_string(coin.out.nValue)), nSpendHeight);
     txNew.vout = { CTxOut(nWithdrawAmount, coin.out.scriptPubKey) };
     if (nBurnAmount > 0) {
         // We have money needs to be burned

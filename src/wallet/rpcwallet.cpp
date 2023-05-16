@@ -4899,7 +4899,7 @@ static UniValue listbindplotters(const JSONRPCRequest& request)
         std::string strLookingForAddress = request.params[4].get_str();
         CTxDestination addr = DecodeDestination(strLookingForAddress);
         if (!IsValidDestination(addr)) {
-            throw std::runtime_error("The BHD address is invalid");
+            throw std::runtime_error("The BHD1 address is invalid");
         }
         lookingForAddr = addr;
     }
@@ -4986,7 +4986,7 @@ static UniValue sendpledgetoaddress(const JSONRPCRequest& request)
                         "                             to which you're sending the transaction. This is not part of the \n"
                         "                             transaction, just kept in your wallet."},
                     {"subtractfeefromamount", RPCArg::Type::BOOL, /* default */ "false", "The fee will be deducted from the amount being sent.\n"
-                        "                             The recipient will receive less BHDs than you enter in the amount field."},
+                        "                             The recipient will receive less BHD1s than you enter in the amount field."},
                     {"replaceable", RPCArg::Type::BOOL, /* default */ "fallback to wallet's default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125"},
                     {"conf_target", RPCArg::Type::NUM, /* default */ "fallback to wallet's default", "Confirmation target (in blocks)"},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
@@ -5020,7 +5020,7 @@ static UniValue sendpledgetoaddress(const JSONRPCRequest& request)
     if (nAmount <= 0)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid amount for send");
     else if (nAmount < PROTOCOL_POINT_AMOUNT_MIN)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Small amount for point, require more than %s BHD", FormatMoney(PROTOCOL_POINT_AMOUNT_MIN)));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Small amount for point, require more than %s BHD1", FormatMoney(PROTOCOL_POINT_AMOUNT_MIN)));
 
     // Wallet comments
     mapValue_t mapValue;

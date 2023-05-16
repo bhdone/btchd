@@ -32,7 +32,7 @@ namespace poc {
 static const arith_uint256 TWO64 = arith_uint256(std::numeric_limits<uint64_t>::max()) + 1;
 
 /**
- * BHD base target when target spacing is 1 seconds
+ * BHD1 base target when target spacing is 1 seconds
  *
  * See https://bhd.one/wiki/The_Proof_of_Capacity#Base_Target
  *

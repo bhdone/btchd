@@ -912,7 +912,7 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
         CBlockIndex* pindex = ::ChainActive().Tip();
         CAmount nTotalSupplied = GetTotalSupplyBeforeBHDIP009(params) - nBurned;
         auto netspace = poc::CalculateAverageNetworkSpace(pindex, params);
-        LogPrint(BCLog::POC, "%s: Average network space %1.6f(Tib), total supplied: %s BHD (burned: %s BHD), params(difficulty=%ld, iters=%ld, DCF(bits)=%ld, Filter(bits)=%ld)\n", __func__,
+        LogPrint(BCLog::POC, "%s: Average network space %1.6f(Tib), total supplied: %s BHD1 (burned: %s BHD1), params(difficulty=%ld, iters=%ld, DCF(bits)=%ld, Filter(bits)=%ld)\n", __func__,
                 chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())),
                 chiapos::FormatNumberStr(std::to_string(nTotalSupplied / COIN)),
                 chiapos::FormatNumberStr(std::to_string(nBurned / COIN)),
@@ -936,7 +936,7 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
         auto reqBalance = arith_uint256(nTotalSupplied) * nMinedCount / nBlockCount;
         assert(reqBalance <= std::numeric_limits<int64_t>::max());
         CAmount nMiningRequireBalance = reqBalance.GetLow64();
-        LogPrint(BCLog::POC, "%s: mining require balance=%ld (%s BHD), miner capacity=%s TB, mined=%ld/%ld, isFoundationAddr=%s\n", __func__, nMiningRequireBalance, chiapos::FormatNumberStr(std::to_string(nMiningRequireBalance / COIN)), chiapos::FormatNumberStr(std::to_string(nMinerCapacityTB)), nMinedCount, nBlockCount, (isFoundationAddr ? "yes" : "no"));
+        LogPrint(BCLog::POC, "%s: mining require balance=%ld (%s BHD1), miner capacity=%s TB, mined=%ld/%ld, isFoundationAddr=%s\n", __func__, nMiningRequireBalance, chiapos::FormatNumberStr(std::to_string(nMiningRequireBalance / COIN)), chiapos::FormatNumberStr(std::to_string(nMinerCapacityTB)), nMinedCount, nBlockCount, (isFoundationAddr ? "yes" : "no"));
         return nMiningRequireBalance;
     } else {
         int64_t nMinerCapacityTB = std::max((nNetCapacityTB * nMinedCount) / nBlockCount, (int64_t) 1);

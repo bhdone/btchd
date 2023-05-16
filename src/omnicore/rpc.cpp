@@ -1876,7 +1876,7 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
                    "    \"seller\" : \"address\",               (string) the BitcoinHD address of the seller\n"
                    "    \"amountavailable\" : \"n.nnnnnnnn\",   (string) the number of tokens still listed for sale and currently available\n"
                    "    \"bitcoindesired\" : \"n.nnnnnnnn\",    (string) the number of bitcoins desired in exchange\n"
-                   "    \"unitprice\" : \"n.nnnnnnnn\" ,        (string) the unit price (BHD/token)\n"
+                   "    \"unitprice\" : \"n.nnnnnnnn\" ,        (string) the unit price (BHD1/token)\n"
                    "    \"timelimit\" : nn,                   (number) the time limit in blocks a buyer has to pay following a successful accept\n"
                    "    \"minimumfee\" : \"n.nnnnnnnn\",        (string) the minimum mining fee a buyer has to pay to accept this offer\n"
                    "    \"amountaccepted\" : \"n.nnnnnnnn\",    (string) the number of tokens currently reserved for pending \"accept\" orders\n"

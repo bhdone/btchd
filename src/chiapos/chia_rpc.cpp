@@ -247,7 +247,7 @@ static UniValue queryNetspace(JSONRPCRequest const& request) {
 
     UniValue res(UniValue::VOBJ);
     res.pushKV("supplied", nTotalSupplied);
-    res.pushKV("supplied(BHD)", MakeNumberStr(nTotalSupplied / COIN));
+    res.pushKV("supplied(BHD1)", MakeNumberStr(nTotalSupplied / COIN));
     res.pushKV("netspace", netspace.GetLow64());
     res.pushKV("netspace(Bytes)", chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())));
 

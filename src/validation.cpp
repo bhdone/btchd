@@ -1352,7 +1352,7 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
             nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &consensusParams.BHDIP009PledgeTerms);
         }
         CAmount miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, nullptr, nBurned, consensusParams); // Netspace fixed
-        LogPrint(BCLog::POC, "%s: miningRequireBalance=%s BHD, accountBalance=%s BHD, balancePointSent=%s BHD, balancePointReceived=%s BHD\n", __func__,
+        LogPrint(BCLog::POC, "%s: miningRequireBalance=%s BHD1, accountBalance=%s BHD1, balancePointSent=%s BHD1, balancePointReceived=%s BHD1\n", __func__,
                 chiapos::FormatNumberStr(std::to_string(miningRequireBalance / COIN)),
                 chiapos::FormatNumberStr(std::to_string(accountBalance / COIN)),
                 chiapos::FormatNumberStr(std::to_string(balancePointSent / COIN)),
@@ -2141,12 +2141,12 @@ static int64_t nBlocksTotal = 0;
 bool CheckWithdrawTx(CTransaction const& tx, int nLockHeight, CAmount nPointValue, int nPointHeight, int nHeight, CScript const& burnToScriptPubKey, CValidationState& state)
 {
     CAmount nWithdrawAmount = GetWithdrawAmount(nLockHeight, nPointHeight, nHeight, nPointValue);
-    LogPrintf("%s: withdraw tx, tx.vout[0].nValue=%ld (%s BHD), withdraw=%ld (%s BHD), point=%ld (%s BHD), calculated on height: %ld, point height: %ld, should be locked %ld blocks\n", __func__, tx.vout[0].nValue, chiapos::FormatNumberStr(std::to_string(tx.vout[0].nValue / COIN)), nWithdrawAmount, chiapos::FormatNumberStr(std::to_string(nWithdrawAmount / COIN)), nPointValue, chiapos::FormatNumberStr(std::to_string(nPointValue / COIN)), nHeight, nPointHeight, nLockHeight);
+    LogPrintf("%s: withdraw tx, tx.vout[0].nValue=%ld (%s BHD1), withdraw=%ld (%s BHD1), point=%ld (%s BHD1), calculated on height: %ld, point height: %ld, should be locked %ld blocks\n", __func__, tx.vout[0].nValue, chiapos::FormatNumberStr(std::to_string(tx.vout[0].nValue / COIN)), nWithdrawAmount, chiapos::FormatNumberStr(std::to_string(nWithdrawAmount / COIN)), nPointValue, chiapos::FormatNumberStr(std::to_string(nPointValue / COIN)), nHeight, nPointHeight, nLockHeight);
     if (tx.vout[0].nValue > nWithdrawAmount) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-wrong-withdraw-value", "the amount is invalid to be withdrawal");
     }
     CAmount nBurnAmount = nPointValue - nWithdrawAmount;
-    LogPrintf("%s: coins are burned total %s (%s BHD) from withdraw tx: %s\n", __func__, chiapos::FormatNumberStr(std::to_string(nBurnAmount)), chiapos::FormatNumberStr(std::to_string(nBurnAmount / COIN)), tx.GetHash().GetHex());
+    LogPrintf("%s: coins are burned total %s (%s BHD1) from withdraw tx: %s\n", __func__, chiapos::FormatNumberStr(std::to_string(nBurnAmount)), chiapos::FormatNumberStr(std::to_string(nBurnAmount / COIN)), tx.GetHash().GetHex());
     if (nBurnAmount > 0) {
         if (tx.vout.size() != 2) {
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-wrong-vout", "tx vout size should be 2");

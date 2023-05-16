@@ -945,7 +945,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
                 "\nMine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.\n",
                 {
                     {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
-                    {"address", RPCArg::Type::STR, /* default */ "", "The address to send the newly generated BHD to. Default use wallet primary address. Require address private key from wallet. "},
+                    {"address", RPCArg::Type::STR, /* default */ "", "The address to send the newly generated BHD1 to. Default use wallet primary address. Require address private key from wallet. "},
                 },
                 RPCResult{
             "[ blockhashes ]     (array) hashes of blocks generated\n"
@@ -988,7 +988,7 @@ static UniValue generatetoprivkey(const JSONRPCRequest& request)
                 "\nMine blocks immediately to a specified private key P2WPKH address (before the RPC call returns)\n",
                 {
                     {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
-                    {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The address (private key P2WPKH) to send the newly generated BHD to."},
+                    {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The address (private key P2WPKH) to send the newly generated BHD1 to."},
                 },
                 RPCResult{
             "[ blockhashes ]     (array) hashes of blocks generated\n"
