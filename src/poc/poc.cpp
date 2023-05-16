@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The BitcoinHD Core developers
+// Copyright (c) 2017-2020 The BitcoinHD1 Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -545,13 +545,13 @@ uint64_t AddNonce(uint64_t& bestDeadline, const CBlockIndex& miningBlockIndex,
             }
         }
         if (!boost::get<ScriptHash>(&dest))
-            throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid BitcoinHD address");
+            throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid BitcoinHD1 address");
 
         // Check bind
         if (miningBlockIndex.nHeight + 1 >= params.BHDIP006Height) {
             const CAccountID accountID = ExtractAccountID(dest);
             if (accountID.IsNull())
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD address");
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD1 address");
             if (!::ChainstateActive().CoinsTip().HaveActiveBindPlotter(accountID, CPlotterBindData(nPlotterId)))
                 throw JSONRPCError(RPC_INVALID_REQUEST,
                     strprintf("%" PRIu64 " with %s not active bind", nPlotterId, EncodeDestination(dest)));

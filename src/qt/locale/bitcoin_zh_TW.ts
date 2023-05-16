@@ -66,11 +66,11 @@
         <translation>收款位址</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your BitcoinHD1 addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>這些是你要付款過去的比特硬幣位址。在付錢之前，務必要檢查金額和收款位址是否正確。</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <source>These are your BitcoinHD1 addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
         <translation>這些是您用於接收付款的比特硬幣位址。 使用接收分頁中的"生成新接收位址"按鈕創建新的位置。</translation>
     </message>
     <message>
@@ -338,7 +338,7 @@
         <translation>代理伺服器&lt;b&gt;已經啟用&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD address</source>
+        <source>Send coins to a BitcoinHD1 address</source>
         <translation>付錢給一個比特硬幣位址</translation>
     </message>
     <message>
@@ -382,11 +382,11 @@
         <translation>把錢包中的密鑰加密</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD addresses to prove you own them</source>
+        <source>Sign messages with your BitcoinHD1 addresses to prove you own them</source>
         <translation>用比特硬幣位址簽署訊息來證明位址是你的</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD addresses</source>
+        <source>Verify messages to ensure they were signed with specified BitcoinHD1 addresses</source>
         <translation>驗證訊息是用來確定訊息是用指定的比特硬幣位址簽署的</translation>
     </message>
     <message>
@@ -426,7 +426,7 @@
         <translation>命令列選項(&amp;C)</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to BitcoinHD network</source>
+        <source>%n active connection(s) to BitcoinHD1 network</source>
         <translation><numerusform>%n 個運作中的比特硬幣網路連線</numerusform></translation>
     </message>
     <message>
@@ -494,7 +494,7 @@
         <translation>關上錢包</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible BitcoinHD command-line options</source>
+        <source>Show the %1 help message to get a list with possible BitcoinHD1 command-line options</source>
         <translation>顯示 %1 的說明訊息，來取得可用命令列選項的列表</translation>
     </message>
     <message>
@@ -606,11 +606,11 @@
         <translation>錢包&lt;b&gt;已加密&lt;/b&gt;並且&lt;b&gt;上鎖中&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. BitcoinHD can no longer continue safely and will quit.</source>
+        <source>A fatal error occurred. BitcoinHD1 can no longer continue safely and will quit.</source>
         <translation>發生了致命的錯誤。比特硬幣軟體沒辦法再繼續安全執行，只好結束。</translation>
     </message>
     <message>
-        <source>BitcoinHD Core</source>
+        <source>BitcoinHD1 Core</source>
         <translation>比特硬幣</translation>
     </message>
     <message>
@@ -826,7 +826,7 @@
         <translation>編輯付款位址</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid BitcoinHD address.</source>
+        <source>The entered address "%1" is not a valid BitcoinHD1 address.</source>
         <translation>輸入的位址 %1 並不是有效的比特硬幣位址。</translation>
     </message>
     <message>
@@ -923,7 +923,7 @@
         <translation>使用自訂的資料目錄:</translation>
     </message>
     <message>
-        <source>BitcoinHD</source>
+        <source>BitcoinHD1</source>
         <translation>比特硬幣</translation>
     </message>
     <message>
@@ -935,7 +935,7 @@
         <translation>在這個目錄中大約會存放 %1 GB 的資料。</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the BitcoinHD block chain.</source>
+        <source>%1 will download and store a copy of the BitcoinHD1 block chain.</source>
         <translation>%1 會下載比特硬幣區塊鏈並且儲存一份副本。</translation>
     </message>
     <message>
@@ -966,7 +966,7 @@
         <translation>表單</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD network, as detailed below.</source>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD1 network, as detailed below.</source>
         <translation>最近的交易可能還看不到，因此錢包餘額可能不正確。在錢包軟體完成跟比特硬幣網路的同步後，這裡的資訊就會正確。詳情請見下面。</translation>
     </message>
     <message>
@@ -1163,7 +1163,7 @@
         <translation>可以花還沒確認的零錢(&amp;S)</translation>
     </message>
     <message>
-        <source>Automatically open the BitcoinHD client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <source>Automatically open the BitcoinHD1 client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>自動在路由器上開放比特硬幣的客戶端通訊埠。只有在你的路由器支援且開啓「通用即插即用」協定(UPnP)時才有作用。</translation>
     </message>
     <message>
@@ -1179,7 +1179,7 @@
         <translation>接受外來連線(&amp;G)</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD network through a SOCKS5 proxy.</source>
+        <source>Connect to the BitcoinHD1 network through a SOCKS5 proxy.</source>
         <translation>透過 SOCKS5 代理伺服器來連線到比特硬幣網路。</translation>
     </message>
     <message>
@@ -1215,7 +1215,7 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <source>Connect to the BitcoinHD1 network through a separate SOCKS5 proxy for Tor hidden services.</source>
         <translation>透過另外的 SOCKS5 代理伺服器來連線到比特硬幣網路中的 Tor 隱藏服務。</translation>
     </message>
     <message>
@@ -1334,7 +1334,7 @@
         <translation>表單</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD network after a connection is established, but this process has not completed yet.</source>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD1 network after a connection is established, but this process has not completed yet.</source>
         <translation>顯示的資訊可能是過期的。跟比特硬幣網路的連線建立後，你的錢包會自動和網路同步，但是這個步驟還沒完成。</translation>
     </message>
     <message>
@@ -1461,7 +1461,7 @@
         <translation>無效的付款位址 %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid BitcoinHD address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid BitcoinHD1 address or malformed URI parameters.</source>
         <translation>沒辦法解析 URI 位址！可能是因為比特硬幣位址無效，或是 URI 參數格式錯誤。</translation>
     </message>
     <message>
@@ -1563,7 +1563,7 @@
         <translation>金額</translation>
     </message>
     <message>
-        <source>Enter a BitcoinHD address (e.g. %1)</source>
+        <source>Enter a BitcoinHD1 address (e.g. %1)</source>
         <translation>輸入比特硬幣位址 (比如說 %1)</translation>
     </message>
     <message>
@@ -2024,7 +2024,7 @@
         <translation>訊息(&amp;M):</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD network.</source>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD1 network.</source>
         <translation>附加在付款要求中的訊息，可以不填，打開要求內容時會顯示。注意: 這個訊息不會隨著付款送到比特硬幣網路上。</translation>
     </message>
     <message>
@@ -2297,7 +2297,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>零散錢:</translation>
     </message>
     <message>
-        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for BitcoinHD transactions than the network can process.</source>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for BitcoinHD1 transactions than the network can process.</source>
         <translation>当交易量小于可用区块空间时，矿工和中继节点可能会执行最低手续费率限制。按照这个最低费率来支付手续费也是可以的，但请注意，一旦交易需求超出比特硬币网络能处理的限度，你的交易可能永远也无法确认。</translation>
     </message>
     <message>
@@ -2453,7 +2453,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation><numerusform>预计在等待 %n 个区块后会有第一个确认。</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid BitcoinHD address</source>
+        <source>Warning: Invalid BitcoinHD1 address</source>
         <translation>警告:比特硬幣位址無效</translation>
     </message>
     <message>
@@ -2564,7 +2564,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>這是一筆正常的付款。</translation>
     </message>
     <message>
-        <source>The BitcoinHD address to send the payment to</source>
+        <source>The BitcoinHD1 address to send the payment to</source>
         <translation>接收付款的比特硬幣位址</translation>
     </message>
     <message>
@@ -2612,7 +2612,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>請輸入這個位址的標記，來把它加進去已使用過位址的清單。</translation>
     </message>
     <message>
-        <source>A message that was attached to the btchd: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BitcoinHD network.</source>
+        <source>A message that was attached to the btchd: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BitcoinHD1 network.</source>
         <translation>附加在比特硬幣付款協議的資源識別碼(URI)中的訊息，會和交易內容一起存起來，給你自己做參考。注意: 這個訊息不會送到比特硬幣網路上。</translation>
     </message>
     <message>
@@ -2685,7 +2685,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>你可以用自己的位址簽署訊息或合約，來證明你可以從該位址收款。但是請小心，不要簽署語意含糊不清，或隨機產生的內容，因為釣魚式詐騙可能會用騙你簽署的手法來冒充是你。只有在語句中的細節你都同意時才簽署。</translation>
     </message>
     <message>
-        <source>The BitcoinHD address to sign the message with</source>
+        <source>The BitcoinHD1 address to sign the message with</source>
         <translation>用來簽署訊息的比特硬幣位址</translation>
     </message>
     <message>
@@ -2717,7 +2717,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>複製目前的簽章到系統剪貼簿</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this BitcoinHD address</source>
+        <source>Sign the message to prove you own this BitcoinHD1 address</source>
         <translation>簽署這個訊息來證明這個比特硬幣位址是你的</translation>
     </message>
     <message>
@@ -2741,11 +2741,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>請在下面輸入收款人的位址，訊息(請確定完整複製了所包含的換行，空格，跳位符號等等)，以及簽章，來驗證這個訊息。請小心，除了訊息內容以外，不要對簽章本身過度解讀，以避免被用「中間人攻擊法」詐騙。請注意，通過驗證的簽章只能證明簽章人確實可以從該位址收款，不能證明任何交易中的付款人身份！</translation>
     </message>
     <message>
-        <source>The BitcoinHD address the message was signed with</source>
+        <source>The BitcoinHD1 address the message was signed with</source>
         <translation>簽署這個訊息的比特硬幣位址</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified BitcoinHD address</source>
+        <source>Verify the message to ensure it was signed with the specified BitcoinHD1 address</source>
         <translation>驗證這個訊息來確定是用指定的比特硬幣位址簽署的</translation>
     </message>
     <message>
@@ -3996,7 +3996,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>載入完成</translation>
     </message>
     <message>
-        <source>BitcoinHD Core</source>
+        <source>BitcoinHD1 Core</source>
         <translation>比特硬幣</translation>
     </message>
 </context>

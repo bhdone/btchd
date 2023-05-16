@@ -62,7 +62,7 @@
         <translation>पतों को प्राप्त कर रहा है</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your BitcoinHD1 addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>ये भुगतान भेजने के लिए ये आपके बिटकॉइन पते हैं। हमेशा सिक्के भेजने से पहले राशि और प्राप्तकर्ता पते की जांच करें।</translation>
     </message>
     <message>
@@ -340,7 +340,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>BitcoinHD</source>
+        <source>BitcoinHD1</source>
         <translation>बीटकोइन</translation>
     </message>
     <message>

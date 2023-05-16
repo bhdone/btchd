@@ -167,7 +167,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>BitcoinHD</source>
+        <source>BitcoinHD1</source>
         <translation>Биткоин</translation>
     </message>
     <message>

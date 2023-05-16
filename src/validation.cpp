@@ -70,7 +70,7 @@
 #include "updatetip_log_helper.hpp"
 
 #if defined(NDEBUG)
-# error "BitcoinHD cannot be compiled without assertions."
+# error "BitcoinHD1 cannot be compiled without assertions."
 #endif
 
 #define MICRO 0.000001

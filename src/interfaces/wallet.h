@@ -373,7 +373,7 @@ struct WalletBalances
     CAmount unconfirmed_watch_only_balance = 0;
     CAmount immature_watch_only_balance = 0;
 
-    //! for BitcoinHD
+    //! for BitcoinHD1
     CAmount frozen_balance = 0;
     CAmount point_sent_balance = 0;
     CAmount point_received_balance = 0;
@@ -387,7 +387,7 @@ struct WalletBalances
                immature_balance != prev.immature_balance || watch_only_balance != prev.watch_only_balance ||
                unconfirmed_watch_only_balance != prev.unconfirmed_watch_only_balance ||
                immature_watch_only_balance != prev.immature_watch_only_balance ||
-               //! for BitcoinHD
+               //! for BitcoinHD1
                frozen_balance != prev.frozen_balance ||
                point_sent_balance != prev.point_sent_balance || point_received_balance != prev.point_received_balance ||
                frozen_watch_only_balance != prev.frozen_watch_only_balance ||
@@ -410,7 +410,7 @@ struct WalletTx
     std::map<std::string, std::string> value_map;
     bool is_coinbase;
 
-    //! for BitcoinHD point/withdraw tx
+    //! for BitcoinHD1 point/withdraw tx
     CTxDestination tx_point_address;
     isminetype tx_point_address_is_mine;
 
@@ -434,7 +434,7 @@ struct WalletTxStatus
     bool is_coinbase;
     bool is_in_main_chain;
 
-    //! for BitcoinHD
+    //! for BitcoinHD1
     bool is_unfrozen;
     bool is_bindplotter_inactived;
 };

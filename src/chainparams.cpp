@@ -115,8 +115,8 @@ public:
         consensus.BHDIP001FundRoyaltyForLowMortgage = 700; // 700‰ to fund
         consensus.BHDIP001MiningRatio = 3 * COIN;
 
-        // It's fuck mind BitcoinHD Improvement Proposals
-        consensus.BHDIP004Height = 96264; // BitcoinHD new consensus upgrade bug. 96264 is first invalid block
+        // It's fuck mind BitcoinHD1 Improvement Proposals
+        consensus.BHDIP004Height = 96264; // BitcoinHD1 new consensus upgrade bug. 96264 is first invalid block
         consensus.BHDIP004AbandonHeight = 99000;
 
         consensus.BHDIP006Height = 129100; // Actived on Wed, 02 Jan 2019 02:17:19 GMT
@@ -400,7 +400,7 @@ public:
         consensus.BHDIP001FundRoyaltyForLowMortgage = 700; // 700‰
         consensus.BHDIP001MiningRatio = 3 * COIN;
 
-        consensus.BHDIP004Height = 96264; // BHDIP004. BitcoinHD new consensus upgrade bug.
+        consensus.BHDIP004Height = 96264; // BHDIP004. BitcoinHD1 new consensus upgrade bug.
         consensus.BHDIP004AbandonHeight = 99000;
 
         consensus.BHDIP006Height = 129100;

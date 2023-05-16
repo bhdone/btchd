@@ -60,7 +60,7 @@
       <key>UTTypeIdentifier</key>
       <string>org.btchd.paymentrequest</string>
       <key>UTTypeDescription</key>
-      <string>BitcoinHD payment request</string>
+      <string>BitcoinHD1 payment request</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>

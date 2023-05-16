@@ -66,8 +66,8 @@
         <translation>Recibiendo direcciones</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Estas son tus direcciones de BitcoinHD para recibir pagos. Siempre revise el monto y la dirección de envío antes de enviar criptomonedas.</translation>
+        <source>These are your BitcoinHD1 addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Estas son tus direcciones de BitcoinHD1 para recibir pagos. Siempre revise el monto y la dirección de envío antes de enviar criptomonedas.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -322,7 +322,7 @@
         <translation>Proxy &lt;b&gt;habilitado&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD address</source>
+        <source>Send coins to a BitcoinHD1 address</source>
         <translation>Enviar monedas a una dirección bitcoin</translation>
     </message>
     <message>
@@ -366,12 +366,12 @@
         <translation>Cifrar las claves privadas de su monedero</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD addresses to prove you own them</source>
+        <source>Sign messages with your BitcoinHD1 addresses to prove you own them</source>
         <translation>Firmar un mensaje para provar que usted es dueño de esta dirección</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD addresses</source>
-        <translation>Verificar mensajes comprobando que están firmados con direcciones BitcoinHD concretas</translation>
+        <source>Verify messages to ensure they were signed with specified BitcoinHD1 addresses</source>
+        <translation>Verificar mensajes comprobando que están firmados con direcciones BitcoinHD1 concretas</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -410,8 +410,8 @@
         <translation>&amp;Opciones de linea de comando</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to BitcoinHD network</source>
-        <translation><numerusform>%n conexión activa hacia la red BitcoinHD</numerusform><numerusform>%n conexiones activas hacia la red BitcoinHD</numerusform></translation>
+        <source>%n active connection(s) to BitcoinHD1 network</source>
+        <translation><numerusform>%n conexión activa hacia la red BitcoinHD1</numerusform><numerusform>%n conexiones activas hacia la red BitcoinHD1</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -454,8 +454,8 @@
         <translation>Actualizado</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible BitcoinHD command-line options</source>
-        <translation>Mostrar el mensaje de ayuda %1 para obtener una lista de los posibles comandos de BitcoinHD</translation>
+        <source>Show the %1 help message to get a list with possible BitcoinHD1 command-line options</source>
+        <translation>Mostrar el mensaje de ayuda %1 para obtener una lista de los posibles comandos de BitcoinHD1</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -550,8 +550,8 @@
         <translation>La billetera esta &lt;b&gt;codificada&lt;/b&gt; y actualmente &lt;b&gt;bloqueda&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. BitcoinHD can no longer continue safely and will quit.</source>
-        <translation>Ha ocurrido un error fatal. BitcoinHD no puede seguir seguro y se cerrará.</translation>
+        <source>A fatal error occurred. BitcoinHD1 can no longer continue safely and will quit.</source>
+        <translation>Ha ocurrido un error fatal. BitcoinHD1 no puede seguir seguro y se cerrará.</translation>
     </message>
 </context>
 <context>
@@ -747,8 +747,8 @@
         <translation>Editar dirección de envio</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid BitcoinHD address.</source>
-        <translation>La dirección introducida "%1" no es una dirección BitcoinHD valida.</translation>
+        <source>The entered address "%1" is not a valid BitcoinHD1 address.</source>
+        <translation>La dirección introducida "%1" no es una dirección BitcoinHD1 valida.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -836,8 +836,8 @@
         <translation>usar un directorio de datos personalizado:</translation>
     </message>
     <message>
-        <source>BitcoinHD</source>
-        <translation>BitcoinHD</translation>
+        <source>BitcoinHD1</source>
+        <translation>BitcoinHD1</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -848,8 +848,8 @@
         <translation>Aproximadamente %1 GB de información será almacenado en este directorio.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the BitcoinHD block chain.</source>
-        <translation>%1 descargará y almacenará una copia del blockchain de BitcoinHD.</translation>
+        <source>%1 will download and store a copy of the BitcoinHD1 block chain.</source>
+        <translation>%1 descargará y almacenará una copia del blockchain de BitcoinHD1.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -879,7 +879,7 @@
         <translation>Formulario</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD network, as detailed below.</source>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD1 network, as detailed below.</source>
         <translation>Las transacciones recientes aún no pueden ser visibles, y por lo tanto el saldo de su monedero podría ser incorrecto. Esta información será correcta cuando su monedero haya terminado de sincronizarse con la red de bitcoin, como se detalla abajo.</translation>
     </message>
     <message>
@@ -1048,8 +1048,8 @@
         <translation>Gastar cambio sin confirmar</translation>
     </message>
     <message>
-        <source>Automatically open the BitcoinHD client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abre automáticamente el puerto del cliente BitcoinHD en el router. Esto funciona solo cuando tu router es compatible con UPnP y está habilitado.</translation>
+        <source>Automatically open the BitcoinHD1 client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Abre automáticamente el puerto del cliente BitcoinHD1 en el router. Esto funciona solo cuando tu router es compatible con UPnP y está habilitado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1064,8 +1064,8 @@
         <translation>Permitir conexiones entrantes</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD network through a SOCKS5 proxy.</source>
-        <translation>Conectar a la red de BitcoinHD a través de un proxy SOCKS5</translation>
+        <source>Connect to the BitcoinHD1 network through a SOCKS5 proxy.</source>
+        <translation>Conectar a la red de BitcoinHD1 a través de un proxy SOCKS5</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1100,8 +1100,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Conectar a la red de BitcoinHD a través de un proxy SOCKS5 diferente para los servicios anónimos de Tor.</translation>
+        <source>Connect to the BitcoinHD1 network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Conectar a la red de BitcoinHD1 a través de un proxy SOCKS5 diferente para los servicios anónimos de Tor.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1208,8 +1208,8 @@
         <translation>Formulario</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD network after a connection is established, but this process has not completed yet.</source>
-        <translation>La información entregada puede estar desactualizada. Tu billetera se sincroniza automáticamente con la red de BitcoinHD después de establecer una conexión, pero este proceso aún no se ha completado.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD1 network after a connection is established, but this process has not completed yet.</source>
+        <translation>La información entregada puede estar desactualizada. Tu billetera se sincroniza automáticamente con la red de BitcoinHD1 después de establecer una conexión, pero este proceso aún no se ha completado.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1284,7 +1284,7 @@
     </message>
     <message>
         <source>Cannot start btchd: click-to-pay handler</source>
-        <translation>No se puede iniciar BitcoinHD: controlador de clic para pagar</translation>
+        <translation>No se puede iniciar BitcoinHD1: controlador de clic para pagar</translation>
     </message>
     <message>
         <source>URI handling</source>
@@ -1299,8 +1299,8 @@
         <translation>Dirección de pago inválida %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid BitcoinHD address or malformed URI parameters.</source>
-        <translation>¡URI no puede ser analizado! Esto puede deberse a una dirección de BitcoinHD no válida o a parámetros de URI mal formados.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid BitcoinHD1 address or malformed URI parameters.</source>
+        <translation>¡URI no puede ser analizado! Esto puede deberse a una dirección de BitcoinHD1 no válida o a parámetros de URI mal formados.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1401,8 +1401,8 @@
         <translation>Cantidad</translation>
     </message>
     <message>
-        <source>Enter a BitcoinHD address (e.g. %1)</source>
-        <translation>Ingresa una dirección de BitcoinHD (Ejemplo: %1)</translation>
+        <source>Enter a BitcoinHD1 address (e.g. %1)</source>
+        <translation>Ingresa una dirección de BitcoinHD1 (Ejemplo: %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1819,8 +1819,8 @@
         <translation>&amp;mensaje</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD network.</source>
-        <translation>Mensaje opcional adjunto a la solicitud de pago, que será mostrado cuando la solicitud sea abierta. Nota: Este mensaje no será enviado con el pago a través de la red BitcoinHD.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD1 network.</source>
+        <translation>Mensaje opcional adjunto a la solicitud de pago, que será mostrado cuando la solicitud sea abierta. Nota: Este mensaje no será enviado con el pago a través de la red BitcoinHD1.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2165,8 +2165,8 @@
         <translation>Solicitud de pago expirada</translation>
     </message>
     <message>
-        <source>Warning: Invalid BitcoinHD address</source>
-        <translation>Peligro: Dirección de BitcoinHD inválida</translation>
+        <source>Warning: Invalid BitcoinHD1 address</source>
+        <translation>Peligro: Dirección de BitcoinHD1 inválida</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2208,8 +2208,8 @@
         <translation>Este es un pago normal</translation>
     </message>
     <message>
-        <source>The BitcoinHD address to send the payment to</source>
-        <translation>Dirección BitcoinHD a enviar el pago</translation>
+        <source>The BitcoinHD1 address to send the payment to</source>
+        <translation>Dirección BitcoinHD1 a enviar el pago</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2289,8 +2289,8 @@
         <translation>&amp;Firmar Mensaje</translation>
     </message>
     <message>
-        <source>The BitcoinHD address to sign the message with</source>
-        <translation>Dirección BitcoinHD con la que firmar el mensaje</translation>
+        <source>The BitcoinHD1 address to sign the message with</source>
+        <translation>Dirección BitcoinHD1 con la que firmar el mensaje</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2321,7 +2321,7 @@
         <translation>Copiar la firma actual al portapapeles del sistema</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this BitcoinHD address</source>
+        <source>Sign the message to prove you own this BitcoinHD1 address</source>
         <translation>Firmar un mensjage para probar que usted es dueño de esta dirección</translation>
     </message>
     <message>
@@ -2341,12 +2341,12 @@
         <translation>&amp;Firmar Mensaje</translation>
     </message>
     <message>
-        <source>The BitcoinHD address the message was signed with</source>
-        <translation>La dirección BitcoinHD con la que se firmó el mensaje</translation>
+        <source>The BitcoinHD1 address the message was signed with</source>
+        <translation>La dirección BitcoinHD1 con la que se firmó el mensaje</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified BitcoinHD address</source>
-        <translation>Verifica el mensaje para asegurar que fue firmado con la dirección de BitcoinHD especificada.</translation>
+        <source>Verify the message to ensure it was signed with the specified BitcoinHD1 address</source>
+        <translation>Verifica el mensaje para asegurar que fue firmado con la dirección de BitcoinHD1 especificada.</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

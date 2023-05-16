@@ -127,7 +127,7 @@ Intro::Intro(QWidget *parent, uint64_t blockchain_size, uint64_t chain_state_siz
         .arg(BitcoinGUI::tr(PACKAGE_NAME))
         .arg(m_blockchain_size)
         .arg(2018)
-        .arg(tr("BitcoinHD"))
+        .arg(tr("BitcoinHD1"))
     );
     ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(BitcoinGUI::tr(PACKAGE_NAME)));
 
@@ -151,7 +151,7 @@ Intro::Intro(QWidget *parent, uint64_t blockchain_size, uint64_t chain_state_siz
     }
     requiredSpace += m_chain_state_size;
     ui->sizeWarningLabel->setText(
-        tr("%1 will download and store a copy of the BitcoinHD block chain.").arg(BitcoinGUI::tr(PACKAGE_NAME)) + " " +
+        tr("%1 will download and store a copy of the BitcoinHD1 block chain.").arg(BitcoinGUI::tr(PACKAGE_NAME)) + " " +
         storageRequiresMsg.arg(requiredSpace) + " " +
         tr("The wallet will also be stored in this directory.")
     );

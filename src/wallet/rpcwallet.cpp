@@ -208,7 +208,7 @@ static UniValue getnewaddress(const JSONRPCRequest& request)
     }
 
             RPCHelpMan{"getnewaddress",
-                "\nReturns a new BitcoinHD address for receiving payments.\n"
+                "\nReturns a new BitcoinHD1 address for receiving payments.\n"
                 "If 'label' is specified, it is added to the address book \n"
                 "so payments received with the address will be associated with 'label'.\n" +
                 HelpRequiringPassphrase(pwallet) + "\n",
@@ -264,7 +264,7 @@ static UniValue getrawchangeaddress(const JSONRPCRequest& request)
     }
 
             RPCHelpMan{"getrawchangeaddress",
-                "\nReturns a new BitcoinHD address, for receiving change.\n"
+                "\nReturns a new BitcoinHD1 address, for receiving change.\n"
                 "This is for use with raw transactions, NOT normal use.\n",
                 {
                     {"address_type", RPCArg::Type::STR, /* default */ "set by -changetype", "The address type to use. Options are \"p2sh-segwit\"."},
@@ -326,7 +326,7 @@ static UniValue setlabel(const JSONRPCRequest& request)
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD1 address");
     }
 
     std::string label = LabelFromValue(request.params[1]);
@@ -684,7 +684,7 @@ static UniValue getreceivedbyaddress(const JSONRPCRequest& request)
     // Bitcoin address
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD1 address");
     }
     CScript scriptPubKey = GetScriptForDestination(dest);
     if (!IsMine(*pwallet, scriptPubKey)) {
@@ -991,7 +991,7 @@ static UniValue sendmany(const JSONRPCRequest& request)
     for (const std::string& name_ : keys) {
         CTxDestination dest = DecodeDestination(name_);
         if (!IsValidDestination(dest)) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid BitcoinHD address: ") + name_);
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid BitcoinHD1 address: ") + name_);
         }
 
         if (destinations.count(dest)) {
@@ -1048,7 +1048,7 @@ static UniValue addmultisigaddress(const JSONRPCRequest& request)
 
             RPCHelpMan{"addmultisigaddress",
                 "\nAdd a nrequired-to-sign multisignature address to the wallet. Requires a new wallet backup.\n"
-                "Each key is a BitcoinHD address or hex-encoded public key.\n"
+                "Each key is a BitcoinHD1 address or hex-encoded public key.\n"
                 "This functionality is only intended for use with non-watchonly addresses.\n"
                 "See `importaddress` for watchonly p2sh address support.\n"
                 "If 'label' is specified, assign address to that label.\n",
@@ -2996,7 +2996,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
             const UniValue& input = inputs[idx];
             CTxDestination dest = DecodeDestination(input.get_str());
             if (!IsValidDestination(dest)) {
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid BitcoinHD address: ") + input.get_str());
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid BitcoinHD1 address: ") + input.get_str());
             }
             if (!destinations.insert(dest).second) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, std::string("Invalid parameter, duplicated address: ") + input.get_str());
@@ -4386,7 +4386,7 @@ static UniValue getprimaryaddress(const JSONRPCRequest& request)
         throw std::runtime_error(
             "getprimaryaddress\n"
             "\nResult:\n"
-            "\"address\"    (string) The primary BitcoinHD address\n"
+            "\"address\"    (string) The primary BitcoinHD1 address\n"
             "\nExamples:\n"
             + HelpExampleCli("getprimaryaddress", "")
             + HelpExampleRpc("getprimaryaddress", "")
@@ -4408,7 +4408,7 @@ static UniValue setprimaryaddress(const JSONRPCRequest& request)
         throw std::runtime_error(
             "setprimaryaddress address\n"
             "\nResult:\n"
-            "\"address\"    (string) The primary BitcoinHD address\n"
+            "\"address\"    (string) The primary BitcoinHD1 address\n"
             "\nExamples:\n"
             + HelpExampleCli("setprimaryaddress", "\"" + Params().GetConsensus().BHDFundAddress + "\"")
             + HelpExampleRpc("setprimaryaddress", "\"" + Params().GetConsensus().BHDFundAddress + "\"")
@@ -4416,7 +4416,7 @@ static UniValue setprimaryaddress(const JSONRPCRequest& request)
 
     CTxDestination dest = DecodeDestination(request.params[0].get_str());
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD1 address");
     }
 
     if (IsMine(*pwallet, dest)) {
@@ -4445,7 +4445,7 @@ static UniValue bindplotter(const JSONRPCRequest& request)
                 "\nBind plotter to to a given address." +
                     HelpRequiringPassphrase(pwallet) + "\n",
                 {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The BitcoinHD address to send to."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The BitcoinHD1 address to send to."},
                     {"passphrase_or_hex", RPCArg::Type::STR, RPCArg::Optional::NO, "The passphrase or hex bind data."},
                     {"allow_high_fee", RPCArg::Type::BOOL, /* default */ "false", "Allow this bind high transaction fee."},
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment used to store what the transaction is for.\n"
@@ -4566,7 +4566,7 @@ static UniValue bindchiaplotter(const JSONRPCRequest &request)
             "bindchiaplotter",
             "\nBind chia-plotter to to a given address." + HelpRequiringPassphrase(pwallet) + "\n",
             {
-                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The BitcoinHD address to send to.\n"},
+                {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The BitcoinHD1 address to send to.\n"},
                 {"farmer_sk", RPCArg::Type::STR, RPCArg::Optional::NO, "The farmer's private-key.\n"},
                 {"allow_high_fee", RPCArg::Type::BOOL, /* default */ "false", "Allow this bind high transaction fee."},
                 {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG,
@@ -4859,7 +4859,7 @@ static UniValue listbindplotters(const JSONRPCRequest& request)
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"address\":\"address\",               (string) The BitcoinHD address of the binded.\n"
+            "    \"address\":\"address\",               (string) The BitcoinHD1 address of the binded.\n"
             "    \"plotterId\": \"plotterId\",          (string) The binded plotter ID.\n"
             "    \"txid\": \"transactionid\",           (string) The transaction id.\n"
             "    \"blockhash\": \"hashvalue\",          (string) The block hash containing the transaction.\n"
@@ -4978,7 +4978,7 @@ static UniValue sendpledgetoaddress(const JSONRPCRequest& request)
                 "\nSend an amount for point to a given address from wallet primary address." +
                     HelpRequiringPassphrase(pwallet) + "\n",
                 {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The BitcoinHD address to send to."},
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The BitcoinHD1 address to send to."},
                     {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
                     {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment used to store what the transaction is for.\n"
                         "                             This is not part of the transaction, just kept in your wallet."},
@@ -5341,8 +5341,8 @@ static UniValue listpledges(const JSONRPCRequest& request)
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"from\":\"address\",                  (string) The BitcoinHD address of the point sender.\n"
-            "    \"to\":\"address\",                    (string) The BitcoinHD address of the point receiver\n"
+            "    \"from\":\"address\",                  (string) The BitcoinHD1 address of the point sender.\n"
+            "    \"to\":\"address\",                    (string) The BitcoinHD1 address of the point receiver\n"
             "    \"category\":\"loan|debit|self\",      (string) The point transaction category.\n"
             "    \"amount\": x.xxx,                   (numeric) The amount in " + CURRENCY_UNIT + ".\n"
             "    \"txid\": \"transactionid\",           (string) The transaction id.\n"
@@ -5507,7 +5507,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrasechange",           &walletpassphrasechange,        {"oldpassphrase","newpassphrase"} },
     { "wallet",             "walletprocesspsbt",                &walletprocesspsbt,             {"psbt","sign","sighashtype","bip32derivs"} },
 
-    // for BitcoinHD
+    // for BitcoinHD1
     { "wallet",             "dumpprivkeys",                     &dumpprivkeys,                  {"from_index", "to_index"} },
     { "wallet",             "getprimaryaddress",                &getprimaryaddress,             {} },
     { "wallet",             "setprimaryaddress",                &setprimaryaddress,             {"address"} },

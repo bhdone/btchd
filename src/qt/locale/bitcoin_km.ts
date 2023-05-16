@@ -147,8 +147,8 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
-        <source>Send coins to a BitcoinHD address</source>
-        <translation>ផ្ញើកាក់ទៅកាន់ អាសយដ្ឋាន BitcoinHD មួយ</translation>
+        <source>Send coins to a BitcoinHD1 address</source>
+        <translation>ផ្ញើកាក់ទៅកាន់ អាសយដ្ឋាន BitcoinHD1 មួយ</translation>
     </message>
     </context>
 <context>

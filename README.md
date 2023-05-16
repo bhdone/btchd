@@ -1,4 +1,4 @@
-BitcoinHD Core integration/staging tree
+BitcoinHD1 Core integration/staging tree
 =======================================
 
 https://bhd.one
@@ -8,25 +8,25 @@ The Crypto Currency System Based on CPoC.
 Pay Tribute to Cryptocurrency Pioneers [Bitcoin](https://bitcoincore.org),
 [Burst](https://www.burst-coin.org) and [Chia](https://chia.net)!
 
-About BitcoinHD
+About BitcoinHD1
 ---------------
 
-- BitcoinHD is a new type of crypto currency based on Proof of Capacity and Proof of Space and Time(Chia).
-- BitcoinHD uses an upgraded version of cPOC mining (Conditioned Proof of Capacity), with a perfect economic model and consensus algorithm.
-- BitcoinHD uses Chia's PoST consensus protocol after upgrade
-- BitcoinHD uses hard disk as the participant of consensus, which reduces power consumption.
-- BitcoinHD mining lowers the entry barriers, and makes the coin generation process more decentralized, secure and reliable.
-- Compared with POW mining, cPOC and PoST mining saves energy, consumes much less power, has lower noise, no heat, and is anti-ASIC. cPOC-mining-based BitcoinHD can realize the original intention of Satoshi Nakamoto ---- everyone can become a miner.
+- BitcoinHD1 is a new type of crypto currency based on Proof of Capacity and Proof of Space and Time(Chia).
+- BitcoinHD1 uses an upgraded version of cPOC mining (Conditioned Proof of Capacity), with a perfect economic model and consensus algorithm.
+- BitcoinHD1 uses Chia's PoST consensus protocol after upgrade
+- BitcoinHD1 uses hard disk as the participant of consensus, which reduces power consumption.
+- BitcoinHD1 mining lowers the entry barriers, and makes the coin generation process more decentralized, secure and reliable.
+- Compared with POW mining, cPOC and PoST mining saves energy, consumes much less power, has lower noise, no heat, and is anti-ASIC. cPOC-mining-based BitcoinHD1 can realize the original intention of Satoshi Nakamoto ---- everyone can become a miner.
 - Lowered the cost of credit, increased the strength and breadth of consensus, and improved the security of the consensus architecture
 
 For more information, as well as an immediately useable, binary version of
-the BitcoinHD Core software, see https://bhd.one/#wallet, or read the
+the BitcoinHD1 Core software, see https://bhd.one/#wallet, or read the
 [original whitepaper](https://github.com/bhdone/white-paper).
 
 License
 -------
 
-BitcoinHD Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+BitcoinHD1 Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
 Development Process
@@ -34,7 +34,7 @@ Development Process
 
 The `master` branch is regularly built and tested, but is not guaranteed to be
 completely stable. [Tags](https://github.com/bhdone/btchd/tags) are created
-regularly to indicate new official, stable release versions of BitcoinHD Core.
+regularly to indicate new official, stable release versions of BitcoinHD1 Core.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
 and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
@@ -70,7 +70,7 @@ not straightforward.
 Translations
 ------------
 
-The BitcoinHD Core base on Bitcoin Core and shares resources with it.
+The BitcoinHD1 Core base on Bitcoin Core and shares resources with it.
 
 Changes to translations as well as new translations can be submitted to
 [Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).

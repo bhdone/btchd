@@ -57,7 +57,7 @@ struct BHDIP009PledgeRewardPercentForLockPeriod {
  * Parameters that influence chain consensus.
  */
 struct Params {
-    /** BitcoinHD Fund address */
+    /** BitcoinHD1 Fund address */
     std::string BHDFundAddress;
     std::set<std::string> BHDFundAddressPool;
 
@@ -66,18 +66,18 @@ struct Params {
     int nSubsidyHalvingInterval;
     int nCapacityEvalWindow;
 
-    /** BHDIP = BitcoinHD Improvement Proposals, like BIP */
-    /** BitcoinHD target spacing */
+    /** BHDIP = BitcoinHD1 Improvement Proposals, like BIP */
+    /** BitcoinHD1 target spacing */
     int BHDIP001TargetSpacing;
-    /** BitcoinHD fund pre-mining height */
+    /** BitcoinHD1 fund pre-mining height */
     int BHDIP001PreMiningEndHeight;
-    /** BitcoinHD fund zero height */
+    /** BitcoinHD1 fund zero height */
     int BHDIP001FundZeroLastHeight;
-    /** BitcoinHD fund royalty for full pledge. 1000% */
+    /** BitcoinHD1 fund royalty for full pledge. 1000% */
     int BHDIP001FundRoyaltyForFullMortgage;
-    /** BitcoinHD fund royalty for low pledge. 1000% */
+    /** BitcoinHD1 fund royalty for low pledge. 1000% */
     int BHDIP001FundRoyaltyForLowMortgage;
-    /** BitcoinHD miner mining ratio per TB */
+    /** BitcoinHD1 miner mining ratio per TB */
     CAmount BHDIP001MiningRatio;
 
     /** View all BHDIP document on https://bhd.one/wiki/BHDIP */

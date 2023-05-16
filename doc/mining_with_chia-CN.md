@@ -42,7 +42,7 @@
 编译完成后，可以在`src/`目录中找到可执行文件`btchd-miner`，使用命令`btchd-miner --help`可以查看基本的参数介绍。
 
 ```
-BitcoinHD miner (chiapos)
+BitcoinHD1 miner (chiapos)
 usage:
   ./btchd-miner <command> [arguments]...
   -h [ --help ]                      show help document

@@ -570,7 +570,7 @@ void SetupServerArgs()
     gArgs.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     gArgs.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
 
-    // BitcoinHD
+    // BitcoinHD1
     gArgs.AddArg("-forcecheckdeadline", strprintf("Force check every block work (default: %u)", DEFAULT_CHECKWORK_ENABLED), ArgsManager::ALLOW_ANY, OptionsCategory::POC);
     gArgs.AddArg("-signprivkey", "Import private key for block signature", ArgsManager::ALLOW_ANY, OptionsCategory::POC);
     gArgs.AddArg("-skip-ibd", "Skip the checking procedure for `Initial block download`", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);

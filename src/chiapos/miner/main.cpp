@@ -467,7 +467,7 @@ uint256 MakeRandomUint256() {
 int main(int argc, char** argv) {
     plog::ConsoleAppender<plog::TxtFormatter> console_appender;
 
-    cxxopts::Options opts("btchd-miner", "BitcoinHD miner - A mining program for BitcoinHD, chia PoC consensus.");
+    cxxopts::Options opts("btchd-miner", "BitcoinHD1 miner - A mining program for BitcoinHD1, chia PoC consensus.");
     opts.add_options()                            // All options
             ("h,help", "Show help document")      // --help
             ("v,verbose", "Show debug logs")      // --verbose
