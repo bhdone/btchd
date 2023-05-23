@@ -53,9 +53,15 @@ QT_END_NAMESPACE
 
 /** Pay operate method */
 enum class PayOperateMethod {
-    Pay,         //! Normal pay
-    Point,       //! Point
-    BindPlotter, //! Bind plotter
+    Pay,                //! Normal pay
+    Point,              //! Point
+    BindPlotter,        //! Bind plotter
+    ChiaPoint,          //! Point `chia consensus`
+    ChiaPointT1,        //! Point `chia consensus` with term 1
+    ChiaPointT2,        //! Point `chia consensus` with term 2
+    ChiaPointT3,        //! Point `chia consensus` with term 3
+    ChiaBindFarmerPk,   //! Bind chia farmer-pk
+    ChiaPointRetarget,  //! Retargeting the address
 };
 
 class SendCoinsRecipient
@@ -92,6 +98,11 @@ public:
     // memory only. For bind plotter request
     QString plotterPassphrase;
     int plotterDataAliveHeight;
+
+    // For retargeting
+    uint256 retargetTxid;
+    DatacarrierType pointType;
+    int pointHeight;
 
     static const int CURRENT_VERSION = 1;
     int nVersion;
@@ -191,7 +202,7 @@ public:
     };
 
     // prepare transaction for getting txfee before sending coins
-    SendCoinsReturn prepareTransaction(PayOperateMethod payOperateMethod, WalletModelTransaction &transaction, const CCoinControl& coinControl);
+    SendCoinsReturn prepareTransaction(PayOperateMethod payOperateMethod, WalletModelTransaction &transaction, CCoinControl& coinControl);
 
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction);

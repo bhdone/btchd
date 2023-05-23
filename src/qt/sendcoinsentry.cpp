@@ -16,13 +16,17 @@
 #include <qt/platformstyle.h>
 
 #include <chainparams.h>
+#include <wallet/wallet.h>
 
 #include <QApplication>
 #include <QClipboard>
 
-#include <array>
+#include <QStringListModel>
 
-static const int hour_blocks = 3600 / 180;
+#include <array>
+#include "sendcoinsentry.h"
+
+static int const hour_blocks = 3600 / 180;
 static const std::array<int, 5> bindActiveHeights = { {1*hour_blocks, 1*24*hour_blocks, 2*24*hour_blocks, 3*24*hour_blocks, PROTOCOL_BINDPLOTTER_MAXALIVE} };
 int getPlotterDataValidHeightForIndex(int index) {
     if (index+1 > static_cast<int>(bindActiveHeights.size())) {
@@ -42,19 +46,28 @@ int getIndexForPlotterDataValidHeight(int height) {
     return bindActiveHeights.size() - 1;
 }
 
-SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, const PlatformStyle *_platformStyle, QWidget *parent) :
-    QStackedWidget(parent),
-    payOperateMethod(payOperateMethod),
-    ui(new Ui::SendCoinsEntry),
-    model(nullptr),
-    platformStyle(_platformStyle)
-{
+SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, PlatformStyle const* _platformStyle, QWidget* parent)
+        : QStackedWidget(parent),
+          payOperateMethod(payOperateMethod),
+          ui(new Ui::SendCoinsEntry),
+          model(nullptr),
+          platformStyle(_platformStyle) {
     ui->setupUi(this);
 
     ui->plotterPassphraseLabel->setVisible(false);
     ui->plotterPassphrase->setVisible(false);
     ui->plotterDataAliveHeightLabel->setVisible(false);
     ui->plotterDataValidHeightSelector->setVisible(false);
+
+    ui->pointsLabel->setVisible(false);
+
+    ui->pointsList->setVisible(false);
+    ui->refreshPointsButton->setVisible(false);
+
+    pointsListModel = new PointItemModel(GetWallets()[0].get());
+    ui->pointsList->setModel(pointsListModel);
+    ui->pointsList->header()->setVisible(true);
+    ui->pointsList->header()->setStretchLastSection(true);
 
     ui->addressBookButton->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
     ui->pasteButton->setIcon(platformStyle->SingleColorIcon(":/icons/editpaste"));
@@ -81,11 +94,12 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, const Platform
     connect(ui->deleteButton_is, &QPushButton::clicked, this, &SendCoinsEntry::deleteClicked);
     connect(ui->deleteButton_s, &QPushButton::clicked, this, &SendCoinsEntry::deleteClicked);
     connect(ui->useAvailableBalanceButton, &QPushButton::clicked, this, &SendCoinsEntry::useAvailableBalanceClicked);
+    connect(ui->refreshPointsButton, &QPushButton::clicked, this, &SendCoinsEntry::on_refreshPointsButton_clicked);
 
     // Pay method
     if (payOperateMethod == PayOperateMethod::Point) {
         ui->payToLabel->setText(tr("Point &To:"));
-    } else if (payOperateMethod == PayOperateMethod::BindPlotter) {
+    } else if (payOperateMethod == PayOperateMethod::BindPlotter || payOperateMethod == PayOperateMethod::ChiaBindFarmerPk) {
         ui->payToLabel->setText(tr("Bind &To:"));
         ui->labellLabel->setVisible(false);
         ui->addAsLabel->setVisible(false);
@@ -95,16 +109,30 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, const Platform
         ui->useAvailableBalanceButton->setVisible(false);
         ui->plotterPassphraseLabel->setVisible(true);
         ui->plotterPassphrase->setVisible(true);
-        ui->plotterPassphrase->setPlaceholderText(tr("Enter your plotter passphrase or bind hex data"));
+        if (payOperateMethod == PayOperateMethod::BindPlotter) {
+            ui->plotterPassphraseLabel->setText(tr("Plotter:"));
+            ui->plotterPassphrase->setPlaceholderText(tr("Enter your plotter passphrase or bind hex data"));
+        } else {
+            ui->plotterPassphraseLabel->setText(tr("Farmer:"));
+            ui->plotterPassphrase->setPlaceholderText(tr("Enter your farmer passphrase"));
+        }
         ui->plotterDataAliveHeightLabel->setVisible(true);
         ui->plotterDataValidHeightSelector->setVisible(true);
-        for (const int n : bindActiveHeights) {
+        for (int const n : bindActiveHeights) {
             assert(n > 0 && n <= PROTOCOL_BINDPLOTTER_MAXALIVE);
             ui->plotterDataValidHeightSelector->addItem(tr("%1 (%2 blocks)")
                 .arg(GUIUtil::formatNiceTimeOffset(n*Params().GetConsensus().nPowTargetSpacing))
                 .arg(n));
         }
         ui->plotterDataValidHeightSelector->setCurrentIndex(getIndexForPlotterDataValidHeight(PROTOCOL_BINDPLOTTER_DEFAULTMAXALIVE));
+    } else if (payOperateMethod == PayOperateMethod::ChiaPointRetarget) {
+        ui->pointsLabel->setVisible(true);
+        ui->pointsList->setVisible(true);
+        ui->refreshPointsButton->setVisible(true);
+        ui->amountLabel->setVisible(false);
+        ui->checkboxSubtractFeeFromAmount->setVisible(false);
+        ui->payAmount->setVisible(false);
+        ui->useAvailableBalanceButton->setVisible(false);
     }
 }
 
@@ -119,8 +147,11 @@ void SendCoinsEntry::on_pasteButton_clicked()
     ui->payTo->setText(QApplication::clipboard()->text());
 }
 
-void SendCoinsEntry::on_addressBookButton_clicked()
-{
+void SendCoinsEntry::on_refreshPointsButton_clicked() {
+    pointsListModel->reload();
+}
+
+void SendCoinsEntry::on_addressBookButton_clicked() {
     if(!model)
         return;
     AddressBookPage::Tabs tab = (payOperateMethod == PayOperateMethod::BindPlotter ? AddressBookPage::ReceivingTab : AddressBookPage::SendingTab);
@@ -133,10 +164,7 @@ void SendCoinsEntry::on_addressBookButton_clicked()
     }
 }
 
-void SendCoinsEntry::on_payTo_textChanged(const QString &address)
-{
-    updateLabel(address);
-}
+void SendCoinsEntry::on_payTo_textChanged(QString const& address) { updateLabel(address); }
 
 void SendCoinsEntry::setModel(WalletModel *_model)
 {
@@ -172,7 +200,9 @@ void SendCoinsEntry::clear()
     updateDisplayUnit();
 
     // Update for bind plotter
-    if (payOperateMethod == PayOperateMethod::BindPlotter) {
+    if (payOperateMethod == PayOperateMethod::BindPlotter ||
+        payOperateMethod == PayOperateMethod::ChiaBindFarmerPk ||
+        payOperateMethod == PayOperateMethod::ChiaPointRetarget) {
         ui->payAmount->setValue(PROTOCOL_BINDPLOTTER_LOCKAMOUNT);
         ui->checkboxSubtractFeeFromAmount->setCheckState(Qt::Unchecked);
     }
@@ -232,7 +262,11 @@ bool SendCoinsEntry::validate(interfaces::Node& node)
     }
 
     // Special tx amount
-    if (payOperateMethod == PayOperateMethod::Point)
+    if (payOperateMethod == PayOperateMethod::Point ||
+        payOperateMethod == PayOperateMethod::ChiaPoint ||
+        payOperateMethod == PayOperateMethod::ChiaPointT1 ||
+        payOperateMethod == PayOperateMethod::ChiaPointT2 ||
+        payOperateMethod == PayOperateMethod::ChiaPointT3)
     {
         if (ui->payAmount->value() < PROTOCOL_POINT_AMOUNT_MIN ||
                 (ui->checkboxSubtractFeeFromAmount->checkState() == Qt::Checked && ui->payAmount->value() <= PROTOCOL_POINT_AMOUNT_MIN)) {
@@ -240,7 +274,7 @@ bool SendCoinsEntry::validate(interfaces::Node& node)
             retval = false;
         }
     }
-    else if (payOperateMethod == PayOperateMethod::BindPlotter)
+    else if (payOperateMethod == PayOperateMethod::BindPlotter || payOperateMethod == PayOperateMethod::ChiaBindFarmerPk)
     {
         QString passphrase = ui->plotterPassphrase->text().trimmed();
         if (!IsValidPassphrase(passphrase.toStdString())) {
@@ -263,9 +297,27 @@ SendCoinsRecipient SendCoinsEntry::getValue()
     // Normal payment
     recipient.address = ui->payTo->text();
     recipient.label = ui->addAsLabel->text();
-    if (payOperateMethod == PayOperateMethod::BindPlotter) {
+    if (payOperateMethod == PayOperateMethod::BindPlotter || payOperateMethod == PayOperateMethod::ChiaBindFarmerPk) {
         recipient.plotterPassphrase = ui->plotterPassphrase->text().trimmed();
         recipient.plotterDataAliveHeight = getPlotterDataValidHeightForIndex(ui->plotterDataValidHeightSelector->currentIndex());
+    } else if (payOperateMethod == PayOperateMethod::ChiaPointRetarget) {
+        if (ui->pointsList->selectionModel()->hasSelection()) {
+            auto curr = ui->pointsList->selectionModel()->currentIndex();
+            assert(curr.isValid());
+            TxPledge pledge = pointsListModel->pledgeFromIndex(curr);
+            recipient.retargetTxid = pledge.txid;
+            if (pledge.payloadType == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+                recipient.pointType = pledge.pointType;
+                recipient.pointHeight = pledge.nPointHeight;
+            } else {
+                recipient.pointType = pledge.payloadType;
+                recipient.pointHeight = pledge.nBlockHeight;
+            }
+        } else {
+            recipient.pointType = DATACARRIER_TYPE_UNKNOWN;
+            recipient.pointHeight = 0;
+        }
+        QModelIndex curr = ui->pointsList->selectionModel()->currentIndex();
     }
     recipient.amount = ui->payAmount->value();
     recipient.message = ui->messageTextLabel->text();
@@ -287,8 +339,7 @@ QWidget *SendCoinsEntry::setupTabChain(QWidget *prev)
     return ui->deleteButton;
 }
 
-void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
-{
+void SendCoinsEntry::setValue(SendCoinsRecipient const& value) {
     recipient = value;
 
 #ifdef ENABLE_BIP70
@@ -330,16 +381,12 @@ void SendCoinsEntry::setValue(const SendCoinsRecipient &value)
     }
 }
 
-void SendCoinsEntry::setAddress(const QString &address)
-{
+void SendCoinsEntry::setAddress(QString const& address) {
     ui->payTo->setText(address);
     ui->payAmount->setFocus();
 }
 
-void SendCoinsEntry::setAmount(const CAmount &amount)
-{
-    ui->payAmount->setValue(amount);
-}
+void SendCoinsEntry::setAmount(CAmount const& amount) { ui->payAmount->setValue(amount); }
 
 bool SendCoinsEntry::isClear()
 {
@@ -362,8 +409,7 @@ void SendCoinsEntry::updateDisplayUnit()
     }
 }
 
-bool SendCoinsEntry::updateLabel(const QString &address)
-{
+bool SendCoinsEntry::updateLabel(QString const& address) {
     if(!model)
         return false;
 

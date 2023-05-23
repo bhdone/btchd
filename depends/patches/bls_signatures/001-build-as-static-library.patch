@@ -1,0 +1,45 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 6922167..99368a0 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -40,6 +40,8 @@ set(SODIUM_PCH "on" CACHE STRING "")
+ set(SODIUM_DISABLE_TESTS "on" CACHE STRING "")
+ set(SODIUM_CHIA_MINIMAL "on" CACHE STRING "")
+ FetchContent_MakeAvailable(Sodium)
++install(TARGETS sodium EXPORT sodium DESTINATION lib)
++install(DIRECTORY ${sodium_SOURCE_DIR}/libsodium/src/libsodium/include/ DESTINATION include/chiabls)
+ 
+ if (DEFINED ENV{RELIC_MAIN})
+   set(RELIC_GIT_TAG "origin/main")
+@@ -50,22 +52,23 @@ endif ()
+ 
+ message(STATUS "Relic will be built from: ${RELIC_GIT_TAG}")
+ 
++IF (EXISTS "${FETCHCONTENT_CACHE_DIR}/relic-${RELIC_GIT_TAG}.zip")
++FetchContent_Declare(
++  relic
++  URL "${FETCHCONTENT_CACHE_DIR}/relic-${RELIC_GIT_TAG}.zip"
++  URL_HASH SHA256=d23b9488051a44deffe36df24f379a6ff259be68d7358c0ae8c43dd2ef019bd8
++)
++ELSE()
+ FetchContent_Declare(
+   relic
+   GIT_REPOSITORY https://github.com/Chia-Network/relic.git
+   GIT_TAG ${RELIC_GIT_TAG}
+ )
++ENDIF()
+ 
+ # Relic related options
+ 
+-set(STBIN TRUE)
+-find_package(gmp)
+-if (GMP_FOUND)
+-  message(STATUS "Found libgmp")
+-  set(ARITH "gmp" CACHE STRING "")
+-else()
+-  set(ARITH "easy" CACHE STRING "")
+-endif()
++set(ARITH "easy" CACHE STRING "")
+ 
+ if(CMAKE_SIZEOF_VOID_P EQUAL 4)
+   set(WSIZE "32" CACHE STRING "Relic - Processor word size")

@@ -13,12 +13,14 @@
 
 uint256 CBlockHeader::GetHash() const
 {
-    return SerializeHash(*this);
+    int ser_flags = IsChiaBlock() ? SERIALIZE_BLOCK_CHIAPOS : 0;
+    return SerializeHash(*this, 0, ser_flags);
 }
 
 uint256 CBlockHeader::GetUnsignaturedHash() const
 {
-    return SerializeHash(*this, SER_GETHASH | SER_UNSIGNATURED);
+    int ser_flags = IsChiaBlock() ? SERIALIZE_BLOCK_CHIAPOS : 0;
+    return SerializeHash(*this, SER_GETHASH | SER_UNSIGNATURED, ser_flags);
 }
 
 std::string CBlock::ToString() const

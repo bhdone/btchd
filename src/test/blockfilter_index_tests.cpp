@@ -7,7 +7,6 @@
 #include <consensus/validation.h>
 #include <index/blockfilterindex.h>
 #include <miner.h>
-#include <pow.h>
 #include <test/setup_common.h>
 #include <script/standard.h>
 #include <util/time.h>
@@ -21,7 +20,7 @@ static bool ComputeFilter(BlockFilterType filter_type, const CBlockIndex* block_
                           BlockFilter& filter)
 {
     CBlock block;
-    if (!ReadBlockFromDisk(block, block_index->GetBlockPos(), Params().GetConsensus())) {
+    if (!ReadBlockFromDisk(block, block_index->GetBlockPos(), Params().GetConsensus(), block_index->nHeight)) {
         return false;
     }
 
@@ -83,12 +82,8 @@ static CBlock CreateBlock(const CBlockIndex* prev,
     for (const CMutableTransaction& tx : txns) {
         block.vtx.push_back(MakeTransactionRef(tx));
     }
-    // IncrementExtraNonce creates a valid coinbase and merkleRoot
-    unsigned int extraNonce = 0;
-    IncrementExtraNonce(&block, prev, extraNonce);
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
-
+    // TODO the block fields should be filled properly
     return block;
 }
 

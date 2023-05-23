@@ -1,15 +1,15 @@
-BitcoinHD Core
+BitcoinHD1 Core
 =============
 
 Setup
 ---------------------
-BitcoinHD Core is the original BitcoinHD client and it builds the backbone of the network. It downloads and, by default, stores the entire history of BitcoinHD transactions, which requires a few hundred gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+BitcoinHD1 Core is the original BitcoinHD1 client and it builds the backbone of the network. It downloads and, by default, stores the entire history of BitcoinHD1 transactions, which requires a few hundred gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
-To download BitcoinHD Core, visit [btchd.org](https://btchd.org/).
+To download BitcoinHD1 Core, visit [bhd.one](https://bhd.one/).
 
 Running
 ---------------------
-The following are some helpful notes on how to run BitcoinHD Core on your native platform.
+The following are some helpful notes on how to run BitcoinHD1 Core on your native platform.
 
 ### Unix
 
@@ -24,15 +24,15 @@ Unpack the files into a directory, and then run btchd-qt.exe.
 
 ### macOS
 
-Drag BitcoinHD Core to your applications folder, and then run BitcoinHD Core.
+Drag BitcoinHD1 Core to your applications folder, and then run BitcoinHD1 Core.
 
 ### Need Help?
 
-* See the documentation at the [BitcoinHD Wiki](https://btchd.org/wiki/Main_Page)
+* See the documentation at the [BitcoinHD1 Wiki](https://bhd.one/wiki/Main_Page)
 
 Building
 ---------------------
-The following are developer notes on how to build BitcoinHD Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build BitcoinHD1 Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [Dependencies](dependencies.md)
 - [macOS Build Notes](build-osx.md)
@@ -45,7 +45,7 @@ The following are developer notes on how to build BitcoinHD Core on your native 
 
 Development
 ---------------------
-The BitcoinHD repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+The BitcoinHD1 repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Productivity Notes](productivity.md)

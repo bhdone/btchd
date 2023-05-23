@@ -15,6 +15,8 @@
 #include <memory>
 #include <set>
 
+#include <chiapos/plotter_id.h>
+
 static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 
 class CKeyID;
@@ -213,7 +215,7 @@ CAccountID ExtractAccountID(const CPubKey& pubkey);
 CAccountID ExtractAccountID(const CScript& scriptPubKey);
 CAccountID ExtractAccountID(const CTxDestination& dest);
 
-/** opreturn type. See https://btchd.org/wiki/datacarrier */
+/** opreturn type. See https://bhd.one/wiki/datacarrier */
 enum DatacarrierType : unsigned int {
     // Range
     DATACARRIER_TYPE_MIN = 0x0000000f,
@@ -223,23 +225,64 @@ enum DatacarrierType : unsigned int {
     DATACARRIER_TYPE_UNKNOWN = DATACARRIER_TYPE_MIN,
 
     // Type of consensus relevant
-    //! See https://btchd.org/wiki/datacarrier/bind-plotter
-    DATACARRIER_TYPE_BINDPLOTTER = 0x00000010,
-    //! See https://btchd.org/wiki/datacarrier/point
-    DATACARRIER_TYPE_POINT       = 0x00000011,
-    //! See https://btchd.org/wiki/datacarrier/contract
-    DATACARRIER_TYPE_CONTRACT    = 0x00000012,
-    //! See https://btchd.org/wiki/datacarrier/text
-    DATACARRIER_TYPE_TEXT        = 0x00000013,
+    //! See https://bhd.one/wiki/datacarrier/bind-plotter
+    DATACARRIER_TYPE_BINDPLOTTER            = 0x00000010,
+    //! See https://bhd.one/wiki/datacarrier/point
+    DATACARRIER_TYPE_POINT                  = 0x00000011,
+    //! See https://bhd.one/wiki/datacarrier/contract
+    DATACARRIER_TYPE_CONTRACT               = 0x00000012,
+    //! See https://bhd.one/wiki/datacarrier/text
+    DATACARRIER_TYPE_TEXT                   = 0x00000013,
+    //! Chia farmer-pk 48-byte data
+    DATACARRIER_TYPE_BINDCHIAFARMER         = 0x00000014,
+    //! Chia point data
+    DATACARRIER_TYPE_CHIA_POINT             = 0x00000015,
+    DATACARRIER_TYPE_CHIA_POINT_TERM_1      = 0x00000016,
+    DATACARRIER_TYPE_CHIA_POINT_TERM_2      = 0x00000017,
+    DATACARRIER_TYPE_CHIA_POINT_TERM_3      = 0x00000018,
+    DATACARRIER_TYPE_CHIA_POINT_RETARGET    = 0x00000019,
 };
 typedef std::set<DatacarrierType> DatacarrierTypes;
+
+inline std::string DatacarrierTypeToString(DatacarrierType type) {
+    std::stringstream ss;
+    switch (type) {
+    case DATACARRIER_TYPE_BINDPLOTTER:
+        return "DATACARRIER_TYPE_BINDPLOTTER";
+    case DATACARRIER_TYPE_POINT:
+        return "DATACARRIER_TYPE_POINT";
+    case DATACARRIER_TYPE_CONTRACT:
+        return "DATACARRIER_TYPE_CONTRACT";
+    case DATACARRIER_TYPE_TEXT:
+        return "DATACARRIER_TYPE_TEXT";
+    case DATACARRIER_TYPE_BINDCHIAFARMER:
+        return "DATACARRIER_TYPE_BINDCHIAFARMER";
+    case DATACARRIER_TYPE_CHIA_POINT:
+        return "DATACARRIER_TYPE_CHIA_POINT";
+    case DATACARRIER_TYPE_CHIA_POINT_TERM_1:
+        return "DATACARRIER_TYPE_CHIA_POINT_TERM_1";
+    case DATACARRIER_TYPE_CHIA_POINT_TERM_2:
+        return "DATACARRIER_TYPE_CHIA_POINT_TERM_2";
+    case DATACARRIER_TYPE_CHIA_POINT_TERM_3:
+        return "DATACARRIER_TYPE_CHIA_POINT_TERM_3";
+    case DATACARRIER_TYPE_CHIA_POINT_RETARGET:
+        return "DATACARRIER_TYPE_CHIA_POINT_RETARGET";
+    default:
+        ss << "DATACARRIER_TYPE_UNKNOWN(" << static_cast<int>(type) << ")";
+        return ss.str();
+    }
+}
+
+inline bool DatacarrierTypeIsChiaPoint(DatacarrierType type) {
+    return type >= DATACARRIER_TYPE_CHIA_POINT && type <= DATACARRIER_TYPE_CHIA_POINT_TERM_3;
+}
 
 /** Datacarrier payload */
 struct DatacarrierPayload
 {
-    const DatacarrierType type;
+    DatacarrierType type;
 
-    explicit DatacarrierPayload(DatacarrierType typeIn) : type(typeIn) {}
+    explicit DatacarrierPayload(DatacarrierType inType) : type(inType) {}
     virtual ~DatacarrierPayload() {}
 };
 typedef std::shared_ptr<DatacarrierPayload> CDatacarrierPayloadRef;
@@ -247,20 +290,35 @@ typedef std::shared_ptr<DatacarrierPayload> CDatacarrierPayloadRef;
 /** For bind plotter */
 struct BindPlotterPayload : public DatacarrierPayload
 {
-    uint64_t id;
+public:
+    explicit BindPlotterPayload(DatacarrierType inType) : DatacarrierPayload(inType) {}
 
-    BindPlotterPayload() : DatacarrierPayload(DATACARRIER_TYPE_BINDPLOTTER), id(0) {}
-    const uint64_t& GetId() const { return id; }
+    void SetId(CPlotterBindData const& inId)
+    {
+        if (inId.GetType() == CPlotterBindData::Type::BURST) {
+            assert(type == DATACARRIER_TYPE_BINDPLOTTER);
+        } else if (inId.GetType() == CPlotterBindData::Type::CHIA) {
+            assert(type == DATACARRIER_TYPE_BINDCHIAFARMER);
+        } else {
+            throw std::runtime_error("invalid type of plotter-id in order to create `BindPlotterPayload`");
+        }
+        m_id = std::move(inId);
+    }
+
+    const CPlotterBindData &GetId() const { return m_id; }
 
     // Checkable cast for CDatacarrierPayloadRef
     static BindPlotterPayload * As(CDatacarrierPayloadRef &ref) {
-        assert(ref->type == DATACARRIER_TYPE_BINDPLOTTER);
+        assert(ref->type == DATACARRIER_TYPE_BINDPLOTTER || ref->type == DATACARRIER_TYPE_BINDCHIAFARMER);
         return (BindPlotterPayload*) ref.get();
     }
     static const BindPlotterPayload * As(const CDatacarrierPayloadRef &ref) {
-        assert(ref->type == DATACARRIER_TYPE_BINDPLOTTER);
+        assert(ref->type == DATACARRIER_TYPE_BINDPLOTTER || ref->type == DATACARRIER_TYPE_BINDCHIAFARMER);
         return (const BindPlotterPayload*) ref.get();
     }
+
+private:
+    CPlotterBindData m_id;
 };
 
 /** For point */
@@ -268,17 +326,43 @@ struct PointPayload : public DatacarrierPayload
 {
     CAccountID receiverID;
 
-    PointPayload() : DatacarrierPayload(DATACARRIER_TYPE_POINT) {}
+    explicit PointPayload(DatacarrierType type) : DatacarrierPayload(type) {
+        assert(type == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint(type));
+    }
     const CAccountID& GetReceiverID() const { return receiverID; }
 
     // Checkable cast for CDatacarrierPayloadRef
     static PointPayload * As(CDatacarrierPayloadRef &ref) {
-        assert(ref->type == DATACARRIER_TYPE_POINT);
+        assert(ref->type == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint(ref->type));
         return (PointPayload*) ref.get();
     }
     static const PointPayload * As(const CDatacarrierPayloadRef &ref) {
-        assert(ref->type == DATACARRIER_TYPE_POINT);
+        assert(ref->type == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint(ref->type));
         return (const PointPayload*) ref.get();
+    }
+};
+
+/** For retarget */
+struct PointRetargetPayload : public DatacarrierPayload
+{
+    CAccountID receiverID;
+    DatacarrierType pointType;
+    int nPointHeight;
+
+    explicit PointRetargetPayload() : DatacarrierPayload(DATACARRIER_TYPE_CHIA_POINT_RETARGET) {}
+
+    const CAccountID& GetReceiverID() const { return receiverID; }
+    DatacarrierType GetPointType() const { return pointType; }
+    int GetPointHeight() const { return nPointHeight; }
+
+    // Checkable cast for CDatacarrierPayloadRef
+    static PointRetargetPayload * As(CDatacarrierPayloadRef &ref) {
+        assert(ref->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET);
+        return (PointRetargetPayload*) ref.get();
+    }
+    static const PointRetargetPayload * As(const CDatacarrierPayloadRef &ref) {
+        assert(ref->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET);
+        return (const PointRetargetPayload*) ref.get();
     }
 };
 
@@ -316,6 +400,9 @@ static const int PROTOCOL_BINDPLOTTER_MAXALIVE = 288 * 7;
 /** The bind plotter script size */
 static const int PROTOCOL_BINDPLOTTER_SCRIPTSIZE = 109;
 
+/** The bind chia-plotter script size */
+static const int PROTOCOL_BINDCHIAFARMER_SCRIPTSIZE = 158;
+
 /** Check whether a string is a valid passphrase. */
 bool IsValidPassphrase(const std::string& passphrase);
 
@@ -325,9 +412,14 @@ bool IsValidPlotterID(const std::string& strPlotterId, uint64_t *id = nullptr);
 /** Generate a bind plotter script. */
 CScript GetBindPlotterScriptForDestination(const CTxDestination& dest, const std::string& passphrase, int lastActiveHeight);
 
+CScript GetBindChiaPlotterScriptForDestination(const CTxDestination &dest,
+    const chiapos::CKey &farmerSk,
+    int lastActiveHeight);
+
 /** Decode bind plotter script. */
 bool DecodeBindPlotterScript(const CScript &script, uint64_t& plotterId, std::string& pubkeyHex, std::string& signatureHex, int& lastActiveHeight);
-uint64_t GetBindPlotterIdFromScript(const CScript &script);
+bool DecodeBindChiaFarmerScript(const CScript &script, std::string &pubkeyHex, std::string signatureHex, int &lastActiveHeight);
+CPlotterBindData GetPlotterBindDataFromScript(const CScript &script);
 
 /** The minimal point amount */
 static const CAmount PROTOCOL_POINT_AMOUNT_MIN = 1 * COIN;
@@ -335,8 +427,14 @@ static const CAmount PROTOCOL_POINT_AMOUNT_MIN = 1 * COIN;
 /** The point script size */
 static const int PROTOCOL_POINT_SCRIPTSIZE = 27;
 
+/** The point retarget script size */
+static const int PROTOCOL_POINT_RETARGET_SCRIPTSIZE = 37;
+
 /** Generate a point script. */
-CScript GetPointScriptForDestination(const CTxDestination& dest);
+CScript GetPointScriptForDestination(const CTxDestination& dest, DatacarrierType type);
+
+/** Generate a point retarget script. */
+CScript GetPointRetargetScriptForDestination(const CTxDestination& dest, DatacarrierType type, int nPointHeight);
 
 /** The text script maximum size. OP_RETURN(1) + type(5) + size(4) */
 static const int PROTOCOL_TEXT_MAXSIZE = MAX_OP_RETURN_RELAY - 10;

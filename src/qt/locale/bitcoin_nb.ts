@@ -66,8 +66,8 @@
         <translation>Mottager adresser</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Dette er dine BitcoinHD adresser for å sende  å sende betalinger. Husk å sjekke beløp og mottager adresser før du sender mynter.</translation>
+        <source>These are your BitcoinHD1 addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Dette er dine BitcoinHD1 adresser for å sende  å sende betalinger. Husk å sjekke beløp og mottager adresser før du sender mynter.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -160,8 +160,8 @@
         <translation>Bekreft kryptering av lommeboken</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHDs&lt;/b&gt;!</source>
-        <translation>Advarsel: Dersom du krypterer lommeboken og mister passordsetningen vil du &lt;b&gt;MISTE ALLE DINE BHDs&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHD1s&lt;/b&gt;!</source>
+        <translation>Advarsel: Dersom du krypterer lommeboken og mister passordsetningen vil du &lt;b&gt;MISTE ALLE DINE BHD1s&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -172,8 +172,8 @@
         <translation>Lommeboken er kryptert</translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your BHDs from being stolen by malware infecting your computer.</source>
-        <translation>Husk at å kryptere lommeboken ikke vil beskytte dine BHDs fullstendig fra å bli stjålet av skadevare som infiserer datamaskinen din.</translation>
+        <source>Remember that encrypting your wallet cannot fully protect your BHD1s from being stolen by malware infecting your computer.</source>
+        <translation>Husk at å kryptere lommeboken ikke vil beskytte dine BHD1s fullstendig fra å bli stjålet av skadevare som infiserer datamaskinen din.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -326,8 +326,8 @@
         <translation>Proxy er &lt;b&gt;slått på&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD address</source>
-        <translation>Send mynter til en BitcoinHD adresse</translation>
+        <source>Send coins to a BitcoinHD1 address</source>
+        <translation>Send mynter til en BitcoinHD1 adresse</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -370,12 +370,12 @@
         <translation>Krypter de private nøklene som tilhører lommeboken din</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD addresses to prove you own them</source>
-        <translation>Signer meldingene med BitcoinHD adresse for å bevise at diu eier dem</translation>
+        <source>Sign messages with your BitcoinHD1 addresses to prove you own them</source>
+        <translation>Signer meldingene med BitcoinHD1 adresse for å bevise at diu eier dem</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD addresses</source>
-        <translation>Verifiser meldinger for å sikre at de ble signert med en angitt BitcoinHD adresse</translation>
+        <source>Verify messages to ensure they were signed with specified BitcoinHD1 addresses</source>
+        <translation>Verifiser meldinger for å sikre at de ble signert med en angitt BitcoinHD1 adresse</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -414,8 +414,8 @@
         <translation>&amp;Kommandolinjealternativer</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to BitcoinHD network</source>
-        <translation><numerusform>%n aktiv tilkobling til BitcoinHD nettverket</numerusform><numerusform>%n aktive tilkoblinger til BitcoinHD nettverket</numerusform></translation>
+        <source>%n active connection(s) to BitcoinHD1 network</source>
+        <translation><numerusform>%n aktiv tilkobling til BitcoinHD1 nettverket</numerusform><numerusform>%n aktive tilkoblinger til BitcoinHD1 nettverket</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -482,8 +482,8 @@
         <translation>Lukk lommebok</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible BitcoinHD command-line options</source>
-        <translation>Vis %1-hjelpemeldingen for å få en liste over mulige BitcoinHD-kommandolinjealternativer</translation>
+        <source>Show the %1 help message to get a list with possible BitcoinHD1 command-line options</source>
+        <translation>Vis %1-hjelpemeldingen for å få en liste over mulige BitcoinHD1-kommandolinjealternativer</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -590,8 +590,8 @@
         <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. BitcoinHD can no longer continue safely and will quit.</source>
-        <translation>En fatal feil har inntruffet. BitcoinHD kan ikke lenger trygt fortsette, og må derfor avslutte.</translation>
+        <source>A fatal error occurred. BitcoinHD1 can no longer continue safely and will quit.</source>
+        <translation>En fatal feil har inntruffet. BitcoinHD1 kan ikke lenger trygt fortsette, og må derfor avslutte.</translation>
     </message>
 </context>
 <context>
@@ -786,8 +786,8 @@
         <translation>Rediger utsendingsadresse</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid BitcoinHD address.</source>
-        <translation>Den angitte adressen "%1" er ikke en gyldig BitcoinHD-adresse.</translation>
+        <source>The entered address "%1" is not a valid BitcoinHD1 address.</source>
+        <translation>Den angitte adressen "%1" er ikke en gyldig BitcoinHD1-adresse.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -879,8 +879,8 @@
         <translation>Bruk en egendefinert datamappe:</translation>
     </message>
     <message>
-        <source>BitcoinHD</source>
-        <translation>BitcoinHD</translation>
+        <source>BitcoinHD1</source>
+        <translation>BitcoinHD1</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -891,8 +891,8 @@
         <translation>Omtrent %1GB data vil bli lagret i denne mappen.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the BitcoinHD block chain.</source>
-        <translation>%1 vil laste ned og lagre en kopi av BitcoinHD blokkjeden.</translation>
+        <source>%1 will download and store a copy of the BitcoinHD1 block chain.</source>
+        <translation>%1 vil laste ned og lagre en kopi av BitcoinHD1 blokkjeden.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -922,11 +922,11 @@
         <translation>Skjema</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD network, as detailed below.</source>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD1 network, as detailed below.</source>
         <translation>Det kan hende nylige transaksjoner ikke vises enda, og at lommeboksaldoen dermed blir uriktig. Denne informasjonen vil rette seg når synkronisering av lommeboka mot bitcoin-nettverket er fullført, som anvist nedenfor.</translation>
     </message>
     <message>
-        <source>Attempting to spend BHDs that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Attempting to spend BHD1s that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
         <translation>Forsøk på å bruke bitcoin som er påvirket av transaksjoner som ikke er vist enda godtas ikke av nettverket.</translation>
     </message>
     <message>
@@ -1103,8 +1103,8 @@
         <translation>&amp;Bruk ubekreftet veksel</translation>
     </message>
     <message>
-        <source>Automatically open the BitcoinHD client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Åpne automatisk BitcoinHD klientporten på ruteren. Dette virker kun om din ruter støtter UPnP og dette er påslått.</translation>
+        <source>Automatically open the BitcoinHD1 client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Åpne automatisk BitcoinHD1 klientporten på ruteren. Dette virker kun om din ruter støtter UPnP og dette er påslått.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1119,8 +1119,8 @@
         <translation>Tillatt innkommend&amp;e tilkoblinger</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD network through a SOCKS5 proxy.</source>
-        <translation>Koble til BitcoinHD-nettverket gjennom en SOCKS5 proxy.</translation>
+        <source>Connect to the BitcoinHD1 network through a SOCKS5 proxy.</source>
+        <translation>Koble til BitcoinHD1-nettverket gjennom en SOCKS5 proxy.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1155,8 +1155,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Koble til BitcoinHD-nettverket gjennom en separat SOCKS5 mellomtjener for Tor skjulte tjenester.</translation>
+        <source>Connect to the BitcoinHD1 network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Koble til BitcoinHD1-nettverket gjennom en separat SOCKS5 mellomtjener for Tor skjulte tjenester.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1192,7 +1192,7 @@
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
-        <translation>Velg standard delt enhet for visning i grensesnittet og for sending av BHDs.</translation>
+        <translation>Velg standard delt enhet for visning i grensesnittet og for sending av BHD1s.</translation>
     </message>
     <message>
         <source>Whether to show coin control features or not.</source>
@@ -1262,8 +1262,8 @@
         <translation>Skjema</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD network after a connection is established, but this process has not completed yet.</source>
-        <translation>Informasjonen som vises kan være foreldet. Din lommebok synkroniseres automatisk med BitcoinHD-nettverket etter at tilkobling er opprettet, men denne prosessen er ikke ferdig enda.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD1 network after a connection is established, but this process has not completed yet.</source>
+        <translation>Informasjonen som vises kan være foreldet. Din lommebok synkroniseres automatisk med BitcoinHD1-nettverket etter at tilkobling er opprettet, men denne prosessen er ikke ferdig enda.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1353,7 +1353,7 @@
         <translation>Ugyldig betalingsadresse %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid BitcoinHD address or malformed URI parameters.</source>
+        <source>URI cannot be parsed! This can be caused by an invalid BitcoinHD1 address or malformed URI parameters.</source>
         <translation>URI kan ikke fortolkes! Dette kan være forårsaket av en ugyldig bitcoin-adresse eller feilformede URI-parametre.</translation>
     </message>
     <message>
@@ -1455,8 +1455,8 @@
         <translation>Beløp</translation>
     </message>
     <message>
-        <source>Enter a BitcoinHD address (e.g. %1)</source>
-        <translation>Oppgi en BitcoinHD-adresse (f.eks. %1)</translation>
+        <source>Enter a BitcoinHD1 address (e.g. %1)</source>
+        <translation>Oppgi en BitcoinHD1-adresse (f.eks. %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1888,8 +1888,8 @@
         <translation>&amp;Melding:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD network.</source>
-        <translation>En valgfri melding å tilknytte betalingsetterspørringen, som vil bli vist når forespørselen er åpnet. Meldingen vil ikke bli sendt med betalingen over BitcoinHD-nettverket.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD1 network.</source>
+        <translation>En valgfri melding å tilknytte betalingsetterspørringen, som vil bli vist når forespørselen er åpnet. Meldingen vil ikke bli sendt med betalingen over BitcoinHD1-nettverket.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2034,7 +2034,7 @@
     <name>SendCoinsDialog</name>
     <message>
         <source>Send Coins</source>
-        <translation>Send BHDs</translation>
+        <translation>Send BHD1s</translation>
     </message>
     <message>
         <source>Coin Control Features</source>
@@ -2277,7 +2277,7 @@
         <translation><numerusform>Antatt bekreftelsesbegynnelse innen %n blokk.</numerusform><numerusform>Antatt bekreftelsesbegynnelse innen %n blokker.</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid BitcoinHD address</source>
+        <source>Warning: Invalid BitcoinHD1 address</source>
         <translation>Advarsel Ugyldig bitcoin-adresse</translation>
     </message>
     <message>
@@ -2320,8 +2320,8 @@
         <translation>Dette er en normal betaling.</translation>
     </message>
     <message>
-        <source>The BitcoinHD address to send the payment to</source>
-        <translation>BitcoinHD-adressen betalingen skal sendes til</translation>
+        <source>The BitcoinHD1 address to send the payment to</source>
+        <translation>BitcoinHD1-adressen betalingen skal sendes til</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2340,8 +2340,8 @@
         <translation>Fjern denne oppføringen</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less BHDs than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>Gebyret vil bli trukket fra beløpet som blir sendt. Mottakeren vil motta mindre BHDs enn det du skriver inn i beløpsfeltet. Hvis det er valgt flere mottakere, deles gebyret likt.</translation>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less BHD1s than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>Gebyret vil bli trukket fra beløpet som blir sendt. Mottakeren vil motta mindre BHD1s enn det du skriver inn i beløpsfeltet. Hvis det er valgt flere mottakere, deles gebyret likt.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2368,8 +2368,8 @@
         <translation>Skriv inn en merkelapp for denne adressen for å legge den til listen av brukte adresser</translation>
     </message>
     <message>
-        <source>A message that was attached to the btchd: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BitcoinHD network.</source>
-        <translation>En melding som var tilknyttet bitcoinen: URI vil bli lagret med transaksjonen for din oversikt. Denne meldingen vil ikke bli sendt over BitcoinHD-nettverket.</translation>
+        <source>A message that was attached to the btchd: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BitcoinHD1 network.</source>
+        <translation>En melding som var tilknyttet bitcoinen: URI vil bli lagret med transaksjonen for din oversikt. Denne meldingen vil ikke bli sendt over BitcoinHD1-nettverket.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2413,12 +2413,12 @@
         <translation>&amp;Signer Melding</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive BHDs sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Du kan signere meldinger/avtaler med adresser for å bevise at du kan motta BHDs sendt til dem. Vær forsiktig med å signere noe vagt eller tilfeldig, siden phishing-angrep kan prøve å lure deg til å signere din identitet over til dem. Bare signer fullt detaljerte utsagn som du er enig i.</translation>
+        <source>You can sign messages/agreements with your addresses to prove you can receive BHD1s sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>Du kan signere meldinger/avtaler med adresser for å bevise at du kan motta BHD1s sendt til dem. Vær forsiktig med å signere noe vagt eller tilfeldig, siden phishing-angrep kan prøve å lure deg til å signere din identitet over til dem. Bare signer fullt detaljerte utsagn som du er enig i.</translation>
     </message>
     <message>
-        <source>The BitcoinHD address to sign the message with</source>
-        <translation>BitcoinHD-adressen meldingen skal signeres med</translation>
+        <source>The BitcoinHD1 address to sign the message with</source>
+        <translation>BitcoinHD1-adressen meldingen skal signeres med</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2449,8 +2449,8 @@
         <translation>Kopier valgt signatur til utklippstavle</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this BitcoinHD address</source>
-        <translation>Signer meldingen for å bevise at du eier denne BitcoinHD-adressen</translation>
+        <source>Sign the message to prove you own this BitcoinHD1 address</source>
+        <translation>Signer meldingen for å bevise at du eier denne BitcoinHD1-adressen</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2473,12 +2473,12 @@
         <translation>Skriv inn mottakerens adresse, melding (forsikre deg om at du kopier linjeskift, mellomrom, faner osv. nøyaktig) og underskrift nedenfor for å bekrefte meldingen. Vær forsiktig så du ikke leser mer ut av signaturen enn hva som er i den signerte meldingen i seg selv, for å unngå å bli lurt av et man-in-the-middle-angrep. Merk at dette bare beviser at den som signerer kan motta med adressen, dette beviser ikke hvem som har sendt transaksjoner!</translation>
     </message>
     <message>
-        <source>The BitcoinHD address the message was signed with</source>
-        <translation>BitcoinHD-adressen meldingen ble signert med</translation>
+        <source>The BitcoinHD1 address the message was signed with</source>
+        <translation>BitcoinHD1-adressen meldingen ble signert med</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified BitcoinHD address</source>
-        <translation>Verifiser meldingen for å være sikker på at den ble signert av den angitte BitcoinHD-adressen</translation>
+        <source>Verify the message to ensure it was signed with the specified BitcoinHD1 address</source>
+        <translation>Verifiser meldingen for å være sikker på at den ble signert av den angitte BitcoinHD1-adressen</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -2688,7 +2688,7 @@
     </message>
     <message>
         <source>Generated coins must mature %1 blocks before they can be spent. When you generated this block, it was broadcast to the network to be added to the block chain. If it fails to get into the chain, its state will change to "not accepted" and it won't be spendable. This may occasionally happen if another node generates a block within a few seconds of yours.</source>
-        <translation>Genererte BHDs må modne %1 blokker før de kan brukes. Da du genererte denne blokken ble den kringkastet på nettverket for å bli lagt til i kjeden av blokker. Hvis den ikke kommer med i kjeden vil den endre seg til "ikke akseptert", og vil ikke kunne brukes. Dette vil noen ganger skje hvis en annen node genererer en blokk innen noen sekunder av din.</translation>
+        <translation>Genererte BHD1s må modne %1 blokker før de kan brukes. Da du genererte denne blokken ble den kringkastet på nettverket for å bli lagt til i kjeden av blokker. Hvis den ikke kommer med i kjeden vil den endre seg til "ikke akseptert", og vil ikke kunne brukes. Dette vil noen ganger skje hvis en annen node genererer en blokk innen noen sekunder av din.</translation>
     </message>
     <message>
         <source>Debug information</source>

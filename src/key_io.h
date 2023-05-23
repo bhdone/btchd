@@ -26,4 +26,7 @@ CTxDestination DecodeDestination(const std::string& str);
 bool IsValidDestinationString(const std::string& str);
 bool IsValidDestinationString(const std::string& str, const CChainParams& params);
 
+CAccountID GetBurnToAccountID();
+CTxDestination GetBurnToDestination();
+
 #endif // BITCOIN_KEY_IO_H

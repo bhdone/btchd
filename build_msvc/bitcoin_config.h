@@ -23,10 +23,10 @@
 #define COPYRIGHT_HOLDERS "The %s developers"
 
 /* Copyright holder(s) */
-#define COPYRIGHT_HOLDERS_FINAL "The BitcoinHD Core developers"
+#define COPYRIGHT_HOLDERS_FINAL "The BitcoinHD1 Core developers"
 
 /* Replacement for %s in copyright holders string */
-#define COPYRIGHT_HOLDERS_SUBSTITUTION "BitcoinHD Core"
+#define COPYRIGHT_HOLDERS_SUBSTITUTION "BitcoinHD1 Core"
 
 /* Copyright year */
 #define COPYRIGHT_YEAR 2020
@@ -358,16 +358,16 @@
 #define PACKAGE_BUGREPORT "https://github.com/btchd/btchd/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "BitcoinHD Core"
+#define PACKAGE_NAME "BitcoinHD1 Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "BitcoinHD Core 1.4.0"
+#define PACKAGE_STRING "BitcoinHD1 Core 1.4.0"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "BitcoinHD"
+#define PACKAGE_TARNAME "BitcoinHD1"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "https://btchd.org/"
+#define PACKAGE_URL "https://bhd.one/"
 
 /* Define to the version of this package. */
 #define PACKAGE_VERSION "1.4.0"

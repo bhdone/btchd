@@ -10,8 +10,13 @@
 #include <uint256.h>
 #include <limits>
 #include <map>
+#include <array>
 #include <set>
 #include <string>
+
+#include <chiapos/kernel/chiapos_types.h>
+
+#include "pledge_term.h"
 
 namespace Consensus {
 
@@ -43,11 +48,16 @@ struct BIP9Deployment {
     static constexpr int64_t ALWAYS_ACTIVE = -1;
 };
 
+struct BHDIP009PledgeRewardPercentForLockPeriod {
+    uint64_t nNumOfBlocks;
+    double percent;
+};
+
 /**
  * Parameters that influence chain consensus.
  */
 struct Params {
-    /** BitcoinHD Fund address */
+    /** BitcoinHD1 Fund address */
     std::string BHDFundAddress;
     std::set<std::string> BHDFundAddressPool;
 
@@ -56,21 +66,21 @@ struct Params {
     int nSubsidyHalvingInterval;
     int nCapacityEvalWindow;
 
-    /** BHDIP = BitcoinHD Improvement Proposals, like BIP */
-    /** BitcoinHD target spacing */
+    /** BHDIP = BitcoinHD1 Improvement Proposals, like BIP */
+    /** BitcoinHD1 target spacing */
     int BHDIP001TargetSpacing;
-    /** BitcoinHD fund pre-mining height */
+    /** BitcoinHD1 fund pre-mining height */
     int BHDIP001PreMiningEndHeight;
-    /** BitcoinHD fund zero height */
+    /** BitcoinHD1 fund zero height */
     int BHDIP001FundZeroLastHeight;
-    /** BitcoinHD fund royalty for full pledge. 1000% */
+    /** BitcoinHD1 fund royalty for full pledge. 1000% */
     int BHDIP001FundRoyaltyForFullMortgage;
-    /** BitcoinHD fund royalty for low pledge. 1000% */
+    /** BitcoinHD1 fund royalty for low pledge. 1000% */
     int BHDIP001FundRoyaltyForLowMortgage;
-    /** BitcoinHD miner mining ratio per TB */
+    /** BitcoinHD1 miner mining ratio per TB */
     CAmount BHDIP001MiningRatio;
 
-    /** View all BHDIP document on https://btchd.org/wiki/BHDIP */
+    /** View all BHDIP document on https://bhd.one/wiki/BHDIP */
     /** Block height at which BHDIP004 becomes active */
     int BHDIP004Height;
     /** Block height at which BHDIP004 becomes inactive */
@@ -94,6 +104,26 @@ struct Params {
     int BHDIP008FundRoyaltyForLowMortgage;
     int BHDIP008FundRoyaltyDecreaseForLowMortgage;
     int BHDIP008FundRoyaltyDecreasePeriodForLowMortgage;
+
+    /** Block height at which BHDIP009 (chiapos) becomes active */
+    bool BHDIP009SkipTestChainChecks; // flag set to True only when building a test chain (skip the check procedure for burst blocks)
+    int BHDIP009Height;
+    std::vector<std::string> BHDIP009FundAddresses;
+    int BHDIP009FundRoyaltyForLowMortgage;
+    uint64_t BHDIP009StartDifficulty;
+    uint64_t BHDIP009StartBlockIters;
+    int BHDIP009DifficultyEvalWindow;
+    int BHDIP009DifficultyConstantFactorBits;
+    int BHDIP009PlotIdBitsOfFilter;
+    int BHDIP009PlotIdBitsOfFilterEnableOnHeight;
+    int BHDIP009PlotSizeMin;
+    int BHDIP009PlotSizeMax;
+    int BHDIP009BaseIters;
+    int BHDIP009TotalAmountUpgradeMultiply;
+    int BHDIP009PledgeRetargetMinHeights;
+    double BHDIP009DifficultyChangeMaxFactor;
+
+    std::array<PledgeTerm, 4> BHDIP009PledgeTerms;
 
     /**
      * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,

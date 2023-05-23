@@ -66,8 +66,8 @@
         <translation>Direcciones de recibo</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Estas son tus direcciones de BitcoinHD para enviar pagos. Siempre revisa el monto y la dirección de envío antes de enviar monedas.</translation>
+        <source>These are your BitcoinHD1 addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Estas son tus direcciones de BitcoinHD1 para enviar pagos. Siempre revisa el monto y la dirección de envío antes de enviar monedas.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -160,8 +160,8 @@
         <translation>Confirmar la encriptación de cartera</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHDs&lt;/b&gt;!</source>
-        <translation>Advertencia: Si encripta su cartera y pierde su contraseña, &lt;b&gt;PERDERÁ TODOS SUS BHDs&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHD1s&lt;/b&gt;!</source>
+        <translation>Advertencia: Si encripta su cartera y pierde su contraseña, &lt;b&gt;PERDERÁ TODOS SUS BHD1s&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -323,8 +323,8 @@ Haga clic para habilitar la actividad de red nuevamente.</translation>
         <translation>El proxy está &lt;b&gt;habilitado&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD address</source>
-        <translation>Enviar monedas a una dirección BitcoinHD</translation>
+        <source>Send coins to a BitcoinHD1 address</source>
+        <translation>Enviar monedas a una dirección BitcoinHD1</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -367,12 +367,12 @@ Haga clic para habilitar la actividad de red nuevamente.</translation>
         <translation>Cifre las claves privadas que pertenecen a su billetera</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD addresses to prove you own them</source>
-        <translation>Firme mensajes con sus direcciones de BitcoinHD para demostrar que los posee</translation>
+        <source>Sign messages with your BitcoinHD1 addresses to prove you own them</source>
+        <translation>Firme mensajes con sus direcciones de BitcoinHD1 para demostrar que los posee</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD addresses</source>
-        <translation>Verifique los mensajes para asegurarse de que se firmaron con direcciones de BitcoinHD especificadas.</translation>
+        <source>Verify messages to ensure they were signed with specified BitcoinHD1 addresses</source>
+        <translation>Verifique los mensajes para asegurarse de que se firmaron con direcciones de BitcoinHD1 especificadas.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -526,8 +526,8 @@ Solicitar pagos (genera códigos QR y btchd: URI)
 <context>
     <name>Intro</name>
     <message>
-        <source>BitcoinHD</source>
-        <translation>BitcoinHD</translation>
+        <source>BitcoinHD1</source>
+        <translation>BitcoinHD1</translation>
     </message>
     <message>
         <source>Error</source>
@@ -615,8 +615,8 @@ Solicitar pagos (genera códigos QR y btchd: URI)
         <translation>Mensaje:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD network.</source>
-        <translation>Mensaje opcional para agregar a la solicitud de pago, el cual será mostrado cuando la solicitud este abierta. Nota: El mensaje no se manda con el pago a travéz de la red de BitcoinHD.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD1 network.</source>
+        <translation>Mensaje opcional para agregar a la solicitud de pago, el cual será mostrado cuando la solicitud este abierta. Nota: El mensaje no se manda con el pago a travéz de la red de BitcoinHD1.</translation>
     </message>
     <message>
         <source>Use this form to request payments. All fields are &lt;b&gt;optional&lt;/b&gt;.</source>

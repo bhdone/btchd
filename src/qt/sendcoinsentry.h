@@ -9,6 +9,11 @@
 
 #include <QStackedWidget>
 
+#include <QStringList>
+#include <QStringListModel>
+
+#include "pointitemmodel.h"
+
 class WalletModel;
 class PlatformStyle;
 
@@ -63,6 +68,7 @@ private Q_SLOTS:
     void on_payTo_textChanged(const QString &address);
     void on_addressBookButton_clicked();
     void on_pasteButton_clicked();
+    void on_refreshPointsButton_clicked();
     void updateDisplayUnit();
 
 private:
@@ -71,6 +77,7 @@ private:
     Ui::SendCoinsEntry *ui;
     WalletModel *model;
     const PlatformStyle *platformStyle;
+    PointItemModel *pointsListModel;
 
     bool updateLabel(const QString &address);
 };

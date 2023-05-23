@@ -24,6 +24,8 @@ BITCOIN_INCLUDES=-I$(builddir) $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFL
 BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
 BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
+UTF8PROC_LIBS = -lutf8proc
+
 LIBBITCOIN_SERVER=libbitcoin_server.a
 LIBBITCOIN_COMMON=libbitcoin_common.a
 LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
@@ -32,6 +34,45 @@ LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO_BASE=crypto/libbitcoin_crypto_base.a
 LIBBITCOINQT=qt/libbitcoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
+
+CHIAPOS_LIBS = -lbls -lrelic_s -lsodium -lbhd_vdf
+
+CHIAPOS_KERNEL_INCLUDES = \
+  chiapos/kernel/chiapos_types.h \
+  chiapos/kernel/pos.h \
+  chiapos/kernel/vdf.h \
+  chiapos/kernel/bls_key.h \
+  chiapos/kernel/calc_diff.h \
+  chiapos/utils.h
+
+CHIAPOS_KERNEL_CPPS = \
+  chiapos/kernel/pos.cpp \
+  chiapos/kernel/vdf.cpp \
+  chiapos/kernel/bls_key.cpp \
+  chiapos/kernel/calc_diff.cpp \
+  chiapos/kernel/utils.cpp
+
+CHIAPOS_H = \
+  chiapos/post.h \
+  chiapos/plotter_id.h \
+  chiapos/block_fields.h \
+  chiapos/timelord_cli/timelord_client.h \
+  $(CHIAPOS_KERNEL_INCLUDES)
+
+CHIAPOS_CPPS = \
+  chiapos/post.cpp \
+  chiapos/plotter_id.cpp \
+  chiapos/block_fields.cpp \
+  chiapos/timelord_cli/timelord_client.cpp \
+  chiapos/chia_rpc.cpp \
+  $(CHIAPOS_KERNEL_CPPS)
+
+LIBCHIA_COMMON=libchia_common.a
+
+libchia_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libchia_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libchia_common_a_SOURCES = \
+  $(CHIAPOS_CPPS)
 
 if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libbitcoin_zmq.a
@@ -64,6 +105,7 @@ $(LIBSECP256K1): $(wildcard secp256k1/src/*.h) $(wildcard secp256k1/src/*.c) $(w
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
 EXTRA_LIBRARIES += \
+  $(LIBCHIA_COMMON) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_COMMON) \
@@ -87,6 +129,9 @@ endif
 
 if BUILD_BITCOIN_CLI
   bin_PROGRAMS += btchd-cli
+endif
+if BUILD_BITCOIN_MINER
+  bin_PROGRAMS += btchd-miner
 endif
 if BUILD_BITCOIN_TX
   bin_PROGRAMS += btchd-tx
@@ -219,7 +264,9 @@ BITCOIN_CORE_H = \
   util/translation.h \
   util/url.h \
   util/validation.h \
+  updatetip_log_helper.hpp \
   validation.h \
+  subsidy_utils.h \
   validationinterface.h \
   versionbits.h \
   versionbitsinfo.h \
@@ -239,12 +286,15 @@ BITCOIN_CORE_H = \
   wallet/wallettool.h \
   wallet/walletutil.h \
   wallet/coinselection.h \
+  wallet/txpledge.h \
   warnings.h \
   zmq/zmqabstractnotifier.h \
   zmq/zmqconfig.h\
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h \
-  zmq/zmqrpc.h
+  zmq/zmqrpc.h \
+  $(CHIAPOS_H) \
+  $(CHIAPOS_TEST_H)
 
 if ENABLE_OMNICORE
 BITCOIN_CORE_H += omnicore_api.h
@@ -291,6 +341,7 @@ libbitcoin_server_a_SOURCES = \
   poc/passphrase-en.cpp \
   poc/poc.cpp \
   poc/poc_rpc.cpp \
+  chiapos/post.cpp \
   policy/fees.cpp \
   policy/rbf.cpp \
   policy/settings.cpp \
@@ -309,6 +360,7 @@ libbitcoin_server_a_SOURCES = \
   txmempool.cpp \
   ui_interface.cpp \
   validation.cpp \
+  subsidy_utils.cpp \
   validationinterface.cpp \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
@@ -356,6 +408,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/walletdb.cpp \
   wallet/walletutil.cpp \
   wallet/coinselection.cpp \
+  wallet/txpledge.cpp \
   $(BITCOIN_CORE_H)
 
 libbitcoin_wallet_tool_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
@@ -365,9 +418,12 @@ libbitcoin_wallet_tool_a_SOURCES = \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libbitcoin_crypto_base_a_CPPFLAGS = $(AM_CPPFLAGS)
+crypto_libbitcoin_crypto_base_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 crypto_libbitcoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libbitcoin_crypto_base_a_SOURCES = \
+  support/lockedpool.cpp \
+  random.cpp \
+  compat/byteswap.cpp \
   crypto/aes.cpp \
   crypto/aes.h \
   crypto/chacha_poly_aead.h \
@@ -491,6 +547,7 @@ libbitcoin_common_a_SOURCES = \
   policy/policy.cpp \
   protocol.cpp \
   psbt.cpp \
+  compat/byteswap.cpp \
   rpc/rawtransaction_util.cpp \
   rpc/util.cpp \
   scheduler.cpp \
@@ -500,6 +557,7 @@ libbitcoin_common_a_SOURCES = \
   script/standard.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
+  $(CHIAPOS_CPPS) \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
@@ -580,10 +638,10 @@ btchdd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-btchdd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
+btchdd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS) $(UTF8PROC_LIBS)
 
 # bitcoin-cli binary #
-btchd_cli_SOURCES = bitcoin-cli.cpp
+btchd_cli_SOURCES = bitcoin-cli.cpp compat/byteswap.cpp
 btchd_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
 btchd_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 btchd_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -602,7 +660,7 @@ btchd_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # bitcoin-tx binary #
-btchd_tx_SOURCES = bitcoin-tx.cpp
+btchd_tx_SOURCES = bitcoin-tx.cpp compat/byteswap.cpp
 btchd_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 btchd_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 btchd_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -619,11 +677,11 @@ btchd_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-btchd_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+btchd_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS) $(UTF8PROC_LIBS)
 #
 
 # bitcoin-wallet binary #
-btchd_wallet_SOURCES = bitcoin-wallet.cpp
+btchd_wallet_SOURCES = bitcoin-wallet.cpp compat/byteswap.cpp
 btchd_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 btchd_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 btchd_wallet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
@@ -646,22 +704,106 @@ btchd_wallet_LDADD = \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE)
 
-btchd_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS)
+btchd_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS) $(UTF8PROC_LIBS)
 #
+
+# bitcoin-miner binary #
+CHIAPOS_MINER_H = \
+  chiapos/plotter_id.h \
+  chiapos/bhd_types.h \
+  chiapos/miner/config.h \
+  chiapos/miner/prover.h \
+  chiapos/miner/rpc_client.h \
+  chiapos/miner/chiapos_miner.h \
+  chiapos/miner/http_client.h \
+  chiapos/miner/tools.h \
+  chiapos/timelord_cli/timelord_client.h
+
+CHIAPOS_MINER_CPPS = \
+  chiapos/plotter_id.cpp \
+  chiapos/miner/config.cpp \
+  chiapos/miner/prover.cpp \
+  chiapos/miner/rpc_client.cpp \
+  chiapos/miner/chiapos_miner.cpp \
+  chiapos/miner/http_client.cpp \
+  chiapos/miner/main.cpp \
+  chiapos/miner/tools.cpp \
+  chiapos/timelord_cli/timelord_client.cpp
+
+btchd_miner_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DCURL_STATICLIB
+btchd_miner_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+btchd_miner_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+btchd_miner_SOURCES = \
+  chainparams.cpp \
+  chainparamsbase.cpp \
+  consensus/merkle.cpp \
+  subsidy_utils.cpp \
+  util/system.cpp \
+  util/translation.h \
+  merkleblock.cpp \
+  bloom.cpp \
+  random.cpp \
+  support/cleanse.cpp \
+  arith_uint256.cpp \
+  uint256.cpp \
+  util/strencodings.cpp \
+  util/time.cpp \
+  util/threadnames.cpp \
+  compat/byteswap.cpp \
+  crypto/sha256.cpp \
+  crypto/sha256_shani.cpp \
+  primitives/transaction.cpp \
+  primitives/block.cpp \
+  chiapos/block_fields.cpp \
+  versionbitsinfo.cpp \
+  fs.cpp \
+  hash.cpp \
+  logging.cpp \
+  script/script.cpp \
+  script/standard.cpp \
+  $(CHIAPOS_KERNEL_INCLUDES) \
+  $(CHIAPOS_KERNEL_CPPS) \
+  $(CHIAPOS_MINER_H) \
+  $(CHIAPOS_MINER_CPPS)
+
+CURL_LIBS = -lcurl
+
+btchd_miner_LDADD = \
+  $(BOOST_LIBS) \
+  $(CRYPTO_LIBS) \
+  $(EVENT_PTHREADS_LIBS) \
+  $(CHIAPOS_LIBS) \
+  $(MPIR_LIBS) \
+  $(UTF8PROC_LIBS) \
+  $(CURL_LIBS) \
+  $(TOOLBOX_LIBS) \
+  $(UNIVALUE_LIBS) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBBITCOIN_CONSENSUS)
 
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = support/cleanse.cpp $(crypto_libbitcoin_crypto_base_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
-if GLIBC_BACK_COMPAT
-  libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
+# libbitcoinconsensus_la_SOURCES = \
+# $(crypto_libbitcoin_crypto_base_a_SOURCES)
+#   $(libbitcoin_consensus_a_SOURCES)
+libbitcoinconsensus_la_SOURCES =
+# if GLIBC_BACK_COMPAT
+#   libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
+# endif
+
+libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(HARDENED_LDFLAGS)
+libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1) $(LIBBITCOIN_CRYPTO)
+
+if TARGET_WINDOWS
+libbitcoinconsensus_la_LIBADD += $(CHIAPOS_LIBS) $(MPIR_LIBS)
 endif
 
-libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
-libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
-libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PTHREAD_CFLAGS)
 
 endif
 #
@@ -732,10 +874,9 @@ if EMBEDDED_LEVELDB
 include Makefile.leveldb.include
 endif
 
-# TODO enable tests
-#if ENABLE_TESTS
-#include Makefile.test.include
-#endif
+if ENABLE_TESTS
+include Makefile.test.include
+endif
 
 # TODO enable bench
 #if ENABLE_BENCH

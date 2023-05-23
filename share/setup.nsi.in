@@ -4,7 +4,7 @@ RequestExecutionLevel highest
 SetCompressor /SOLID lzma
 
 # For legacy
-!define LegacyPackageName "BitcoinHD Chain"
+!define LegacyPackageName "BitcoinHD1 Chain"
 !define LegacyName "${LegacyPackageName} (@WINDOWS_BITS@-bit)"
 
 # General Symbol Definitions
@@ -20,7 +20,7 @@ SetCompressor /SOLID lzma
 !define MUI_HEADERIMAGE_BITMAP "@abs_top_srcdir@/share/pixmaps/nsis-header.bmp"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 !define MUI_STARTMENUPAGE_REGISTRY_ROOT HKLM
-!define MUI_STARTMENUPAGE_REGISTRY_KEY ${REGKEY}
+!define MUI_STARTMENUPAGE_REGISTRY_KEY "${REGKEY}"
 !define MUI_STARTMENUPAGE_REGISTRY_VALUENAME StartMenuGroup
 !define MUI_STARTMENUPAGE_DEFAULTFOLDER "@PACKAGE_NAME@"
 !define MUI_FINISHPAGE_RUN "$WINDIR\explorer.exe"
@@ -54,9 +54,9 @@ Var StartMenuGroup
 # Installer attributes
 OutFile @abs_top_srcdir@/@PACKAGE_TARNAME@-@PACKAGE_VERSION@-win@WINDOWS_BITS@-setup.exe
 !if "@WINDOWS_BITS@" == "64"
-InstallDir $PROGRAMFILES64\BitcoinHD
+InstallDir $PROGRAMFILES64\BitcoinHD1
 !else
-InstallDir $PROGRAMFILES\BitcoinHD
+InstallDir $PROGRAMFILES\BitcoinHD1
 !endif
 CRCCheck on
 XPStyle on
@@ -84,6 +84,7 @@ Section -Main SEC0000
     File @abs_top_srcdir@/release/@BITCOIN_DAEMON_NAME@@EXEEXT@
     File @abs_top_srcdir@/release/@BITCOIN_CLI_NAME@@EXEEXT@
     File @abs_top_srcdir@/release/@BITCOIN_TX_NAME@@EXEEXT@
+    File @abs_top_srcdir@/release/@BITCOIN_MINER_NAME@@EXEEXT@
     File @abs_top_srcdir@/release/@BITCOIN_WALLET_TOOL_NAME@@EXEEXT@
     SetOutPath $INSTDIR\doc
     File /r /x Makefile* @abs_top_srcdir@/doc\*.*
@@ -114,7 +115,7 @@ Section -post SEC0001
     WriteRegStr HKCR "@PACKAGE_TARNAME@" "" "URL:BTCHD"
     WriteRegStr HKCR "@PACKAGE_TARNAME@\DefaultIcon" "" $INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@
     WriteRegStr HKCR "@PACKAGE_TARNAME@\shell\open\command" "" '"$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" "%1"'
-    # Clear "BitcoinHD Chain"
+    # Clear "BitcoinHD1 Chain"
     Delete "$SMPROGRAMS\${LegacyPackageName}\Uninstall ${LegacyName}.lnk"
     Delete "$SMPROGRAMS\${LegacyPackageName}\${LegacyName}.lnk"
     Delete "$SMPROGRAMS\${LegacyPackageName}\${LegacyPackageName} (mining, @WINDOWS_BITS@-bit).lnk"
@@ -151,7 +152,7 @@ Section -un.post UNSEC0001
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (mining, @WINDOWS_BITS@-bit).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, @WINDOWS_BITS@-bit).lnk"
-    Delete /REBOOTOK "$SMSTARTUP\BitcoinHD.lnk"
+    Delete /REBOOTOK "$SMSTARTUP\BitcoinHD1.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
     Delete /REBOOTOK $INSTDIR\debug.log
     Delete /REBOOTOK $INSTDIR\db.log

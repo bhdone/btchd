@@ -162,7 +162,8 @@ BITCOIN_QT_H = \
   qt/walletmodel.h \
   qt/walletmodeltransaction.h \
   qt/walletview.h \
-  qt/winshutdownmonitor.h
+  qt/winshutdownmonitor.h \
+  qt/pointitemmodel.h
 
 RES_ICONS = \
   qt/res/icons/add.png \
@@ -274,7 +275,8 @@ BITCOIN_QT_WALLET_CPP = \
   qt/walletframe.cpp \
   qt/walletmodel.cpp \
   qt/walletmodeltransaction.cpp \
-  qt/walletview.cpp
+  qt/walletview.cpp \
+  qt/pointitemmodel.cpp
 
 BITCOIN_QT_WALLET_BIP70_CPP = \
   qt/paymentrequestplus.cpp
@@ -349,7 +351,7 @@ qt_btchd_qt_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 qt_btchd_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
-  $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
+  $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS)
 if ENABLE_BIP70
 qt_btchd_qt_LDADD += $(SSL_LIBS)
 else
@@ -358,8 +360,11 @@ qt_btchd_qt_LDADD += $(SSL_LIBS)
 endif
 endif
 qt_btchd_qt_LDADD += $(CRYPTO_LIBS)
+qt_btchd_qt_LDADD += $(LIBBIP39)
 qt_btchd_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 qt_btchd_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
+
+qt_btchd_qt_LDADD += $(LIBCHIA_COMMON) $(BIP3X_LIBS) $(TOOLBOX_LIBS) $(UTF8PROC_LIBS)
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)

@@ -376,6 +376,8 @@ QString TransactionTableModel::formatTxType(const TransactionRecord *wtx) const
         return tr("Point to yourself");
     case TransactionRecord::WithdrawPoint:
         return tr("Withdraw point");
+    case TransactionRecord::RetargetPoint:
+        return tr("Retarget point");
     default:
         return QString();
     }
@@ -417,6 +419,8 @@ QVariant TransactionTableModel::txAddressDecoration(const TransactionRecord *wtx
             return QIcon(":/icons/tx_point_inout");
     case TransactionRecord::WithdrawPoint:
         return QIcon(":/icons/tx_point_withdraw");
+    case TransactionRecord::RetargetPoint:
+        return QIcon(":/icons/tx_point_inout");
     default:
         return QIcon(":/icons/tx_inout");
     }
@@ -448,6 +452,7 @@ QString TransactionTableModel::formatTxToAddress(const TransactionRecord *wtx, b
     case TransactionRecord::PointSent:
     case TransactionRecord::PointReceived:
     case TransactionRecord::SelfPoint:
+    case TransactionRecord::RetargetPoint:
     case TransactionRecord::WithdrawPoint:
         return lookupAddress(wtx->address, tooltip) + watchAddress + comment;
     case TransactionRecord::SendToOther:
@@ -551,7 +556,8 @@ QString TransactionTableModel::formatTooltip(const TransactionRecord *rec) const
         rec->type==TransactionRecord::SendToAddress || rec->type==TransactionRecord::RecvWithAddress ||
         rec->type == TransactionRecord::BindPlotter || rec->type == TransactionRecord::UnbindPlotter ||
         rec->type == TransactionRecord::PointSent || rec->type == TransactionRecord::PointReceived ||
-        rec->type == TransactionRecord::SelfPoint || rec->type == TransactionRecord::WithdrawPoint)
+        rec->type == TransactionRecord::SelfPoint || rec->type == TransactionRecord::WithdrawPoint ||
+        rec->type == TransactionRecord::RetargetPoint)
     {
         tooltip += QString(" ") + formatTxToAddress(rec, true);
     }

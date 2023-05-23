@@ -76,6 +76,8 @@ static bool is_state_prefix(std::string const &str)
 
 static int write_msc_balances(std::ofstream& file, SHA256_CTX* shaCtx)
 {
+    AssertLockHeld(cs_tally);
+
     std::unordered_map<std::string, CMPTally>::iterator iter;
     for (iter = mp_tally_map.begin(); iter != mp_tally_map.end(); ++iter) {
         bool emptyWallet = true;
@@ -121,6 +123,8 @@ static int write_msc_balances(std::ofstream& file, SHA256_CTX* shaCtx)
 
 static int write_mp_offers(std::ofstream& file, SHA256_CTX* shaCtx)
 {
+    AssertLockHeld(cs_tally);
+
     OfferMap::const_iterator iter;
     for (iter = my_offers.begin(); iter != my_offers.end(); ++iter) {
         // decompose the key for address
@@ -135,6 +139,8 @@ static int write_mp_offers(std::ofstream& file, SHA256_CTX* shaCtx)
 
 static int write_mp_accepts(std::ofstream& file, SHA256_CTX* shaCtx)
 {
+    AssertLockHeld(cs_tally);
+
     AcceptMap::const_iterator iter;
     for (iter = my_accepts.begin(); iter != my_accepts.end(); ++iter) {
         // decompose the key for address
@@ -149,6 +155,8 @@ static int write_mp_accepts(std::ofstream& file, SHA256_CTX* shaCtx)
 
 static int write_globals_state(std::ofstream& file, SHA256_CTX* shaCtx)
 {
+    AssertLockHeld(cs_tally);
+
     uint32_t nextSPID = pDbSpInfo->peekNextSPID(OMNI_PROPERTY_MSC);
     uint32_t nextTestSPID = pDbSpInfo->peekNextSPID(OMNI_PROPERTY_TMSC);
     std::string lineOut = strprintf("%d,%d,%d",
@@ -167,6 +175,8 @@ static int write_globals_state(std::ofstream& file, SHA256_CTX* shaCtx)
 
 static int write_mp_crowdsales(std::ofstream& file, SHA256_CTX* shaCtx)
 {
+    AssertLockHeld(cs_tally);
+
     for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
         // decompose the key for address
         const CMPCrowd& crowd = it->second;
@@ -178,6 +188,8 @@ static int write_mp_crowdsales(std::ofstream& file, SHA256_CTX* shaCtx)
 
 static int write_mp_metadex(std::ofstream &file, SHA256_CTX* shaCtx)
 {
+    AssertLockHeld(cs_tally);
+
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         md_PricesMap& prices = my_it->second;
         for (md_PricesMap::iterator it = prices.begin(); it != prices.end(); ++it) {
@@ -264,6 +276,7 @@ static int input_mp_offers_string(const std::string& s)
     const std::string combo = STR_SELLOFFER_ADDR_PROP_COMBO(sellerAddr, prop);
     CMPOffer newOffer(offerBlock, amountOriginal, prop, btcDesired, minFee, blocktimelimit, txid);
 
+    AssertLockHeld(cs_tally);
     if (!my_offers.insert(std::make_pair(combo, newOffer)).second) return -1;
 
     return 0;
@@ -296,6 +309,8 @@ static int input_mp_accepts_string(const std::string& s)
     btcDesired = boost::lexical_cast<int64_t>(vstr[i++]);
     txidStr = vstr[i++];
 
+    AssertLockHeld(cs_tally);
+
     const std::string combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(sellerAddr, buyerAddr, prop);
     CMPAccept newAccept(amountOriginal, amountRemaining, nBlock, blocktimelimit, prop, offerOriginal, btcDesired, uint256S(txidStr));
     if (my_accepts.insert(std::make_pair(combo, newAccept)).second) {
@@ -318,6 +333,8 @@ static int input_globals_state_string(const std::string& s)
     exodusPrev = boost::lexical_cast<int64_t>(vstr[i++]);
     nextSPID = boost::lexical_cast<uint32_t>(vstr[i++]);
     nextTestSPID = boost::lexical_cast<uint32_t>(vstr[i++]);
+
+    AssertLockHeld(cs_tally);
 
     exodus_prev = exodusPrev;
     pDbSpInfo->init(nextSPID, nextTestSPID);
@@ -363,6 +380,8 @@ static int input_mp_crowdsale_string(const std::string& s)
         uint256 txHash = uint256S(entryData[0]);
         newCrowdsale.insertDatabase(txHash, vals);
     }
+
+    AssertLockHeld(cs_tally);
 
     if (!my_crowds.insert(std::make_pair(sellerAddr, newCrowdsale)).second) {
         return -1;
@@ -556,6 +575,8 @@ int PersistInMemoryState(const CBlockIndex* pBlockIndex)
     // clean-up the directory
     prune_state_files(pBlockIndex);
 
+    AssertLockHeld(cs_tally);
+
     pDbSpInfo->setWatermark(pBlockIndex->GetBlockHash());
 
     return 0;
@@ -566,6 +587,8 @@ int PersistInMemoryState(const CBlockIndex* pBlockIndex)
  */
 int RestoreInMemoryState(const std::string& filename, int what, bool verifyHash)
 {
+    AssertLockHeld(cs_tally);
+
     int lines = 0;
     int (*inputLineFunc)(const std::string&) = nullptr;
 

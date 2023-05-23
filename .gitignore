@@ -1,4 +1,8 @@
+.cache
+.vscode
 *.tar.gz
+compile_commands.json
+configure~
 
 *.exe
 *.pdb
@@ -7,6 +11,8 @@ src/btchdd
 src/btchd-cli
 src/btchd-tx
 src/btchd-wallet
+src/btchd-miner
+src/btchd-test
 src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
@@ -137,3 +143,8 @@ db4/
 osx_volname
 dist/
 *.background.tiff
+
+.ccls-cache/
+
+# misc
+config.json

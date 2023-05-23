@@ -93,6 +93,8 @@ void CMPCrowd::saveCrowdSale(std::ofstream& file, SHA256_CTX* shaCtx, const std:
 
 CMPCrowd* mastercore::getCrowd(const std::string& address)
 {
+    AssertLockHeld(cs_tally);
+
     CrowdMap::iterator my_it = my_crowds.find(address);
 
     if (my_it != my_crowds.end()) return &(my_it->second);
@@ -102,6 +104,8 @@ CMPCrowd* mastercore::getCrowd(const std::string& address)
 
 bool mastercore::IsPropertyIdValid(uint32_t propertyId)
 {
+    AssertLockHeld(cs_tally);
+
     if (propertyId == 0) return false;
 
     uint32_t nextId = 0;
@@ -121,6 +125,8 @@ bool mastercore::IsPropertyIdValid(uint32_t propertyId)
 
 bool mastercore::isPropertyDivisible(uint32_t propertyId)
 {
+    AssertLockHeld(cs_tally);
+
     // TODO: is a lock here needed
     CMPSPInfo::Entry sp;
 
@@ -131,6 +137,8 @@ bool mastercore::isPropertyDivisible(uint32_t propertyId)
 
 std::string mastercore::getPropertyName(uint32_t propertyId)
 {
+    AssertLockHeld(cs_tally);
+
     CMPSPInfo::Entry sp;
     if (pDbSpInfo->getSP(propertyId, sp)) return sp.name;
     return "Property Name Not Found";
@@ -138,6 +146,8 @@ std::string mastercore::getPropertyName(uint32_t propertyId)
 
 bool mastercore::isCrowdsaleActive(uint32_t propertyId)
 {
+    AssertLockHeld(cs_tally);
+
     for (CrowdMap::const_iterator it = my_crowds.begin(); it != my_crowds.end(); ++it) {
         const CMPCrowd& crowd = it->second;
         uint32_t foundPropertyId = crowd.getPropertyId();
@@ -307,6 +317,8 @@ bool mastercore::isCrowdsalePurchase(const uint256& txid, const std::string& add
         }
     }
 
+    AssertLockHeld(cs_tally);
+
     // if we still haven't found txid, check non active crowdsales to this address
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
         uint32_t startPropertyId = (ecosystem == 1) ? 1 : TEST_ECO_PROPERTY_1;
@@ -330,6 +342,8 @@ bool mastercore::isCrowdsalePurchase(const uint256& txid, const std::string& add
 
 void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTime, int block, uint256& blockHash)
 {
+    AssertLockHeld(cs_tally);
+
     CrowdMap::iterator it = my_crowds.find(address);
 
     if (it != my_crowds.end()) {
@@ -364,6 +378,8 @@ void mastercore::eraseMaxedCrowdsale(const std::string& address, int64_t blockTi
 unsigned int mastercore::eraseExpiredCrowdsale(const CBlockIndex* pBlockIndex)
 {
     if (pBlockIndex == nullptr) return 0;
+
+    AssertLockHeld(cs_tally);
 
     const int64_t blockTime = pBlockIndex->GetBlockTime();
     const int blockHeight = pBlockIndex->nHeight;

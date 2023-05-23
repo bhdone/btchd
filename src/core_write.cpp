@@ -190,7 +190,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     entry.pushKV("txid", tx.GetHash().GetHex());
     entry.pushKV("hash", tx.GetWitnessHash().GetHex());
     entry.pushKV("version", tx.nVersion);
-    entry.pushKV("size", (int)::GetSerializeSize(tx, PROTOCOL_VERSION));
+    entry.pushKV("size", (int)::GetSerializeSize(tx, 0, PROTOCOL_VERSION));
     entry.pushKV("vsize", (GetTransactionWeight(tx) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR);
     entry.pushKV("weight", GetTransactionWeight(tx));
     entry.pushKV("locktime", (int64_t)tx.nLockTime);
@@ -238,7 +238,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     entry.pushKV("vout", vout);
 
     if (tx.IsUniform()) {
-        CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(tx, nHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_POINT});
+        CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(tx, nHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_BINDCHIAFARMER, DATACARRIER_TYPE_POINT, DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_RETARGET});
         if (payload) {
             UniValue extra(UniValue::VOBJ);;
             DatacarrierPayloadToUniv(payload, tx.vout[0], extra);
@@ -257,15 +257,19 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
 void DatacarrierPayloadToUniv(const CDatacarrierPayloadRef& payload, const CTxOut& txOut, UniValue& out)
 {
     assert(payload != nullptr);
-    if (payload->type == DATACARRIER_TYPE_BINDPLOTTER) {
+    if (payload->type == DATACARRIER_TYPE_BINDPLOTTER || payload->type == DATACARRIER_TYPE_BINDCHIAFARMER) {
         out.pushKV("type", "bindplotter");
         out.pushKV("amount", ValueFromAmount(txOut.nValue));
         out.pushKV("address", EncodeDestination(ExtractDestination(txOut.scriptPubKey)));
-        out.pushKV("id", std::to_string(BindPlotterPayload::As(payload)->GetId()));
-    } else if (payload->type == DATACARRIER_TYPE_POINT) {
-        out.pushKV("type", "pledge");
+        out.pushKV("id", BindPlotterPayload::As(payload)->GetId().ToString());
+    } else if (payload->type == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint(payload->type)) {
+        out.pushKV("type", std::string("pledge") + DatacarrierTypeToString(payload->type));
         out.pushKV("amount", ValueFromAmount(txOut.nValue));
         out.pushKV("from", EncodeDestination(ExtractDestination(txOut.scriptPubKey)));
-        out.pushKV("to", EncodeDestination(ScriptHash(PointPayload::As(payload)->GetReceiverID())));
+        if (payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+            out.pushKV("to", EncodeDestination(ScriptHash(PointRetargetPayload::As(payload)->GetReceiverID())));
+        } else {
+            out.pushKV("to", EncodeDestination(ScriptHash(PointPayload::As(payload)->GetReceiverID())));
+        }
     }
 }

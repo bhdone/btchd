@@ -175,13 +175,17 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
 
     if (rec->type == TransactionRecord::BindPlotter || rec->type == TransactionRecord::UnbindPlotter)
     {
-        strHTML += "<b>" + tr("Plotter ID") + ":</b> " + QString::fromStdString(wtx.value_map["plotter_id"]) + "<br>";
+        strHTML += "<b>" + tr("Farmer PubKey") + ":</b> " + QString::fromStdString(wtx.value_map["plotter_id"]) + "<br>";
         if (rec->type == TransactionRecord::UnbindPlotter)
             strHTML += "<b>" + tr("Relevant transaction ID") + ":</b> " + QString::fromStdString(wtx.value_map["relevant_txid"]) + "<br>";
     }
     else if (rec->type == TransactionRecord::WithdrawPoint)
     {
         strHTML += "<b>" + tr("Relevant transaction ID") + ":</b> " + QString::fromStdString(wtx.value_map["relevant_txid"]) + "<br>";
+    }
+    else if (rec->type == TransactionRecord::RetargetPoint)
+    {
+        strHTML += "<b>" + tr("Relevant transaction ID") + ":</b> " + QString::fromStdString(wtx.value_map["txid"]) + "<br>";
     }
 
     //

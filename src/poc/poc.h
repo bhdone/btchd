@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The BitcoinHD Core developers
+// Copyright (c) 2017-2020 The BitcoinHD1 Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,9 +32,9 @@ namespace poc {
 static const arith_uint256 TWO64 = arith_uint256(std::numeric_limits<uint64_t>::max()) + 1;
 
 /**
- * BHD base target when target spacing is 1 seconds
- * 
- * See https://btchd.org/wiki/The_Proof_of_Capacity#Base_Target
+ * BHD1 base target when target spacing is 1 seconds
+ *
+ * See https://bhd.one/wiki/The_Proof_of_Capacity#Base_Target
  *
  * net capacity(t) = 4398046511104 / t / baseTarget(t)
  *
@@ -190,18 +190,17 @@ CAmount GetCapacityRequireBalance(int64_t nCapacityTB, CAmount miningRatio);
  * Get mining required balance
  *
  * @param generatorAccountID        Block generator
- * @param nPlotterId                Proof of capacity ID
+ * @param bindData                  Proof of capacity ID
  * @param nMiningHeight             The height of mining
  * @param view                      The coin view
  * @param pMinerCapacityTB          Miner capacity by estimate
- * @param pOldMiningRequireBalance  Only in BHDIP004. See https://btchd.org/wiki/BHDIP/004#getminingrequire
+ * @param pOldMiningRequireBalance  Only in BHDIP004. See https://bhd.one/wiki/BHDIP/004#getminingrequire
+ * @param nBurned                   The amount of coins are burned, need fix the total supplied amount
  * @param params                    Consensus params
  *
  * @return Required balance
  */
-CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const uint64_t& nPlotterId, int nMiningHeight,
-    const CCoinsViewCache& view, int64_t* pMinerCapacityTB, CAmount* pOldMiningRequireBalance,
-    const Consensus::Params& params);
+CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlotterBindData& bindData, int nMiningHeight, const CCoinsViewCache& view, int64_t* pMinerCapacityTB, CAmount* pOldMiningRequireBalance, CAmount nBurned, const Consensus::Params& params, int* pnMinedBlocks = nullptr, int* pnTotalBlocks = nullptr);
 
 /**
  * Check block work
@@ -229,6 +228,8 @@ CTxDestination AddMiningSignaturePrivkey(const CKey& key);
  * @return Imported signature key related P2WSH addresses
  */
 std::vector<CTxDestination> GetMiningSignatureAddresses();
+
+arith_uint256 CalculateAverageNetworkSpace(CBlockIndex *pindexCurr, Consensus::Params const& params);
 
 }
 

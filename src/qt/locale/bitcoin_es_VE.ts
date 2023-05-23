@@ -66,8 +66,8 @@
         <translation>Direcciones de recepción</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Estas son sus direcciones BitcoinHD para enviar pagos. Compruebe siempre la cantidad y la dirección de recibo antes de transferir monedas.</translation>
+        <source>These are your BitcoinHD1 addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Estas son sus direcciones BitcoinHD1 para enviar pagos. Compruebe siempre la cantidad y la dirección de recibo antes de transferir monedas.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -160,8 +160,8 @@
         <translation>Confirme cifrado del monedero</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHDs&lt;/b&gt;!</source>
-        <translation>Atención: Si cifra su monedero y pierde la contraseña, perderá ¡&lt;b&gt;TODOS SUS BHDs&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHD1s&lt;/b&gt;!</source>
+        <translation>Atención: Si cifra su monedero y pierde la contraseña, perderá ¡&lt;b&gt;TODOS SUS BHD1s&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -246,8 +246,8 @@
         <translation>Reindexando bloques en disco...</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD address</source>
-        <translation>Enviar monedas a una dirección BitcoinHD</translation>
+        <source>Send coins to a BitcoinHD1 address</source>
+        <translation>Enviar monedas a una dirección BitcoinHD1</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -290,12 +290,12 @@
         <translation>Cifrar las claves privadas de su monedero</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD addresses to prove you own them</source>
-        <translation>Firmar mensajes con sus direcciones BitcoinHD para demostrar la propiedad</translation>
+        <source>Sign messages with your BitcoinHD1 addresses to prove you own them</source>
+        <translation>Firmar mensajes con sus direcciones BitcoinHD1 para demostrar la propiedad</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD addresses</source>
-        <translation>Verificar mensajes comprobando que están firmados con direcciones BitcoinHD concretas</translation>
+        <source>Verify messages to ensure they were signed with specified BitcoinHD1 addresses</source>
+        <translation>Verificar mensajes comprobando que están firmados con direcciones BitcoinHD1 concretas</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -315,7 +315,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and btchd: URIs)</source>
-        <translation>Solicitar pagos (genera codigo QR y URL's de BitcoinHD)</translation>
+        <translation>Solicitar pagos (genera codigo QR y URL's de BitcoinHD1)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -587,8 +587,8 @@
         <translation>Utilice un directorio de datos personalizado:</translation>
     </message>
     <message>
-        <source>BitcoinHD</source>
-        <translation>BitcoinHD</translation>
+        <source>BitcoinHD1</source>
+        <translation>BitcoinHD1</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -667,8 +667,8 @@
         <translation>Experto</translation>
     </message>
     <message>
-        <source>Automatically open the BitcoinHD client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abrir automáticamente el puerto del cliente BitcoinHD en el router. Esta opción solo funciona si el router admite UPnP y está activado.</translation>
+        <source>Automatically open the BitcoinHD1 client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Abrir automáticamente el puerto del cliente BitcoinHD1 en el router. Esta opción solo funciona si el router admite UPnP y está activado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -766,8 +766,8 @@
         <translation>Desde</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD network after a connection is established, but this process has not completed yet.</source>
-        <translation>La información mostrada puede estar desactualizada. Su monedero se sincroniza automáticamente con la red BitcoinHD después de que se haya establecido una conexión, pero este proceso aún no se ha completado.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD1 network after a connection is established, but this process has not completed yet.</source>
+        <translation>La información mostrada puede estar desactualizada. Su monedero se sincroniza automáticamente con la red BitcoinHD1 después de que se haya establecido una conexión, pero este proceso aún no se ha completado.</translation>
     </message>
     <message>
         <source>Available:</source>
@@ -1257,8 +1257,8 @@
         <translation>Copiar la firma actual al portapapeles del sistema</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this BitcoinHD address</source>
-        <translation>Firmar el mensaje para demostrar que se posee esta dirección BitcoinHD</translation>
+        <source>Sign the message to prove you own this BitcoinHD1 address</source>
+        <translation>Firmar el mensaje para demostrar que se posee esta dirección BitcoinHD1</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -1277,8 +1277,8 @@
         <translation>&amp;Verificar mensaje</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified BitcoinHD address</source>
-        <translation>Verificar el mensaje para comprobar que fue firmado con la dirección BitcoinHD indicada</translation>
+        <source>Verify the message to ensure it was signed with the specified BitcoinHD1 address</source>
+        <translation>Verificar el mensaje para comprobar que fue firmado con la dirección BitcoinHD1 indicada</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

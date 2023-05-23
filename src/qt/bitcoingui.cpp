@@ -266,7 +266,7 @@ void BitcoinGUI::createActions()
     tabGroup->addAction(overviewAction);
 
     sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), tr("&Send"), this);
-    sendCoinsAction->setStatusTip(tr("Send coins to a BitcoinHD address"));
+    sendCoinsAction->setStatusTip(tr("Send coins to a BitcoinHD1 address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + Qt::Key_2));
@@ -337,9 +337,9 @@ void BitcoinGUI::createActions()
     changePassphraseAction = new QAction(tr("&Change Passphrase..."), this);
     changePassphraseAction->setStatusTip(tr("Change the passphrase used for wallet encryption"));
     signMessageAction = new QAction(tr("Sign &message..."), this);
-    signMessageAction->setStatusTip(tr("Sign messages with your BitcoinHD addresses to prove you own them"));
+    signMessageAction->setStatusTip(tr("Sign messages with your BitcoinHD1 addresses to prove you own them"));
     verifyMessageAction = new QAction(tr("&Verify message..."), this);
-    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified BitcoinHD addresses"));
+    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified BitcoinHD1 addresses"));
 
     openRPCConsoleAction = new QAction(tr("&Debug window"), this);
     openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
@@ -369,7 +369,7 @@ void BitcoinGUI::createActions()
 
     showHelpMessageAction = new QAction(tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible BitcoinHD command-line options").arg(BitcoinGUI::tr(PACKAGE_NAME)));
+    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible BitcoinHD1 command-line options").arg(BitcoinGUI::tr(PACKAGE_NAME)));
 
     generatePassphraseAction = new QAction(tr("&Generate plotting account"), this);
     generatePassphraseAction->setStatusTip(tr("Generate plotting account"));
@@ -848,7 +848,7 @@ void BitcoinGUI::generatePassphraseClicked()
     QString information;
     information += "<span style='color:#aa0000;'>" + tr("This account is randomly generated, please save it. Loss will make plotting data invalid.") + "</span><br/><br/>";
     information += tr("Passphrase: %1").arg(QString::fromStdString(passphrase)) + "<br/>";
-    information += tr("Plotter ID: %1").arg(QString::number(plotterId));
+    information += tr("Farmer PubKey: %1").arg(QString::number(plotterId));
 
     QMessageBox messageBox(QMessageBox::Information, tr("Generate plotting account"), information, QMessageBox::Ok, this);
     messageBox.setTextInteractionFlags(Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse);
@@ -916,7 +916,7 @@ void BitcoinGUI::updateNetworkState()
     QString tooltip;
 
     if (m_node.getNetworkActive()) {
-        tooltip = tr("%n active connection(s) to BitcoinHD network", "", count) + QString(".<br>") + tr("Click to disable network activity.");
+        tooltip = tr("%n active connection(s) to BitcoinHD1 network", "", count) + QString(".<br>") + tr("Click to disable network activity.");
     } else {
         tooltip = tr("Network activity disabled.") + QString("<br>") + tr("Click to enable network activity again.");
         icon = ":/icons/network_disabled";

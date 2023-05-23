@@ -20,6 +20,7 @@
 #include <string.h>
 #include <utility>
 #include <vector>
+#include <sstream>
 
 #include <prevector.h>
 #include <span.h>
@@ -315,8 +316,11 @@ uint64_t ReadCompactSize(Stream& is)
         if (nSizeRet < 0x100000000ULL)
             throw std::ios_base::failure("non-canonical ReadCompactSize()");
     }
-    if (nSizeRet > (uint64_t)MAX_SIZE)
-        throw std::ios_base::failure("ReadCompactSize(): size too large");
+    if (nSizeRet > (uint64_t)MAX_SIZE) {
+        std::stringstream ssErr;
+        ssErr << "ReadCompactSize(): size too large, nSizeRet=" << nSizeRet;
+        throw std::ios_base::failure(ssErr.str());
+    }
     return nSizeRet;
 }
 
@@ -961,9 +965,10 @@ class CSizeComputer
 protected:
     size_t nSize;
 
+    const int nType;
     const int nVersion;
 public:
-    explicit CSizeComputer(int nVersionIn) : nSize(0), nVersion(nVersionIn) {}
+    CSizeComputer(int nTypeIn, int nVersionIn) : nSize(0), nType(nTypeIn), nVersion(nVersionIn) {}
 
     void write(const char *psz, size_t _nSize)
     {
@@ -986,6 +991,8 @@ public:
     size_t size() const {
         return nSize;
     }
+
+    int GetType() const { return nType; }
 
     int GetVersion() const { return nVersion; }
 };
@@ -1038,15 +1045,15 @@ inline void WriteCompactSize(CSizeComputer &s, uint64_t nSize)
 }
 
 template <typename T>
-size_t GetSerializeSize(const T& t, int nVersion = 0)
+size_t GetSerializeSize(const T& t, int nType, int nVersion)
 {
-    return (CSizeComputer(nVersion) << t).size();
+    return (CSizeComputer(nType, nVersion) << t).size();
 }
 
 template <typename... T>
-size_t GetSerializeSizeMany(int nVersion, const T&... t)
+size_t GetSerializeSizeMany(int nType, int nVersion, const T&... t)
 {
-    CSizeComputer sc(nVersion);
+    CSizeComputer sc(nType, nVersion);
     SerializeMany(sc, t...);
     return sc.size();
 }
@@ -1056,10 +1063,6 @@ template <typename Stream>
 int GetSerializeType(const Stream& s)
 {
     return s.GetType();
-}
-inline int GetSerializeType(const CSizeComputer&)
-{
-    return 0;
 }
 
 #endif // BITCOIN_SERIALIZE_H

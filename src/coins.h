@@ -23,8 +23,13 @@
 #include <set>
 #include <unordered_map>
 
+#include <chiapos/plotter_id.h>
+
 // Max height of coin
 static const uint32_t COIN_MAXHEIGHT = 0x3FFFFFFF;
+
+struct PledgeTerm;
+using PledgeTerms = std::array<PledgeTerm, 4>;
 
 /**
  * A UTXO entry.
@@ -86,9 +91,16 @@ public:
         if (code & 0x80000000) {
             ::Serialize(s, VARINT((unsigned int&)extraData->type));
             if (extraData->type == DATACARRIER_TYPE_BINDPLOTTER) {
-                ::Serialize(s, VARINT(BindPlotterPayload::As(extraData)->id));
-            } else if (extraData->type == DATACARRIER_TYPE_POINT) {
+                ::Serialize(s, VARINT(BindPlotterPayload::As(extraData)->GetId().GetBurstPlotterId()));
+            } else if (extraData->type == DATACARRIER_TYPE_BINDCHIAFARMER) {
+                ::Serialize(s, BindPlotterPayload::As(extraData)->GetId().GetChiaFarmerPk());
+            } else if (extraData->type == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint(extraData->type)) {
                 ::Serialize(s, REF(PointPayload::As(extraData)->GetReceiverID()));
+            } else if (extraData->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+                auto payload = PointRetargetPayload::As(extraData);
+                ::Serialize(s, REF(payload->GetReceiverID()));
+                ::Serialize(s, REF((uint32_t)payload->pointType));
+                ::Serialize(s, REF(payload->nPointHeight));
             } else
                 assert(false);
         }
@@ -108,11 +120,26 @@ public:
             unsigned int extraDataType = 0;
             ::Unserialize(s, VARINT(extraDataType));
             if (extraDataType == DATACARRIER_TYPE_BINDPLOTTER) {
-                extraData = std::make_shared<BindPlotterPayload>();
-                ::Unserialize(s, VARINT(BindPlotterPayload::As(extraData)->id));
-            } else if (extraDataType == DATACARRIER_TYPE_POINT) {
-                extraData = std::make_shared<PointPayload>();
+                extraData = std::make_shared<BindPlotterPayload>(DATACARRIER_TYPE_BINDPLOTTER);
+                uint64_t nPlotterId{0};
+                ::Unserialize(s, VARINT(nPlotterId));
+                BindPlotterPayload::As(extraData)->SetId(CPlotterBindData(nPlotterId));
+            } else if (extraDataType == DATACARRIER_TYPE_BINDCHIAFARMER) {
+                extraData = std::make_shared<BindPlotterPayload>(DATACARRIER_TYPE_BINDCHIAFARMER);
+                CChiaFarmerPk pk;
+                ::Unserialize(s, pk);
+                BindPlotterPayload::As(extraData)->SetId(CPlotterBindData(pk));
+            } else if (extraDataType == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint((DatacarrierType)extraDataType)) {
+                extraData = std::make_shared<PointPayload>(static_cast<DatacarrierType>(extraDataType));
                 ::Unserialize(s, REF(PointPayload::As(extraData)->GetReceiverID()));
+            } else if (extraDataType == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+                extraData = std::make_shared<PointRetargetPayload>();
+                auto payload = PointRetargetPayload::As(extraData);
+                ::Unserialize(s, payload->receiverID);
+                uint32_t pointType;
+                ::Unserialize(s, pointType);
+                payload->pointType = static_cast<DatacarrierType>(pointType);
+                ::Unserialize(s, payload->nPointHeight);
             } else
                 assert(false);
         }
@@ -127,11 +154,19 @@ public:
     }
 
     bool IsBindPlotter() const {
-        return extraData && extraData->type == DATACARRIER_TYPE_BINDPLOTTER;
+        return extraData && (extraData->type == DATACARRIER_TYPE_BINDPLOTTER || extraData->type == DATACARRIER_TYPE_BINDCHIAFARMER);
     }
 
     bool IsPoint() const {
-        return extraData && extraData->type == DATACARRIER_TYPE_POINT;
+        return extraData && (extraData->type == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint(extraData->type));
+    }
+
+    bool IsChiaPointRelated() const {
+        return extraData && (extraData->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET || DatacarrierTypeIsChiaPoint(extraData->type));
+    }
+
+    bool IsPointRetarget() const {
+        return extraData && extraData->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET;
     }
 
     DatacarrierType GetExtraDataType() const {
@@ -194,12 +229,12 @@ struct CBindPlotterCoinInfo
 {
     int nHeight;
     CAccountID accountID;
-    uint64_t plotterId;
+    CPlotterBindData bindData;
     bool valid;
 
-    CBindPlotterCoinInfo() : nHeight(-1), accountID(), plotterId(0), valid(false) {}
+    CBindPlotterCoinInfo() : nHeight(-1), accountID(), valid(false) {}
     explicit CBindPlotterCoinInfo(const Coin& coin) : nHeight((int)coin.nHeight), accountID(coin.refOutAccountID),
-        plotterId(BindPlotterPayload::As(coin.extraData)->GetId()), valid(!coin.IsSpent()) {}
+        bindData(BindPlotterPayload::As(coin.extraData)->GetId()), valid(!coin.IsSpent()) {}
 };
 
 typedef std::map<COutPoint, CBindPlotterCoinInfo> CBindPlotterCoinsMap;
@@ -212,15 +247,15 @@ public:
     COutPoint outpoint;
     int nHeight;
     CAccountID accountID;
-    uint64_t plotterId;
+    CPlotterBindData bindData;
     bool valid;
 
-    CBindPlotterInfo() : outpoint(), nHeight(-1), accountID(), plotterId(0), valid(false) {}
+    CBindPlotterInfo() : outpoint(), nHeight(-1), accountID(), valid(false) {}
     explicit CBindPlotterInfo(const CBindPlotterCoinPair& pair) : outpoint(pair.first),
-        nHeight(pair.second.nHeight), accountID(pair.second.accountID), plotterId(pair.second.plotterId), valid(pair.second.valid) {} 
+        nHeight(pair.second.nHeight), accountID(pair.second.accountID), bindData(pair.second.bindData), valid(pair.second.valid) {}
     CBindPlotterInfo(const COutPoint& o, const Coin& coin) : outpoint(o),
         nHeight((int)coin.nHeight), accountID(coin.refOutAccountID),
-        plotterId(BindPlotterPayload::As(coin.extraData)->GetId()), valid(!coin.IsSpent()) {}
+        bindData(BindPlotterPayload::As(coin.extraData)->GetId()), valid(!coin.IsSpent()) {}
 };
 
 /** Cursor template for iterating over CoinsData state */
@@ -247,6 +282,8 @@ private:
 /** Cursor for iterating over CoinsView state */
 typedef CCoinsDataCursor<COutPoint,Coin> CCoinsViewCursor;
 typedef std::shared_ptr<CCoinsViewCursor> CCoinsViewCursorRef;
+
+enum class PointType { Burst, Chia, ChiaT1, ChiaT2, ChiaT3, ChiaRT };
 
 /** Abstract view on the open txout dataset. */
 class CCoinsView
@@ -279,8 +316,8 @@ public:
     virtual CCoinsViewCursorRef Cursor(const CAccountID &accountID) const;
 
     //! Get a cursor to iterate over the whole point send and receive state
-    virtual CCoinsViewCursorRef PointSendCursor(const CAccountID &accountID) const;
-    virtual CCoinsViewCursorRef PointReceiveCursor(const CAccountID &accountID) const;
+    virtual CCoinsViewCursorRef PointSendCursor(const CAccountID &accountID, PointType pt) const;
+    virtual CCoinsViewCursorRef PointReceiveCursor(const CAccountID &accountID, PointType pt) const;
 
     //! As we use CCoinsViews polymorphically, have a virtual destructor
     virtual ~CCoinsView() {}
@@ -289,13 +326,13 @@ public:
     virtual size_t EstimateSize() const { return 0; }
 
     //! Get balance. Return amount of account
-    virtual CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive) const;
+    virtual CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const;
 
     //! Get account bind plotter all coin entries. if plotterId is 0 then return all coin entries for account.
-    virtual CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const uint64_t &plotterId = 0) const;
+    virtual CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const CPlotterBindData &bindData = {}) const;
 
     //! Get plotter bind all coin entries.
-    virtual CBindPlotterCoinsMap GetBindPlotterEntries(const uint64_t &plotterId) const;
+    virtual CBindPlotterCoinsMap GetBindPlotterEntries(const CPlotterBindData &bindData) const;
 };
 
 
@@ -315,12 +352,12 @@ public:
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
     CCoinsViewCursorRef Cursor() const override;
     CCoinsViewCursorRef Cursor(const CAccountID &accountID) const override;
-    CCoinsViewCursorRef PointSendCursor(const CAccountID &accountID) const override;
-    CCoinsViewCursorRef PointReceiveCursor(const CAccountID &accountID) const override;
+    CCoinsViewCursorRef PointSendCursor(const CAccountID &accountID, PointType pt) const override;
+    CCoinsViewCursorRef PointReceiveCursor(const CAccountID &accountID, PointType pt) const override;
     size_t EstimateSize() const override;
-    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive) const override;
-    CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const uint64_t &plotterId = 0) const override;
-    CBindPlotterCoinsMap GetBindPlotterEntries(const uint64_t &plotterId) const override;
+    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const override;
+    CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const CPlotterBindData &bindData = {}) const override;
+    CBindPlotterCoinsMap GetBindPlotterEntries(const CPlotterBindData &bindData) const override;
 };
 
 
@@ -358,15 +395,16 @@ public:
     CCoinsViewCursorRef Cursor(const CAccountID &accountID) const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
-    CCoinsViewCursorRef PointSendCursor(const CAccountID &accountID) const override {
+    CCoinsViewCursorRef PointSendCursor(const CAccountID &accountID, PointType pt) const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
-    CCoinsViewCursorRef PointReceiveCursor(const CAccountID &accountID) const override {
+    CCoinsViewCursorRef PointReceiveCursor(const CAccountID &accountID, PointType pt) const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
-    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive) const override;
-    CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const uint64_t &plotterId = 0) const override;
-    CBindPlotterCoinsMap GetBindPlotterEntries(const uint64_t &plotterId) const override;
+    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const override;
+
+    CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const CPlotterBindData &bindData = {}) const override;
+    CBindPlotterCoinsMap GetBindPlotterEntries(const CPlotterBindData &bindData) const override;
 
     /**
      * Check if we have the given utxo already loaded in this cache.
@@ -433,19 +471,18 @@ public:
     bool HaveInputs(const CTransaction& tx) const;
 
     /** Scan UTXO for the account. Return total balance. */
-    CAmount GetAccountBalance(const CAccountID &accountID,
-        CAmount *balanceBindPlotter = nullptr, CAmount *balancePointSend = nullptr, CAmount *balancePointReceive = nullptr) const;
+    CAmount GetAccountBalance(const CAccountID &accountID, CAmount *balanceBindPlotter = nullptr, CAmount *balancePointSend = nullptr, CAmount *balancePointReceive = nullptr, PledgeTerms const* terms = nullptr, int nHeight = 0) const;
 
     /** Return a reference to lastest bind plotter information, or a pruned one if not found. */
     CBindPlotterInfo GetChangeBindPlotterInfo(const CBindPlotterInfo &sourceBindInfo, bool compatible = false) const;
-    CBindPlotterInfo GetLastBindPlotterInfo(const uint64_t &plotterId) const;
-    const Coin& GetLastBindPlotterCoin(const uint64_t &plotterId, COutPoint *outpoint = nullptr) const;
+    CBindPlotterInfo GetLastBindPlotterInfo(const CPlotterBindData &bindData) const;
+    const Coin& GetLastBindPlotterCoin(const CPlotterBindData &bindData, COutPoint *outpoint = nullptr) const;
 
-    /** Just check whether a given <accountID,plotterId> exist and lastest binded of plotterId. */
-    bool HaveActiveBindPlotter(const CAccountID &accountID, const uint64_t &plotterId) const;
+    /** Just check whether a given <accountID,bindData> exist and lastest binded of bindData. */
+    bool HaveActiveBindPlotter(const CAccountID &accountID, const CPlotterBindData &bindData) const;
 
     /** Find accont revelate plotters */
-    std::set<uint64_t> GetAccountBindPlotters(const CAccountID &accountID) const;
+    std::set<CPlotterBindData> GetAccountBindPlotters(const CAccountID &accountID, CPlotterBindData::Type bindType) const;
 
 private:
     /**

@@ -347,6 +347,8 @@ static UniValue omni_getfeetrigger(const JSONRPCRequest& request)
         RequireExistingProperty(propertyId);
     }
 
+    AssertLockHeld(cs_tally);
+
     UniValue response(UniValue::VARR);
 
     for (uint8_t ecosystem = 1; ecosystem <= 2; ecosystem++) {
@@ -478,6 +480,8 @@ static UniValue omni_getfeecache(const JSONRPCRequest& request)
     if (propertyId > 0) {
         RequireExistingProperty(propertyId);
     }
+
+    AssertLockHeld(cs_tally);
 
     UniValue response(UniValue::VARR);
 
@@ -1210,7 +1214,7 @@ static UniValue omni_getproperty(const JSONRPCRequest& request)
                    "  \"data\" : \"information\",          (string) additional information or a description\n"
                    "  \"url\" : \"uri\",                   (string) an URI, for example pointing to a website\n"
                    "  \"divisible\" : true|false,        (boolean) whether the tokens are divisible\n"
-                   "  \"issuer\" : \"address\",            (string) the BitcoinHD address of the issuer on record\n"
+                   "  \"issuer\" : \"address\",            (string) the BitcoinHD1 address of the issuer on record\n"
                    "  \"creationtxid\" : \"hash\",         (string) the hex-encoded creation transaction hash\n"
                    "  \"fixedissuance\" : true|false,    (boolean) whether the token supply is fixed\n"
                    "  \"managedissuance\" : true|false,    (boolean) whether the token supply is managed\n"
@@ -1329,7 +1333,7 @@ static UniValue omni_getcrowdsale(const JSONRPCRequest& request)
                    "  \"propertyid\" : n,                     (number) the identifier of the crowdsale\n"
                    "  \"name\" : \"name\",                      (string) the name of the tokens issued via the crowdsale\n"
                    "  \"active\" : true|false,                (boolean) whether the crowdsale is still active\n"
-                   "  \"issuer\" : \"address\",                 (string) the BitcoinHD address of the issuer on record\n"
+                   "  \"issuer\" : \"address\",                 (string) the BitcoinHD1 address of the issuer on record\n"
                    "  \"propertyiddesired\" : n,              (number) the identifier of the tokens eligible to participate in the crowdsale\n"
                    "  \"tokensperunit\" : \"n.nnnnnnnn\",       (string) the amount of tokens granted per unit invested in the crowdsale\n"
                    "  \"earlybonus\" : n,                     (number) an early bird bonus for participants in percent per week\n"
@@ -1486,7 +1490,7 @@ static UniValue omni_getactivecrowdsales(const JSONRPCRequest& request)
                    "  {\n"
                    "    \"propertyid\" : n,                 (number) the identifier of the crowdsale\n"
                    "    \"name\" : \"name\",                  (string) the name of the tokens issued via the crowdsale\n"
-                   "    \"issuer\" : \"address\",             (string) the BitcoinHD address of the issuer on record\n"
+                   "    \"issuer\" : \"address\",             (string) the BitcoinHD1 address of the issuer on record\n"
                    "    \"propertyiddesired\" : n,          (number) the identifier of the tokens eligible to participate in the crowdsale\n"
                    "    \"tokensperunit\" : \"n.nnnnnnnn\",   (string) the amount of tokens granted per unit invested in the crowdsale\n"
                    "    \"earlybonus\" : n,                 (number) an early bird bonus for participants in percent per week\n"
@@ -1567,7 +1571,7 @@ static UniValue omni_getgrants(const JSONRPCRequest& request)
                    "{\n"
                    "  \"propertyid\" : n,               (number) the identifier of the managed tokens\n"
                    "  \"name\" : \"name\",                (string) the name of the tokens\n"
-                   "  \"issuer\" : \"address\",           (string) the BitcoinHD address of the issuer on record\n"
+                   "  \"issuer\" : \"address\",           (string) the BitcoinHD1 address of the issuer on record\n"
                    "  \"creationtxid\" : \"hash\",        (string) the hex-encoded creation transaction hash\n"
                    "  \"totaltokens\" : \"n.nnnnnnnn\",   (string) the total number of tokens in existence\n"
                    "  \"issuances\": [                  (array of JSON objects) a list of the granted and revoked tokens\n"
@@ -1652,7 +1656,7 @@ static UniValue omni_getorderbook(const JSONRPCRequest& request)
                RPCResult{
                    "[                                              (array of JSON objects)\n"
                    "  {\n"
-                   "    \"address\" : \"address\",                         (string) the BitcoinHD address of the trader\n"
+                   "    \"address\" : \"address\",                         (string) the BitcoinHD1 address of the trader\n"
                    "    \"txid\" : \"hash\",                               (string) the hex-encoded hash of the transaction of the order\n"
                    "    \"ecosystem\" : \"main\"|\"test\",                   (string) the ecosytem in which the order was made (if \"cancel-ecosystem\")\n"
                    "    \"propertyidforsale\" : n,                       (number) the identifier of the tokens put up for sale\n"
@@ -1733,7 +1737,7 @@ static UniValue omni_gettradehistoryforaddress(const JSONRPCRequest& request)
                    "[                                              (array of JSON objects)\n"
                    "  {\n"
                    "    \"txid\" : \"hash\",                               (string) the hex-encoded hash of the transaction of the order\n"
-                   "    \"sendingaddress\" : \"address\",                  (string) the BitcoinHD address of the trader\n"
+                   "    \"sendingaddress\" : \"address\",                  (string) the BitcoinHD1 address of the trader\n"
                    "    \"ismine\" : true|false,                         (boolean) whether the order involes an address in the wallet\n"
                    "    \"confirmations\" : nnnnnnnnnn,                  (number) the number of transaction confirmations\n"
                    "    \"fee\" : \"n.nnnnnnnn\",                          (string) the transaction fee in bitcoins\n"
@@ -1755,7 +1759,7 @@ static UniValue omni_gettradehistoryforaddress(const JSONRPCRequest& request)
                    "      {\n"
                    "        \"txid\" : \"hash\",                               (string) the hash of the transaction that was matched against\n"
                    "        \"block\" : nnnnnn,                              (number) the index of the block that contains this transaction\n"
-                   "        \"address\" : \"address\",                         (string) the BitcoinHD address of the other trader\n"
+                   "        \"address\" : \"address\",                         (string) the BitcoinHD1 address of the other trader\n"
                    "        \"amountsold\" : \"n.nnnnnnnn\",                   (string) the number of tokens sold in this trade\n"
                    "        \"amountreceived\" : \"n.nnnnnnnn\"                (string) the number of tokens traded in exchange\n"
                    "      },\n"
@@ -1823,11 +1827,11 @@ static UniValue omni_gettradehistoryforpair(const JSONRPCRequest& request)
                    "    \"unitprice\" : \"n.nnnnnnnnnnn...\" ,     (string) the unit price used to execute this trade (received/sold)\n"
                    "    \"inverseprice\" : \"n.nnnnnnnnnnn...\",   (string) the inverse unit price (sold/received)\n"
                    "    \"sellertxid\" : \"hash\",                 (string) the hash of the transaction of the seller\n"
-                   "    \"address\" : \"address\",                 (string) the BitcoinHD address of the seller\n"
+                   "    \"address\" : \"address\",                 (string) the BitcoinHD1 address of the seller\n"
                    "    \"amountsold\" : \"n.nnnnnnnn\",           (string) the number of tokens sold in this trade\n"
                    "    \"amountreceived\" : \"n.nnnnnnnn\",       (string) the number of tokens traded in exchange\n"
                    "    \"matchingtxid\" : \"hash\",               (string) the hash of the transaction that was matched against\n"
-                   "    \"matchingaddress\" : \"address\"          (string) the BitcoinHD address of the other party of this trade\n"
+                   "    \"matchingaddress\" : \"address\"          (string) the BitcoinHD1 address of the other party of this trade\n"
                    "  },\n"
                    "  ...\n"
                    "]\n"
@@ -1869,16 +1873,16 @@ static UniValue omni_getactivedexsells(const JSONRPCRequest& request)
                    "  {\n"
                    "    \"txid\" : \"hash\",                    (string) the hash of the transaction of this offer\n"
                    "    \"propertyid\" : n,                   (number) the identifier of the tokens for sale\n"
-                   "    \"seller\" : \"address\",               (string) the BitcoinHD address of the seller\n"
+                   "    \"seller\" : \"address\",               (string) the BitcoinHD1 address of the seller\n"
                    "    \"amountavailable\" : \"n.nnnnnnnn\",   (string) the number of tokens still listed for sale and currently available\n"
                    "    \"bitcoindesired\" : \"n.nnnnnnnn\",    (string) the number of bitcoins desired in exchange\n"
-                   "    \"unitprice\" : \"n.nnnnnnnn\" ,        (string) the unit price (BHD/token)\n"
+                   "    \"unitprice\" : \"n.nnnnnnnn\" ,        (string) the unit price (BHD1/token)\n"
                    "    \"timelimit\" : nn,                   (number) the time limit in blocks a buyer has to pay following a successful accept\n"
                    "    \"minimumfee\" : \"n.nnnnnnnn\",        (string) the minimum mining fee a buyer has to pay to accept this offer\n"
                    "    \"amountaccepted\" : \"n.nnnnnnnn\",    (string) the number of tokens currently reserved for pending \"accept\" orders\n"
                    "    \"accepts\": [                        (array of JSON objects) a list of pending \"accept\" orders\n"
                    "      {\n"
-                   "        \"buyer\" : \"address\",                (string) the BitcoinHD address of the buyer\n"
+                   "        \"buyer\" : \"address\",                (string) the BitcoinHD1 address of the buyer\n"
                    "        \"block\" : nnnnnn,                   (number) the index of the block that contains the \"accept\" order\n"
                    "        \"blocksleft\" : nn,                  (number) the number of blocks left to pay\n"
                    "        \"amount\" : \"n.nnnnnnnn\"             (string) the amount of tokens accepted and reserved\n"
@@ -2028,7 +2032,7 @@ static UniValue omni_listblocktransactions(const JSONRPCRequest& request)
 
     LOCK(cs_tally);
 
-    for(const auto tx : block.vtx) {
+    for(const auto& tx : block.vtx) {
         if (pDbTransactionList->exists(tx->GetHash())) {
             // later we can add a verbose flag to decode here, but for now callers can send returned txids into gettransaction_MP
             // add the txid into the response as it's an MP transaction
@@ -2098,8 +2102,8 @@ static UniValue omni_gettransaction(const JSONRPCRequest& request)
                RPCResult{
                    "{\n"
                    "  \"txid\" : \"hash\",                  (string) the hex-encoded hash of the transaction\n"
-                   "  \"sendingaddress\" : \"address\",     (string) the BitcoinHD address of the sender\n"
-                   "  \"referenceaddress\" : \"address\",   (string) a BitcoinHD address used as reference (if any)\n"
+                   "  \"sendingaddress\" : \"address\",     (string) the BitcoinHD1 address of the sender\n"
+                   "  \"referenceaddress\" : \"address\",   (string) a BitcoinHD1 address used as reference (if any)\n"
                    "  \"ismine\" : true|false,            (boolean) whether the transaction involes an address in the wallet\n"
                    "  \"confirmations\" : nnnnnnnnnn,     (number) the number of transaction confirmations\n"
                    "  \"fee\" : \"n.nnnnnnnn\",             (string) the transaction fee in bitcoins\n"
@@ -2148,8 +2152,8 @@ static UniValue omni_listtransactions(const JSONRPCRequest& request)
                    "[                                 (array of JSON objects)\n"
                    "  {\n"
                    "    \"txid\" : \"hash\",                  (string) the hex-encoded hash of the transaction\n"
-                   "    \"sendingaddress\" : \"address\",     (string) the BitcoinHD address of the sender\n"
-                   "    \"referenceaddress\" : \"address\",   (string) a BitcoinHD address used as reference (if any)\n"
+                   "    \"sendingaddress\" : \"address\",     (string) the BitcoinHD1 address of the sender\n"
+                   "    \"referenceaddress\" : \"address\",   (string) a BitcoinHD1 address used as reference (if any)\n"
                    "    \"ismine\" : true|false,            (boolean) whether the transaction involes an address in the wallet\n"
                    "    \"confirmations\" : nnnnnnnnnn,     (number) the number of transaction confirmations\n"
                    "    \"fee\" : \"n.nnnnnnnn\",             (string) the transaction fee in bitcoins\n"
@@ -2233,8 +2237,8 @@ static UniValue omni_listpendingtransactions(const JSONRPCRequest& request)
                    "[                                 (array of JSON objects)\n"
                    "  {\n"
                    "    \"txid\" : \"hash\",                  (string) the hex-encoded hash of the transaction\n"
-                   "    \"sendingaddress\" : \"address\",     (string) the BitcoinHD address of the sender\n"
-                   "    \"referenceaddress\" : \"address\",   (string) a BitcoinHD address used as reference (if any)\n"
+                   "    \"sendingaddress\" : \"address\",     (string) the BitcoinHD1 address of the sender\n"
+                   "    \"referenceaddress\" : \"address\",   (string) a BitcoinHD1 address used as reference (if any)\n"
                    "    \"ismine\" : true|false,            (boolean) whether the transaction involes an address in the wallet\n"
                    "    \"fee\" : \"n.nnnnnnnn\",             (string) the transaction fee in bitcoins\n"
                    "    \"version\" : n,                    (number) the transaction version\n"
@@ -2286,7 +2290,7 @@ static UniValue omni_getinfo(const JSONRPCRequest& request)
                    "  \"omnicoreversion_int\" : xxxxxxx,       (number) client version as integer\n"
                    "  \"omnicoreversion\" : \"x.x.x.x-xxx\",     (string) client version\n"
                    "  \"mastercoreversion\" : \"x.x.x.x-xxx\",   (string) client version (DEPRECATED)\n"
-                   "  \"bitcoincoreversion\" : \"x.x.x\",        (string) BitcoinHD Core version\n"
+                   "  \"bitcoincoreversion\" : \"x.x.x\",        (string) BitcoinHD1 Core version\n"
                    "  \"block\" : nnnnnn,                      (number) index of the last processed block\n"
                    "  \"blocktime\" : nnnnnnnnnn,              (number) timestamp of the last processed block\n"
                    "  \"blocktransactions\" : nnnn,            (number) Omni transactions found in the last processed block\n"
@@ -2448,7 +2452,7 @@ static UniValue omni_getsto(const JSONRPCRequest& request)
                RPCResult{
                    "{\n"
                    "  \"txid\" : \"hash\",                (string) the hex-encoded hash of the transaction\n"
-                   "  \"sendingaddress\" : \"address\",   (string) the BitcoinHD address of the sender\n"
+                   "  \"sendingaddress\" : \"address\",   (string) the BitcoinHD1 address of the sender\n"
                    "  \"ismine\" : true|false,          (boolean) whether the transaction involes an address in the wallet\n"
                    "  \"confirmations\" : nnnnnnnnnn,   (number) the number of transaction confirmations\n"
                    "  \"fee\" : \"n.nnnnnnnn\",           (string) the transaction fee in bitcoins\n"
@@ -2463,7 +2467,7 @@ static UniValue omni_getsto(const JSONRPCRequest& request)
                    "  \"totalstofee\" : \"n.nnnnnnnn\",   (string) the fee paid by the sender, nominated in OMN or TOMN\n"
                    "  \"recipients\": [                 (array of JSON objects) a list of recipients\n"
                    "    {\n"
-                   "      \"address\" : \"address\",          (string) the BitcoinHD address of the recipient\n"
+                   "      \"address\" : \"address\",          (string) the BitcoinHD1 address of the recipient\n"
                    "      \"amount\" : \"n.nnnnnnnn\"         (string) the number of tokens sent to this recipient\n"
                    "    },\n"
                    "    ...\n"
@@ -2506,7 +2510,7 @@ static UniValue omni_gettrade(const JSONRPCRequest& request)
                RPCResult{
                    "{\n"
                    "  \"txid\" : \"hash\",                               (string) the hex-encoded hash of the transaction of the order\n"
-                   "  \"sendingaddress\" : \"address\",                  (string) the BitcoinHD address of the trader\n"
+                   "  \"sendingaddress\" : \"address\",                  (string) the BitcoinHD1 address of the trader\n"
                    "  \"ismine\" : true|false,                         (boolean) whether the order involes an address in the wallet\n"
                    "  \"confirmations\" : nnnnnnnnnn,                  (number) the number of transaction confirmations\n"
                    "  \"fee\" : \"n.nnnnnnnn\",                          (string) the transaction fee in bitcoins\n"
@@ -2528,7 +2532,7 @@ static UniValue omni_gettrade(const JSONRPCRequest& request)
                    "    {\n"
                    "      \"txid\" : \"hash\",                               (string) the hash of the transaction that was matched against\n"
                    "      \"block\" : nnnnnn,                              (number) the index of the block that contains this transaction\n"
-                   "      \"address\" : \"address\",                         (string) the BitcoinHD address of the other trader\n"
+                   "      \"address\" : \"address\",                         (string) the BitcoinHD1 address of the other trader\n"
                    "      \"amountsold\" : \"n.nnnnnnnn\",                   (string) the number of tokens sold in this trade\n"
                    "      \"amountreceived\" : \"n.nnnnnnnn\"                (string) the number of tokens traded in exchange\n"
                    "    },\n"

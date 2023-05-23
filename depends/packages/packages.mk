@@ -1,4 +1,4 @@
-packages:=boost openssl libevent
+packages:=mpir boost openssl libevent bls_signatures bhd_vdf curl utf8proc cxxopts plog
 
 protobuf_native_packages = native_protobuf
 protobuf_packages = protobuf

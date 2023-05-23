@@ -40,6 +40,7 @@ bool DEx_offerExists(const std::string& addressSeller, uint32_t propertyId)
 {
     std::string key = STR_SELLOFFER_ADDR_PROP_COMBO(addressSeller, propertyId);
 
+    AssertLockHeld(cs_tally);
     return !(my_offers.find(key) == my_offers.end());
 }
 
@@ -48,6 +49,7 @@ bool DEx_offerExists(const std::string& addressSeller, uint32_t propertyId)
  */
 bool DEx_hasOffer(const std::string& addressSeller)
 {
+    AssertLockHeld(cs_tally);
     for (auto const& offer : my_offers) {
         if (offer.first.find(addressSeller) == 0) {
             return true;
@@ -69,6 +71,7 @@ bool DEx_hasOffer(const std::string& addressSeller)
  */
 bool DEx_getTokenForSale(const std::string& addressSeller, uint32_t& retTokenId)
 {
+    AssertLockHeld(cs_tally);
     for (auto const& offer : my_offers) {
         if (offer.first.find(addressSeller) == 0) {
 
@@ -101,6 +104,7 @@ bool DEx_getTokenForSale(const std::string& addressSeller, uint32_t& retTokenId)
  */
 CMPOffer* DEx_getOffer(const std::string& addressSeller, uint32_t propertyId)
 {
+    AssertLockHeld(cs_tally);
     if (msc_debug_dex) PrintToLog("%s(%s, %d)\n", __func__, addressSeller, propertyId);
 
     std::string key = STR_SELLOFFER_ADDR_PROP_COMBO(addressSeller, propertyId);
@@ -116,6 +120,7 @@ CMPOffer* DEx_getOffer(const std::string& addressSeller, uint32_t propertyId)
  */
 bool DEx_acceptExists(const std::string& addressSeller, uint32_t propertyId, const std::string& addressBuyer)
 {
+    AssertLockHeld(cs_tally);
     std::string key = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(addressSeller, addressBuyer, propertyId);
 
     return !(my_accepts.find(key) == my_accepts.end());
@@ -128,6 +133,7 @@ bool DEx_acceptExists(const std::string& addressSeller, uint32_t propertyId, con
  */
 CMPAccept* DEx_getAccept(const std::string& addressSeller, uint32_t propertyId, const std::string& addressBuyer)
 {
+    AssertLockHeld(cs_tally);
     if (msc_debug_dex) PrintToLog("%s(%s, %d, %s)\n", __func__, addressSeller, propertyId, addressBuyer);
 
     std::string key = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(addressSeller, addressBuyer, propertyId);
@@ -243,12 +249,13 @@ int DEx_offerCreate(const std::string& addressSeller, uint32_t propertyId, int64
         amountOffered = balanceReallyAvailable;
         if (nAmended) *nAmended = amountOffered;
 
-        PrintToLog("%s: adjusting order: updated amount for sale: %s %s, offered for: %s BHD\n", __func__,
+        PrintToLog("%s: adjusting order: updated amount for sale: %s %s, offered for: %s BHD1\n", __func__,
                         FormatDivisibleMP(amountOffered), strMPProperty(propertyId), FormatDivisibleMP(amountDesired));
     }
     // -------------------------------------------------------------------------
 
     if (amountOffered > 0) {
+        AssertLockHeld(cs_tally);
         assert(update_tally_map(addressSeller, propertyId, -amountOffered, BALANCE));
         assert(update_tally_map(addressSeller, propertyId, amountOffered, SELLOFFER_RESERVE));
 
@@ -281,6 +288,8 @@ int DEx_offerDestroy(const std::string& addressSeller, uint32_t propertyId)
         assert(update_tally_map(addressSeller, propertyId, -amountReserved, SELLOFFER_RESERVE));
         assert(update_tally_map(addressSeller, propertyId, amountReserved, BALANCE));
     }
+
+    AssertLockHeld(cs_tally);
 
     // delete the offer
     const std::string key = STR_SELLOFFER_ADDR_PROP_COMBO(addressSeller, propertyId);
@@ -325,6 +334,8 @@ int DEx_offerUpdate(const std::string& addressSeller, uint32_t propertyId, int64
  */
 int DEx_acceptCreate(const std::string& addressBuyer, const std::string& addressSeller, uint32_t propertyId, int64_t amountAccepted, int block, int64_t feePaid, uint64_t* nAmended)
 {
+    AssertLockHeld(cs_tally);
+
     int rc = DEX_ERROR_ACCEPT -10;
     const std::string keySellOffer = STR_SELLOFFER_ADDR_PROP_COMBO(addressSeller, propertyId);
     const std::string keyAcceptOrder = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(addressSeller, addressBuyer, propertyId);
@@ -429,6 +440,8 @@ int DEx_acceptDestroy(const std::string& addressBuyer, const std::string& addres
 
     // can only erase when is NOT called from an iterator loop
     if (fForceErase) {
+        AssertLockHeld(cs_tally);
+
         std::string key = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(addressSeller, addressBuyer, propertyid);
         AcceptMap::iterator it = my_accepts.find(key);
 
@@ -569,7 +582,7 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
     const int64_t amountRemaining = p_accept->getAcceptAmountRemaining(); // actual amount desired, in the Accept
 
     if (msc_debug_dex) PrintToLog(
-            "%s: BHD desired: %s, offered amount: %s, amount to purchase: %s, amount remaining: %s\n", __func__,
+            "%s: BHD1 desired: %s, offered amount: %s, amount to purchase: %s, amount remaining: %s\n", __func__,
             FormatDivisibleMP(amountDesired), FormatDivisibleMP(amountOffered),
             FormatDivisibleMP(amountPurchased), FormatDivisibleMP(amountRemaining));
 
@@ -581,13 +594,15 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
     }
 
     if (amountPurchased > 0) {
-        PrintToLog("%s: seller %s offered %s %s for %s BHD\n", __func__,
+        PrintToLog("%s: seller %s offered %s %s for %s BHD1\n", __func__,
                 addressSeller, FormatDivisibleMP(amountOffered), strMPProperty(propertyId), FormatDivisibleMP(amountDesired));
-        PrintToLog("%s: buyer %s pays %s BHD to purchase %s %s\n", __func__,
+        PrintToLog("%s: buyer %s pays %s BHD1 to purchase %s %s\n", __func__,
                 addressBuyer, FormatDivisibleMP(amountPaid), FormatDivisibleMP(amountPurchased), strMPProperty(propertyId));
 
         assert(update_tally_map(addressSeller, propertyId, -amountPurchased, ACCEPT_RESERVE));
         assert(update_tally_map(addressBuyer, propertyId, amountPurchased, BALANCE));
+
+        AssertLockHeld(cs_tally);
 
         bool valid = true;
         pDbTransactionList->recordPaymentTX(txid, valid, block, vout, propertyId, amountPurchased, addressBuyer, addressSeller);
@@ -614,6 +629,8 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
 
 unsigned int eraseExpiredAccepts(int blockNow)
 {
+    AssertLockHeld(cs_tally);
+
     unsigned int how_many_erased = 0;
     AcceptMap::iterator it = my_accepts.begin();
 

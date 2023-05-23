@@ -969,6 +969,7 @@ int CMPTransaction::logicHelper_CrowdsaleParticipation(uint256& blockHash)
     }
 
     CMPSPInfo::Entry sp;
+    AssertLockHeld(cs_tally);
     assert(pDbSpInfo->getSP(pcrowdsale->getPropertyId(), sp));
     PrintToLog("INVESTMENT SEND to Crowdsale Issuer: %s\n", receiver);
 
@@ -1220,6 +1221,8 @@ int CMPTransaction::logicMath_SendAll()
     }
 
     // ------------------------------------------
+    AssertLockHeld(cs_tally);
+
 
     CMPTally* ptally = getTally(sender);
     if (ptally == nullptr) {
@@ -1459,6 +1462,7 @@ int CMPTransaction::logicMath_MetaDExTrade()
     }
 
     // ------------------------------------------
+    AssertLockHeld(cs_tally);
 
     pDbTradeList->recordNewTrade(txid, sender, property, desired_property, block, tx_idx);
     int rc = MetaDEx_ADD(sender, property, nNewValue, block, desired_property, desired_value, txid, tx_idx);
@@ -1646,6 +1650,7 @@ int CMPTransaction::logicMath_CreatePropertyFixed(CBlockIndex* pindex)
     newSP.creation_block = blockHash;
     newSP.update_block = newSP.creation_block;
 
+    AssertLockHeld(cs_tally);
     const uint32_t propertyId = pDbSpInfo->putSP(ecosystem, newSP);
     assert(propertyId > 0);
     assert(update_tally_map(sender, propertyId, nValue, BALANCE));
@@ -1743,6 +1748,8 @@ int CMPTransaction::logicMath_CreatePropertyVariable(CBlockIndex* pindex)
     newSP.creation_block = blockHash;
     newSP.update_block = newSP.creation_block;
 
+    AssertLockHeld(cs_tally);
+
     const uint32_t propertyId = pDbSpInfo->putSP(ecosystem, newSP);
     assert(propertyId > 0);
     my_crowds.insert(std::make_pair(sender, CMPCrowd(propertyId, nValue, property, deadline, early_bird, percentage, 0, 0)));
@@ -1775,6 +1782,8 @@ int CMPTransaction::logicMath_CloseCrowdsale(CBlockIndex* pindex)
         PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_SP -24);
     }
+
+    AssertLockHeld(cs_tally);
 
     CrowdMap::iterator it = my_crowds.find(sender);
     if (it == my_crowds.end()) {
@@ -1864,6 +1873,7 @@ int CMPTransaction::logicMath_CreatePropertyManaged(CBlockIndex* pindex)
     newSP.creation_block = blockHash;
     newSP.update_block = newSP.creation_block;
 
+    AssertLockHeld(cs_tally);
     uint32_t propertyId = pDbSpInfo->putSP(ecosystem, newSP);
     assert(propertyId > 0);
 
@@ -1900,6 +1910,8 @@ int CMPTransaction::logicMath_GrantTokens(CBlockIndex* pindex, uint256& blockHas
         PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_TOKENS -24);
     }
+
+    AssertLockHeld(cs_tally);
 
     CMPSPInfo::Entry sp;
     assert(pDbSpInfo->getSP(property, sp));
@@ -1982,6 +1994,8 @@ int CMPTransaction::logicMath_RevokeTokens(CBlockIndex* pindex)
         return (PKT_ERROR_TOKENS -24);
     }
 
+    AssertLockHeld(cs_tally);
+
     CMPSPInfo::Entry sp;
     assert(pDbSpInfo->getSP(property, sp));
 
@@ -2041,6 +2055,8 @@ int CMPTransaction::logicMath_ChangeIssuer(CBlockIndex* pindex)
         return (PKT_ERROR_TOKENS -24);
     }
 
+    AssertLockHeld(cs_tally);
+
     CMPSPInfo::Entry sp;
     assert(pDbSpInfo->getSP(property, sp));
 
@@ -2099,6 +2115,7 @@ int CMPTransaction::logicMath_EnableFreezing(CBlockIndex* pindex)
         return (PKT_ERROR_TOKENS -24);
     }
 
+    AssertLockHeld(cs_tally);
     CMPSPInfo::Entry sp;
     assert(pDbSpInfo->getSP(property, sp));
 
@@ -2153,6 +2170,8 @@ int CMPTransaction::logicMath_DisableFreezing(CBlockIndex* pindex)
         return (PKT_ERROR_TOKENS -24);
     }
 
+    AssertLockHeld(cs_tally);
+
     CMPSPInfo::Entry sp;
     assert(pDbSpInfo->getSP(property, sp));
 
@@ -2198,6 +2217,8 @@ int CMPTransaction::logicMath_FreezeTokens(CBlockIndex* pindex)
         PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_TOKENS -24);
     }
+
+    AssertLockHeld(cs_tally);
 
     CMPSPInfo::Entry sp;
     assert(pDbSpInfo->getSP(property, sp));
@@ -2249,6 +2270,8 @@ int CMPTransaction::logicMath_UnfreezeTokens(CBlockIndex* pindex)
         PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_TOKENS -24);
     }
+
+    AssertLockHeld(cs_tally);
 
     CMPSPInfo::Entry sp;
     assert(pDbSpInfo->getSP(property, sp));

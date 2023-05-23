@@ -29,8 +29,12 @@
 #include <util/strencodings.h>
 #include <util/validation.h>
 
+#include <chiapos/post.h>
+
 #include <memory>
 #include <typeinfo>
+#include <array>
+#include <utility>
 
 #if defined(NDEBUG)
 # error "Bitcoin cannot be compiled without assertions."
@@ -1071,6 +1075,7 @@ static bool MaybePunishNode(NodeId nodeid, const CValidationState& state, bool v
     case ValidationInvalidReason::TX_CONFLICT:
     case ValidationInvalidReason::TX_MEMPOOL_POLICY:
     case ValidationInvalidReason::TX_INVALID_BIND:
+    case ValidationInvalidReason::TX_INVALID_UNLOCK_PERIOD:
         break;
     }
     if (message != "") {
@@ -1444,11 +1449,13 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
             // Fast-path: in this case it is possible to serve the block directly from disk,
             // as the network format matches the format on disk
             std::vector<uint8_t> block_data;
-            if (!ReadRawBlockFromDisk(block_data, pindex, chainparams.MessageStart())) {
+            LogPrint(BCLog::DB, "%s: reading MSG_WITNESS_BLOCK from disk, height=%d\n", __func__, pindex->nHeight);
+            // Don't set pblock as we've sent the block
+            std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
+            if (!ReadBlockFromDisk(*pblockRead, pindex, consensusParams)) {
                 assert(!"cannot load block from disk");
             }
-            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::BLOCK, MakeSpan(block_data)));
-            // Don't set pblock as we've sent the block
+            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::BLOCK, *pblockRead));
         } else {
             // Send block from disk
             std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
@@ -1874,7 +1881,7 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
 
 bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61)
 {
-    LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
+    LogPrint(BCLog::NET, "<<<< received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
     {
         LogPrintf("dropmessagestest DROPPING RECV MESSAGE\n");
@@ -2972,6 +2979,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
         unsigned int nCount = ReadCompactSize(vRecv);
+        LogPrint(BCLog::NET, "%s: receiving headers count=%d from peer %d\n", __func__, nCount, pfrom->GetId());
         if (nCount > MAX_HEADERS_RESULTS) {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 20, strprintf("headers message size = %u", nCount));

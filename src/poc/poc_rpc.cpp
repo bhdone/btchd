@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The BitcoinHD Core developers
+// Copyright (c) 2017-2020 The BitcoinHD1 Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -129,7 +129,7 @@ static UniValue addSignPrivkey(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. \"privkey\"      (string, required) The string of the private key\n"
             "\nResult:\n"
-            "BitcoinHD mining address\n"
+            "BitcoinHD1 mining address\n"
         );
     }
 
@@ -146,7 +146,7 @@ static UniValue listSignAddresses(const JSONRPCRequest& request)
             "listsignaddresses\n"
             "\nList signature addresses for signature.\n"
             "\nResult:\n"
-            "BitcoinHD address\n"
+            "BitcoinHD1 address\n"
         );
     }
 

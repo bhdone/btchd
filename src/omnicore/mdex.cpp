@@ -43,6 +43,8 @@ md_PropertiesMap mastercore::metadex;
 
 md_PricesMap* mastercore::get_Prices(uint32_t prop)
 {
+    AssertLockHeld(cs_tally);
+
     md_PropertiesMap::iterator it = metadex.find(prop);
 
     if (it != metadex.end()) return &(it->second);
@@ -309,6 +311,8 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             if (msc_debug_metadex1) PrintToLog("==== TRADED !!! %u=%s\n", NewReturn, getTradeReturnType(NewReturn));
 
             // record the trade in MPTradeList
+            AssertLockHeld(cs_tally);
+
             pDbTradeList->recordMatchedTrade(pold->getHash(), pnew->getHash(), // < might just pass pold, pnew
                 pold->getAddr(), pnew->getAddr(), pold->getDesProperty(), pnew->getDesProperty(), seller_amountGot, buyer_amountGotAfterFee, pnew->getBlock(), tradingFee);
 
@@ -483,6 +487,7 @@ bool mastercore::MetaDEx_INSERT(const CMPMetaDEx& objMetaDEx)
     (*p_prices)[objMetaDEx.unitPrice()] = *p_indexes;
 
     // Set the metadex map for the property to the updated (or new if it didn't exist) price map
+    AssertLockHeld(cs_tally);
     metadex[objMetaDEx.getProperty()] = *p_prices;
 
     return true;
@@ -566,6 +571,7 @@ int mastercore::MetaDEx_CANCEL_AT_PRICE(const uint256& txid, unsigned int block,
             assert(update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), p_mdex->getAmountRemaining(), BALANCE));
 
             // record the cancellation
+            AssertLockHeld(cs_tally);
             bool bValid = true;
             pDbTransactionList->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountRemaining());
 
@@ -615,6 +621,8 @@ int mastercore::MetaDEx_CANCEL_ALL_FOR_PAIR(const uint256& txid, unsigned int bl
             assert(update_tally_map(p_mdex->getAddr(), p_mdex->getProperty(), p_mdex->getAmountRemaining(), BALANCE));
 
             // record the cancellation
+            AssertLockHeld(cs_tally);
+
             bool bValid = true;
             pDbTransactionList->recordMetaDExCancelTX(txid, p_mdex->getHash(), bValid, block, p_mdex->getProperty(), p_mdex->getAmountRemaining());
 
@@ -640,6 +648,7 @@ int mastercore::MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int bloc
 
     PrintToLog("<<<<<<\n");
 
+    AssertLockHeld(cs_tally);
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         unsigned int prop = my_it->first;
 
@@ -691,6 +700,8 @@ int mastercore::MetaDEx_CANCEL_EVERYTHING(const uint256& txid, unsigned int bloc
  */
 int mastercore::MetaDEx_SHUTDOWN_ALLPAIR()
 {
+    AssertLockHeld(cs_tally);
+
     int rc = 0;
     PrintToLog("%s()\n", __FUNCTION__);
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
@@ -716,6 +727,8 @@ int mastercore::MetaDEx_SHUTDOWN_ALLPAIR()
  */
 int mastercore::MetaDEx_SHUTDOWN()
 {
+    AssertLockHeld(cs_tally);
+
     int rc = 0;
     PrintToLog("%s()\n", __FUNCTION__);
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
@@ -738,6 +751,8 @@ int mastercore::MetaDEx_SHUTDOWN()
 // allows search to be optimized if propertyIdForSale is specified
 bool mastercore::MetaDEx_isOpen(const uint256& txid, uint32_t propertyIdForSale)
 {
+    AssertLockHeld(cs_tally);
+
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         if (propertyIdForSale != 0 && propertyIdForSale != my_it->first) continue;
         md_PricesMap & prices = my_it->second;
@@ -775,6 +790,8 @@ std::string mastercore::MetaDEx_getStatusText(int tradeStatus)
  */
 int mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, int64_t totalSold)
 {
+    AssertLockHeld(cs_tally);
+
     // NOTE: If the calling code is already aware of the total amount sold, pass the value in to this function to avoid duplication of
     //       work.  If the calling code doesn't know the amount, leave default (-1) and we will calculate it from levelDB lookups.
     if (totalSold == -1) {
@@ -806,6 +823,8 @@ int mastercore::MetaDEx_getStatus(const uint256& txid, uint32_t propertyIdForSal
 
 void mastercore::MetaDEx_debug_print(bool bShowPriceLevel, bool bDisplay)
 {
+    AssertLockHeld(cs_tally);
+
     PrintToLog("<<<\n");
     for (md_PropertiesMap::iterator my_it = metadex.begin(); my_it != metadex.end(); ++my_it) {
         uint32_t prop = my_it->first;
@@ -836,6 +855,8 @@ void mastercore::MetaDEx_debug_print(bool bShowPriceLevel, bool bDisplay)
  */
 const CMPMetaDEx* mastercore::MetaDEx_RetrieveTrade(const uint256& txid)
 {
+    AssertLockHeld(cs_tally);
+
     for (md_PropertiesMap::iterator propIter = metadex.begin(); propIter != metadex.end(); ++propIter) {
         md_PricesMap & prices = propIter->second;
         for (md_PricesMap::iterator pricesIter = prices.begin(); pricesIter != prices.end(); ++pricesIter) {

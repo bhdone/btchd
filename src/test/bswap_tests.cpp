@@ -7,6 +7,15 @@
 
 #include <boost/test/unit_test.hpp>
 
+#ifdef _WIN32
+
+// FIXME here is the definition of bswap functions to avoid compiling/linking errors
+uint16_t bswap_16(uint16_t x) { return __bswap_16(x); }
+uint32_t bswap_32(uint32_t x) { return __bswap_32(x); }
+uint64_t bswap_64(uint64_t x) { return __bswap_64(x); }
+
+#endif
+
 BOOST_FIXTURE_TEST_SUITE(bswap_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(bswap_tests)

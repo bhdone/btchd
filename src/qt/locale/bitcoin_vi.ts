@@ -66,12 +66,12 @@
         <translation>Địa chỉ đang nhận</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your BitcoinHD1 addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Đây là những địa chỉ đang thực hiện thanh toán. Luôn kiểm tra số lượng và địa chỉ nhận trước khi gửi coins.</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Những địa chỉ BitcoinHD này để bạn nhận thanh toán. Sử dụng  'Tạo địa chỉ nhận mới'</translation>
+        <source>These are your BitcoinHD1 addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Những địa chỉ BitcoinHD1 này để bạn nhận thanh toán. Sử dụng  'Tạo địa chỉ nhận mới'</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -164,8 +164,8 @@
         <translation>Xác nhận mã hóa ví</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHDs&lt;/b&gt;!</source>
-        <translation>Cảnh báo: Nếu bạn mã hóa ví và mất cụm mật khẩu, bạn sẽ &lt;b&gt;MẤT TẤT CẢ BHDs&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHD1s&lt;/b&gt;!</source>
+        <translation>Cảnh báo: Nếu bạn mã hóa ví và mất cụm mật khẩu, bạn sẽ &lt;b&gt;MẤT TẤT CẢ BHD1s&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -326,8 +326,8 @@
         <translation>Proxy là &lt;b&gt; cho phép &lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD address</source>
-        <translation>Gửi coin đến một địa chỉ BitcoinHD</translation>
+        <source>Send coins to a BitcoinHD1 address</source>
+        <translation>Gửi coin đến một địa chỉ BitcoinHD1</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -370,12 +370,12 @@
         <translation>Mã hóa private key thuộc về ví của bạn</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD addresses to prove you own them</source>
-        <translation>Đăng ký lời nhắn với địa chỉ BitcoinHD của bạn để chứng minh quyền sở hữu chúng</translation>
+        <source>Sign messages with your BitcoinHD1 addresses to prove you own them</source>
+        <translation>Đăng ký lời nhắn với địa chỉ BitcoinHD1 của bạn để chứng minh quyền sở hữu chúng</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD addresses</source>
-        <translation>Xác minh lời nhắn để chắc chắn đã được đăng ký với địa chỉ BitcoinHD xác định</translation>
+        <source>Verify messages to ensure they were signed with specified BitcoinHD1 addresses</source>
+        <translation>Xác minh lời nhắn để chắc chắn đã được đăng ký với địa chỉ BitcoinHD1 xác định</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -414,8 +414,8 @@
         <translation>&amp;Tùy chỉnh Command-line</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to BitcoinHD network</source>
-        <translation><numerusform>%n kết nối đến BitcoinHD network</numerusform></translation>
+        <source>%n active connection(s) to BitcoinHD1 network</source>
+        <translation><numerusform>%n kết nối đến BitcoinHD1 network</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -482,8 +482,8 @@
         <translation>Đông ví</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible BitcoinHD command-line options</source>
-        <translation>Hiển thị %1 tin nhắn hỗ trợ để nhận được danh sách BitcoinHD command-line khả dụng</translation>
+        <source>Show the %1 help message to get a list with possible BitcoinHD1 command-line options</source>
+        <translation>Hiển thị %1 tin nhắn hỗ trợ để nhận được danh sách BitcoinHD1 command-line khả dụng</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -594,8 +594,8 @@
         <translation>Ví thì &lt;b&gt;encrypted&lt;/b&gt; và hiện tại &lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. BitcoinHD can no longer continue safely and will quit.</source>
-        <translation>Một lỗi nghiêm trọng vừa xảy ra. BitcoinHD có thể không còn tiếp tục an toàn và sẽ bị bỏ.</translation>
+        <source>A fatal error occurred. BitcoinHD1 can no longer continue safely and will quit.</source>
+        <translation>Một lỗi nghiêm trọng vừa xảy ra. BitcoinHD1 có thể không còn tiếp tục an toàn và sẽ bị bỏ.</translation>
     </message>
 </context>
 <context>
@@ -790,8 +790,8 @@
         <translation>Edit address đang gửi</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid BitcoinHD address.</source>
-        <translation>Address đã nhập "%1" không valid BitcoinHD address.</translation>
+        <source>The entered address "%1" is not a valid BitcoinHD1 address.</source>
+        <translation>Address đã nhập "%1" không valid BitcoinHD1 address.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -887,8 +887,8 @@
         <translation>Sử dụng custom danh mục data:</translation>
     </message>
     <message>
-        <source>BitcoinHD</source>
-        <translation>BitcoinHD</translation>
+        <source>BitcoinHD1</source>
+        <translation>BitcoinHD1</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -899,8 +899,8 @@
         <translation>Gần đúng %1 GB of data sẽ được lưu giữ trong danh mục này.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the BitcoinHD block chain.</source>
-        <translation>%1 sẽ download và lưu trữ một bản copy của BitcoinHD block chain.</translation>
+        <source>%1 will download and store a copy of the BitcoinHD1 block chain.</source>
+        <translation>%1 sẽ download và lưu trữ một bản copy của BitcoinHD1 block chain.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -930,12 +930,12 @@
         <translation>Form</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD network, as detailed below.</source>
-        <translation>Giao dịch gần đây có thể chưa được hiển thị, và vì vậy số dư wallet của bạn có thể không dúng. Thông tin này sẽ được làm đúng khi wallet hoàn thành đồng bộ với BitcoinHD network, như chi tiết bên dưới.</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD1 network, as detailed below.</source>
+        <translation>Giao dịch gần đây có thể chưa được hiển thị, và vì vậy số dư wallet của bạn có thể không dúng. Thông tin này sẽ được làm đúng khi wallet hoàn thành đồng bộ với BitcoinHD1 network, như chi tiết bên dưới.</translation>
     </message>
     <message>
-        <source>Attempting to spend BHDs that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Cố gắng spend các BHDs bị ảnh hưởng bởi các giao dịch chưa được hiển thị sẽ không được chấp nhận bởi mạng.</translation>
+        <source>Attempting to spend BHD1s that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <translation>Cố gắng spend các BHD1s bị ảnh hưởng bởi các giao dịch chưa được hiển thị sẽ không được chấp nhận bởi mạng.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1127,8 +1127,8 @@
         <translation>&amp;Spend unconfirmed change</translation>
     </message>
     <message>
-        <source>Automatically open the BitcoinHD client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatically open the BitcoinHD client port on the router. This only works when your router supports UPnP and it is enabled.</translation>
+        <source>Automatically open the BitcoinHD1 client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Automatically open the BitcoinHD1 client port on the router. This only works when your router supports UPnP and it is enabled.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1143,8 +1143,8 @@
         <translation>Chấp nhận  kết nối đang tới</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD network through a SOCKS5 proxy.</source>
-        <translation>Kết nối đến BitcoinHD network qua một SOCKS5 proxy.</translation>
+        <source>Connect to the BitcoinHD1 network through a SOCKS5 proxy.</source>
+        <translation>Kết nối đến BitcoinHD1 network qua một SOCKS5 proxy.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1179,8 +1179,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Kết nối đến BitcoinHD network qua một nhánh rời SOCKS5 proxy của Tor hidden services.</translation>
+        <source>Connect to the BitcoinHD1 network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Kết nối đến BitcoinHD1 network qua một nhánh rời SOCKS5 proxy của Tor hidden services.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1290,8 +1290,8 @@
         <translation>Form</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD network after a connection is established, but this process has not completed yet.</source>
-        <translation>Thông tin được hiển thị có thể đã lỗi thời. Cái wallet tự động đồng bộ với BitcoinHD network sau một connection được thiết lập, nhưng quá trình này vẫn chưa completed yet.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD1 network after a connection is established, but this process has not completed yet.</source>
+        <translation>Thông tin được hiển thị có thể đã lỗi thời. Cái wallet tự động đồng bộ với BitcoinHD1 network sau một connection được thiết lập, nhưng quá trình này vẫn chưa completed yet.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1393,8 +1393,8 @@
         <translation>Invalid payment address %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid BitcoinHD address or malformed URI parameters.</source>
-        <translation>URI không thể phân tích cú pháp! Đây có thể gây nên bởi invalid BitcoinHD address hoặc URI không đúng định dạng tham số.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid BitcoinHD1 address or malformed URI parameters.</source>
+        <translation>URI không thể phân tích cú pháp! Đây có thể gây nên bởi invalid BitcoinHD1 address hoặc URI không đúng định dạng tham số.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1495,8 +1495,8 @@
         <translation>Số lượng</translation>
     </message>
     <message>
-        <source>Enter a BitcoinHD address (e.g. %1)</source>
-        <translation>Nhập một BitcoinHD address (e.g. %1)</translation>
+        <source>Enter a BitcoinHD1 address (e.g. %1)</source>
+        <translation>Nhập một BitcoinHD1 address (e.g. %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1956,8 +1956,8 @@
         <translation>&amp;Message:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD network.</source>
-        <translation>Một optional lời nhắn để đính kèm đến payment request, cái mà sẽ được hiển thị khi mà request đang mở. Lưu ý: Tin nhắn này sẽ không được gửi với payment over the BitcoinHD network.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD1 network.</source>
+        <translation>Một optional lời nhắn để đính kèm đến payment request, cái mà sẽ được hiển thị khi mà request đang mở. Lưu ý: Tin nhắn này sẽ không được gửi với payment over the BitcoinHD1 network.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2221,7 +2221,7 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Rác:</translation>
     </message>
     <message>
-        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for BitcoinHD transactions than the network can process.</source>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for BitcoinHD1 transactions than the network can process.</source>
         <translation>Khi có khối lượng giao dịch ít hơn chổ trống trong các khối, các nhà đào mỏ cũng như các nút chuyển tiếp có thể thực thi chỉ với một khoản phí tối thiểu. Chỉ trả khoản phí tối thiểu này là tốt, nhưng lưu ý rằng điều này có thể dẫn đến một giao dịch không bao giờ xác nhận một khi có nhu cầu giao dịch bitcoin nhiều hơn khả năng mạng có thể xử lý.</translation>
     </message>
     <message>
@@ -2377,8 +2377,8 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation><numerusform>Dự kiến bắt đầu xác nhận trong vòng %n blocks.</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid BitcoinHD address</source>
-        <translation>Warning: Invalid BitcoinHD address</translation>
+        <source>Warning: Invalid BitcoinHD1 address</source>
+        <translation>Warning: Invalid BitcoinHD1 address</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2420,8 +2420,8 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Đây là một thông thường payment.</translation>
     </message>
     <message>
-        <source>The BitcoinHD address to send the payment to</source>
-        <translation>The BitcoinHD address để gửi the payment đến</translation>
+        <source>The BitcoinHD1 address to send the payment to</source>
+        <translation>The BitcoinHD1 address để gửi the payment đến</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2440,8 +2440,8 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Xóa bỏ entry này</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less BHDs than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
-        <translation>The fee sẽ được khấu trừ từ số tiền đang gửi. Người nhận sẽ receive ít BHDs hơn bạn gõ vào khoảng trống. Nếu nhiều người gửi được chọn, fee sẽ được chia đều.</translation>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less BHD1s than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <translation>The fee sẽ được khấu trừ từ số tiền đang gửi. Người nhận sẽ receive ít BHD1s hơn bạn gõ vào khoảng trống. Nếu nhiều người gửi được chọn, fee sẽ được chia đều.</translation>
     </message>
     <message>
         <source>S&amp;ubtract fee from amount</source>
@@ -2468,8 +2468,8 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Nhập một label cho cái address này để thêm vào danh sách địa chỉ đã sử dụng</translation>
     </message>
     <message>
-        <source>A message that was attached to the btchd: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BitcoinHD network.</source>
-        <translation>Một tin nhắn được đính kèm với số btchd: URI mà sẽ được lưu giữ với transaction dành cho tài liệu tham khảo. Lưu ý: Tin nhắn này sẽ không được gửi thông qua BitcoinHD network.</translation>
+        <source>A message that was attached to the btchd: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BitcoinHD1 network.</source>
+        <translation>Một tin nhắn được đính kèm với số btchd: URI mà sẽ được lưu giữ với transaction dành cho tài liệu tham khảo. Lưu ý: Tin nhắn này sẽ không được gửi thông qua BitcoinHD1 network.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2513,12 +2513,12 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>&amp;Sign Tin nhắn</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive BHDs sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
-        <translation>Bạn có thể ký/đồng ý với địa chỉ chứng minh bạn có thể receive BHDs đã gửi đến chúng. Cẩn thận không ký bất cứ không rõ hay random, như các cuộc tấn công lừa đảo có thể cố lừa bạn ký tên vào danh tính của bạn.. Chỉ ký các bản tuyên bố hoàn chỉnh mà bạn đồng ý.</translation>
+        <source>You can sign messages/agreements with your addresses to prove you can receive BHD1s sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <translation>Bạn có thể ký/đồng ý với địa chỉ chứng minh bạn có thể receive BHD1s đã gửi đến chúng. Cẩn thận không ký bất cứ không rõ hay random, như các cuộc tấn công lừa đảo có thể cố lừa bạn ký tên vào danh tính của bạn.. Chỉ ký các bản tuyên bố hoàn chỉnh mà bạn đồng ý.</translation>
     </message>
     <message>
-        <source>The BitcoinHD address to sign the message with</source>
-        <translation>The BitcoinHD address để ký với tin nhắn</translation>
+        <source>The BitcoinHD1 address to sign the message with</source>
+        <translation>The BitcoinHD1 address để ký với tin nhắn</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2549,8 +2549,8 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Copy hiện tại signature tới system clipboard</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this BitcoinHD address</source>
-        <translation>Ký tin nhắn để chứng minh bạn sở hữu BitcoinHD address này</translation>
+        <source>Sign the message to prove you own this BitcoinHD1 address</source>
+        <translation>Ký tin nhắn để chứng minh bạn sở hữu BitcoinHD1 address này</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2573,12 +2573,12 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Nhập vào address người nhận, tin nhắn (chắc rằng bạn copy line breaks, khoảng trống, tabs, etc. chính xác) và signature bên dưới verify tin nhắn. Cẩn thận không đọc nhiều hơn từ signature so với cái được ký trong bản thân tin nhắn, để tránh bị lừa bới man-in-the-middle tấn công. Lưu ý rằng điều này chỉ chứng nhận nhóm những người nhân với address, nó không thể chứng minh bên gửi có bất kỳ transaction!</translation>
     </message>
     <message>
-        <source>The BitcoinHD address the message was signed with</source>
-        <translation>The BitcoinHD address tin nhắn đã ký với</translation>
+        <source>The BitcoinHD1 address the message was signed with</source>
+        <translation>The BitcoinHD1 address tin nhắn đã ký với</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified BitcoinHD address</source>
-        <translation>Verify tin nhắn để chắc rằng nó đã được ký với xác định BitcoinHD address</translation>
+        <source>Verify the message to ensure it was signed with the specified BitcoinHD1 address</source>
+        <translation>Verify tin nhắn để chắc rằng nó đã được ký với xác định BitcoinHD1 address</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

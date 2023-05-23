@@ -164,7 +164,7 @@ bool CMPSPInfo::updateSP(uint32_t propertyId, const Entry& info)
 
     // DB value for property entry
     CDataStream ssSpValue(SER_DISK, CLIENT_VERSION);
-    ssSpValue.reserve(::GetSerializeSize(info, CLIENT_VERSION));
+    ssSpValue.reserve(::GetSerializeSize(info, SER_DISK, CLIENT_VERSION));
     ssSpValue << info;
     leveldb::Slice slSpValue(&ssSpValue[0], ssSpValue.size());
 
@@ -216,7 +216,7 @@ uint32_t CMPSPInfo::putSP(uint8_t ecosystem, const Entry& info)
 
     // DB value for property entry
     CDataStream ssSpValue(SER_DISK, CLIENT_VERSION);
-    ssSpValue.reserve(::GetSerializeSize(info, CLIENT_VERSION));
+    ssSpValue.reserve(::GetSerializeSize(info, SER_DISK, CLIENT_VERSION));
     ssSpValue << info;
     leveldb::Slice slSpValue(&ssSpValue[0], ssSpValue.size());
 
@@ -227,7 +227,7 @@ uint32_t CMPSPInfo::putSP(uint8_t ecosystem, const Entry& info)
 
     // DB value for identifier
     CDataStream ssTxValue(SER_DISK, CLIENT_VERSION);
-    ssTxValue.reserve(::GetSerializeSize(propertyId, CLIENT_VERSION));
+    ssTxValue.reserve(::GetSerializeSize(propertyId, SER_DISK, CLIENT_VERSION));
     ssTxValue << propertyId;
     leveldb::Slice slTxValue(&ssTxValue[0], ssTxValue.size());
 
@@ -427,7 +427,7 @@ void CMPSPInfo::setWatermark(const uint256& watermark)
     leveldb::Slice slKey(&ssKey[0], ssKey.size());
 
     CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-    ssValue.reserve(::GetSerializeSize(watermark, CLIENT_VERSION));
+    ssValue.reserve(::GetSerializeSize(watermark, SER_DISK, CLIENT_VERSION));
     ssValue << watermark;
     leveldb::Slice slValue(&ssValue[0], ssValue.size());
 

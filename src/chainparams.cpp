@@ -12,21 +12,33 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <versionbitsinfo.h>
+#include <arith_uint256.h>
+
+#include <limits>
 
 #include <assert.h>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint64_t nNonce, uint64_t nBaseTarget, int32_t nVersion, const CAmount& genesisReward)
-{
+#include <chiapos/post.h>
+#include <chiapos/kernel/calc_diff.h>
+
+const uint32_t SECONDS_OF_A_DAY = 60 * 60 * 24;
+const int AVERAGE_VDF_SPEED = 100 * 1000;
+
+static CBlock CreateGenesisBlock(char const* pszTimestamp, CScript const& genesisOutputScript, uint32_t nTime,
+                                 uint64_t nNonce, uint64_t nBaseTarget, int32_t nVersion,
+                                 CAmount const& genesisReward) {
     CMutableTransaction txNew;
     txNew.nVersion = 1;
     txNew.vin.resize(1);
     txNew.vout.resize(2);
-    txNew.vin[0].scriptSig = CScript() << static_cast<unsigned int>(0)
-        << CScriptNum(static_cast<int64_t>(nNonce)) << CScriptNum(static_cast<int64_t>(0))
-        << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+    txNew.vin[0].scriptSig =
+            CScript() << static_cast<unsigned int>(0) << CScriptNum(static_cast<int64_t>(nNonce))
+                      << CScriptNum(static_cast<int64_t>(0))
+                      << std::vector<unsigned char>((unsigned char const*)pszTimestamp,
+                                                    (unsigned char const*)pszTimestamp + strlen(pszTimestamp));
     txNew.vout[0].nValue = genesisReward;
     txNew.vout[0].scriptPubKey = genesisOutputScript;
     txNew.vout[1].nValue = 0;
@@ -55,9 +67,9 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  *     CTxOut(nValue=00.00000000, scriptPubKey=0x2102CD2103A86877937A05)
  *   vMerkleTree: 4a5e1e
  */
-static CBlock CreateGenesisBlock(uint32_t nTime, uint64_t nNonce, uint64_t nBaseTarget, int32_t nVersion, const CAmount& genesisReward)
-{
-    const char* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
+static CBlock CreateGenesisBlock(uint32_t nTime, uint64_t nNonce, uint64_t nBaseTarget, int32_t nVersion,
+                                 CAmount const& genesisReward) {
+    char const* pszTimestamp = "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks";
     const CScript genesisOutputScript = CScript() << ParseHex("02cd2103a86877937a05eff85cf487424b52796542149f2888f9a17fbe6d66ce9d") << OP_CHECKSIG;
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBaseTarget, nVersion, genesisReward);
 }
@@ -76,7 +88,7 @@ public:
         consensus.SegwitHeight = 0;
 
         consensus.BHDFundAddress = "32B86ghqRTJkh2jvyhRWFugX7YWoqHPqVE";
-        // See https://btchd.org/wiki/fund-address-pool
+        // See https://bhd.one/wiki/fund-address-pool
         consensus.BHDFundAddressPool = {
             "3F26JRhiGjc8z8pRKJvLXBEkdE6nLDAA3y", //!< 0x20000000, Deprecated!. Last use on v1.1.0.1-30849da
             "32B86ghqRTJkh2jvyhRWFugX7YWoqHPqVE", //!< 0x20000004, 0x20000000
@@ -103,8 +115,8 @@ public:
         consensus.BHDIP001FundRoyaltyForLowMortgage = 700; // 700‰ to fund
         consensus.BHDIP001MiningRatio = 3 * COIN;
 
-        // It's fuck mind BitcoinHD Improvement Proposals
-        consensus.BHDIP004Height = 96264; // BitcoinHD new consensus upgrade bug. 96264 is first invalid block
+        // It's fuck mind BitcoinHD1 Improvement Proposals
+        consensus.BHDIP004Height = 96264; // BitcoinHD1 new consensus upgrade bug. 96264 is first invalid block
         consensus.BHDIP004AbandonHeight = 99000;
 
         consensus.BHDIP006Height = 129100; // Actived on Wed, 02 Jan 2019 02:17:19 GMT
@@ -124,6 +136,31 @@ public:
         assert(consensus.BHDIP008Height % consensus.nMinerConfirmationWindow == 0);
         assert(consensus.BHDIP008FundRoyaltyForLowMortgage < consensus.BHDIP001FundRoyaltyForLowMortgage);
         assert(consensus.BHDIP008FundRoyaltyForLowMortgage > consensus.BHDIP001FundRoyaltyForFullMortgage);
+
+        consensus.BHDIP009SkipTestChainChecks = false; // Do not check validation for blocks of burst consensus
+        consensus.BHDIP009Height = 9999999; // TODO When reach the height the consensus will change to chiapos
+        // The reward address should be filled
+        consensus.BHDIP009FundAddresses = { "3Maw3PdwSvtXgBKJ9QPGwRSQW8AgQrGK3W" };
+        consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
+        consensus.BHDIP009StartBlockIters = AVERAGE_VDF_SPEED * consensus.BHDIP008TargetSpacing;
+        consensus.BHDIP009DifficultyConstantFactorBits = chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS;
+        consensus.BHDIP009DifficultyEvalWindow = 20 * 3; // 3 hours
+        consensus.BHDIP009PlotIdBitsOfFilter = chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER;
+        consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 100;
+        consensus.BHDIP009PlotSizeMin = chiapos::MIN_K;
+        consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
+        consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
+        consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(32) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
+
+        int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
+        consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 5, 8};
+        consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 365, 20};
+        consensus.BHDIP009PledgeTerms[2] = {nHeightsOfADay * 365 * 2, 50};
+        consensus.BHDIP009PledgeTerms[3] = {nHeightsOfADay * 365 * 3, 100};
+
+        consensus.BHDIP009TotalAmountUpgradeMultiply = 3; // 21,000,000 * 3 = 63,000,000
+        consensus.BHDIP009PledgeRetargetMinHeights = (SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing) * 7; // minimal number to retarget a pledge is 7 days
+        consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
@@ -160,10 +197,10 @@ public:
         // This is fine at runtime as we'll fall back to using them as a oneshot if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.push_back("seed0-chain.btchd.org");
-        vSeeds.push_back("seed1-chain.btchd.org");
-        vSeeds.push_back("seed2-chain.btchd.org");
-        vSeeds.push_back("seed3-chain.btchd.org");
+        vSeeds.push_back("seed0-chain.bhd.one");
+        vSeeds.push_back("seed1-chain.bhd.one");
+        vSeeds.push_back("seed2-chain.bhd.one");
+        vSeeds.push_back("seed3-chain.bhd.one");
         vSeeds.push_back("seed-bhd.hpool.com");
         vSeeds.push_back("seed-bhd.hdpool.com");
         vSeeds.push_back("seed-bhd.awpool.com");
@@ -343,8 +380,9 @@ public:
         consensus.CSVHeight = 0;
         consensus.SegwitHeight = 0;
 
-        consensus.BHDFundAddress = "2N3DHXpYQFZ6pNCUxNpHuTtaFQZJCmCKNBw";
-        consensus.BHDFundAddressPool = { "2N3DHXpYQFZ6pNCUxNpHuTtaFQZJCmCKNBw" };
+        consensus.BHDFundAddress = "2N5aE4GqA1AYQWmDWaHHRTg38cBBXQr3Q58";
+        consensus.BHDFundAddressPool = { "2N5aE4GqA1AYQWmDWaHHRTg38cBBXQr3Q58" };
+
         assert(consensus.BHDFundAddressPool.find(consensus.BHDFundAddress) != consensus.BHDFundAddressPool.end());
 
         consensus.nPowTargetSpacing = 180; // Reset by BHDIP008
@@ -352,66 +390,87 @@ public:
         consensus.nCapacityEvalWindow = 2016;
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.fAllowMinDifficultyBlocks = false;
-        consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
+        consensus.nRuleChangeActivationThreshold = 1916; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016;
 
-        consensus.BHDIP001PreMiningEndHeight = 8400; // 21M * 1% = 0.21M, 0.21M/25=8400
-        consensus.BHDIP001FundZeroLastHeight = 12400;
+        consensus.BHDIP001PreMiningEndHeight = 84001; // 21M * 1% = 0.21M, 0.21M/25=8400
+        consensus.BHDIP001FundZeroLastHeight = 92641;
         consensus.BHDIP001TargetSpacing = 300;
         consensus.BHDIP001FundRoyaltyForFullMortgage = 50; // 50‰
         consensus.BHDIP001FundRoyaltyForLowMortgage = 700; // 700‰
         consensus.BHDIP001MiningRatio = 3 * COIN;
 
-        consensus.BHDIP004Height = 12400; // BHDIP004. BitcoinHD new consensus upgrade bug.
-        consensus.BHDIP004AbandonHeight = 21000;
+        consensus.BHDIP004Height = 96264; // BHDIP004. BitcoinHD1 new consensus upgrade bug.
+        consensus.BHDIP004AbandonHeight = 99000;
 
-        consensus.BHDIP006Height = 41290;
-        consensus.BHDIP006BindPlotterActiveHeight = 41296;
-        consensus.BHDIP006CheckRelayHeight = 45328;
-        consensus.BHDIP006LimitBindPlotterHeight  = 48790;
+        consensus.BHDIP006Height = 129100;
+        consensus.BHDIP006BindPlotterActiveHeight = 131116;
+        consensus.BHDIP006CheckRelayHeight = 133000;
+        consensus.BHDIP006LimitBindPlotterHeight  = 134650;
 
-        consensus.BHDIP007Height = 72550;
-        consensus.BHDIP007SmoothEndHeight = 76582; // 240 -> 300, About 2 weeks
-        consensus.BHDIP007MiningRatioStage = 10; // 10 TB
+        consensus.BHDIP007Height = 168300;
+        consensus.BHDIP007SmoothEndHeight = 172332; // 240 -> 300, About 2 weeks
+        consensus.BHDIP007MiningRatioStage = 1250 * 1024; // 1250 PB
 
-        consensus.BHDIP008Height = 106848; // About active on Fri, 09 Aug 2019 10:01:58 GMT
+        consensus.BHDIP008Height = 197568; // About active on Fri, 09 Aug 2019 10:01:58 GMT
         consensus.BHDIP008TargetSpacing = 180;
         consensus.BHDIP008FundRoyaltyForLowMortgage = 270;  // 270‰ to fund
         consensus.BHDIP008FundRoyaltyDecreaseForLowMortgage = 20; // 20‰ decrease
-        consensus.BHDIP008FundRoyaltyDecreasePeriodForLowMortgage = 1008; // About half week
+        consensus.BHDIP008FundRoyaltyDecreasePeriodForLowMortgage = 33600; // About half week
         assert(consensus.BHDIP008Height % consensus.nMinerConfirmationWindow == 0);
         assert(consensus.BHDIP008FundRoyaltyForLowMortgage < consensus.BHDIP001FundRoyaltyForLowMortgage);
         assert(consensus.BHDIP008FundRoyaltyForLowMortgage > consensus.BHDIP001FundRoyaltyForFullMortgage);
+
+        consensus.BHDIP009SkipTestChainChecks = true; // Do not check on test-chain construction
+        consensus.BHDIP009Height = 200000; // When reach the height the consensus will change to chiapos
+        consensus.BHDIP009FundAddresses = {"2N7mAbSHzAeCiY2WJzREPJYKTEJbKo7tYke"};
+        consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
+        consensus.BHDIP009StartBlockIters = AVERAGE_VDF_SPEED * consensus.BHDIP008TargetSpacing;
+        consensus.BHDIP009DifficultyConstantFactorBits = chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS;
+        consensus.BHDIP009DifficultyEvalWindow = 100;
+        consensus.BHDIP009PlotIdBitsOfFilter = chiapos::NUMBER_OF_ZEROS_BITS_FOR_FILTER_TESTNET;
+        consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 200;
+        consensus.BHDIP009PlotSizeMin = chiapos::MIN_K_TEST_NET;
+        consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
+        consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
+        consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(32) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
+        int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
+        consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 1, 8};
+        consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 2, 20};
+        consensus.BHDIP009PledgeTerms[2] = {nHeightsOfADay * 3, 50};
+        consensus.BHDIP009PledgeTerms[3] = {nHeightsOfADay * 4, 100};
+        consensus.BHDIP009TotalAmountUpgradeMultiply = 3; // 21,000,000 * 3 = 63,000,000
+        consensus.BHDIP009PledgeRetargetMinHeights = 10; // minimal number to retarget a pledge is 10 blocks in testnet3
+        consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000076ccf61f873be4a");
+        consensus.nMinimumChainWork = uint256S("0x00");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x87ea715185228eaaefada076b0550893e36c3a35e716e33949566ae00d703a3b");
+        consensus.defaultAssumeValid = uint256S("0x915e3ef622459f8b1b04dc274e1097b31111b0c6e0a9e9cd2da60c9d692f2c93");
 
         pchMessageStart[0] = 0x1e;
         pchMessageStart[1] = 0x12;
         pchMessageStart[2] = 0xa0;
         pchMessageStart[3] = 0x08;
         nDefaultPort = 18733;
-        nPruneAfterHeight = 1000;
+        nPruneAfterHeight = 0;
         m_assumed_blockchain_size = 3;
         m_assumed_chain_state_size = 1;
 
-        genesis = CreateGenesisBlock(1531292789, 1, poc::GetBaseTarget(240), 2, 50 * COIN * consensus.BHDIP001TargetSpacing / 600);
+        genesis = CreateGenesisBlock(1531292789, 0, poc::GetBaseTarget(240), 2, 50 * COIN * consensus.BHDIP001TargetSpacing / 600);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0xb67faee747224b7646d66cd08763f33d72b594da8e884535c2f95904fe3cf8c1"));
-        assert(genesis.hashMerkleRoot == uint256S("0xb8f17dd05a0d3fe40963d189ee0397ff909ce33bd1c9821898d2400b89ea75e6"));
+        assert(consensus.hashGenesisBlock == uint256S("0x8cec494f7f02ad25b3abf418f7d5647885000e010c34e16c039711e4061497b0"));
+        assert(genesis.hashMerkleRoot == uint256S("0x6b80acabaf0fef45e2cad0b8b63d07cff1b35640e81f3ab3d83120dd8bc48164"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.push_back("testnet-seed0-chain.btchd.org");
-        vSeeds.push_back("testnet-seed1-chain.btchd.org");
+        vSeeds.push_back("testnet-seed0-chain.bhd.one");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
@@ -427,136 +486,16 @@ public:
         fRequireStandard = false;
         m_is_test_chain = true;
 
-
         checkpointData = {
             {
-                {      0, uint256S("0xb67faee747224b7646d66cd08763f33d72b594da8e884535c2f95904fe3cf8c1") },
-                {   2000, uint256S("0x13c8cd68809c554d883015b263bbe0b5ab19f3589ea659505e5e59c2aad7d32c") },
-                {   4000, uint256S("0x1feebf8cd1458170c531fca3cc46baff57765ad2b61695b0a6ba28b9fd467fab") },
-                {   6000, uint256S("0x13303b079c3c651c682096b419abbf610c06a87cb0bd5b2ddd638b1da5ccb29d") },
-                {   8000, uint256S("0x070ef2c57440d016b0a97b005a18811d2396ca2aa9a5f2458e844ac4f86923a8") },
-                {   8400, uint256S("0x9ceb8e7eaceba6d78d66b6561e60f0196e0580d2e708f0076578d99035def0e4") },
-                // Offset +2000. Sync batch by 2000
-                {   8600, uint256S("0x85328fd04bf8ece91dbb0e5d494059517a579c09e1c00cb1699aa832de42f825") },
-                {   9000, uint256S("0xf6d498706e76904cf7404f0d701d542755713d8e238af3f2aeea5c228b0c4d79") },
-                {  10000, uint256S("0x8912d6c4b3666e16db738c5b9253760da60140c6f6da4677c3c65a922c562981") },
-                {  12000, uint256S("0xf274f4f16024e66139babad61b953f6e670dcc7ce729519013169491324afa42") },
-                {  14000, uint256S("0x225060edd20c722111a96eb7f1947a9cca58755f524fc8c23a6d64fe7fc5be92") },
-                {  16000, uint256S("0x32e35edd797596ce166609b58f6ee6b920f8e60bfc7f4131f98ae21faa8398b7") },
-                {  18000, uint256S("0xd0b4e5638db1d664dffc561a6c4c9f6bf691c376a36ccbfc412418c4aee03df1") },
-                {  20000, uint256S("0xd886caeac8c821716d0cab7a1ffc58836eca7e24193c0fb7cdb0ccf0f08f8eea") },
-                {  22000, uint256S("0x54ebf72c827700d162290d8369321266d78443d43387ed4dacc6bcc8e8dee61c") },
-                {  24000, uint256S("0xb0f1ce1964d04acc6e0ce02db2c1874b83811d973d025b95b8f927c94ba622d6") },
-                {  26000, uint256S("0xbacd9dcc2147915a3e84b0b24addad37c3f57c1cea01ea0483220effeac2ed0f") },
-                {  28000, uint256S("0xd119dc0c48a3071ea2e1522fa758e85717c9a19fbab7542b3890b3076a13851a") },
-                {  30000, uint256S("0xc8c0367622ced32dd3c4793d974e04d672d8f88115149445f37c6c5950bfe9b2") },
-                {  32000, uint256S("0xb7f29370d35409bfaf79715785ec44d73cb653c34d80190dced08e19af0d800b") },
-                {  34000, uint256S("0x941e0ef9fe8f8c1e1a05fcb4644b655b659f5d5dc64a1d9f946e450bcdd64fd6") },
-                {  36000, uint256S("0x91f802d19f2d24e3ae85a1fc3e30dd2896bb2469410ed5532d9bb7811427e2b0") },
-                {  38000, uint256S("0x4496f906d81728a522dc5e5e8c4784df4663da9b7063f1e5e6ffd1474ef61fec") },
-                {  40000, uint256S("0x5e968add124371c1d5fe4cd2171d45d2c8a11dea1339eb1ade25cb9725a0a56b") },
-                {  42000, uint256S("0x181454802688c0899771b697a2b2cb8e3d291ac098b0f41899319dc9f0c39112") },
-                {  44000, uint256S("0x9d25ffd74c63f7c1d56d33f279aeb3be91c7d64be85b6f87d3a4defef8d72456") },
-                {  46000, uint256S("0x1052f78825e55d3eec69684d7d5fd09fde27f7d07a21978229a2b14cee13bb73") },
-                {  48000, uint256S("0x22784d9a08f451f51b00c23b99396e131840b7d9f51fe7be50a74c2025c6bd36") },
-                {  50000, uint256S("0x762e0c3c9baedf5b113f7253ca9091bf646e009cb322f4aaf720d5a3f889dc45") },
-                {  52000, uint256S("0x7a11b8feafa4921bf32a43fb5fa2938f658fc57916cb2972237ed928e3073ee9") },
-                {  54000, uint256S("0x121773f98a69b2be0b99a33e63b4246311da1939c23bc3d726e94d6fa6d88a13") },
-                {  56000, uint256S("0x9d55d5b3c1df040dc7504a1b36f60d6f11f89036d8ac5869b82df67cb223edb3") },
-                {  58000, uint256S("0x97235c555f8d072236da56807bfe0f8ca32edfca5fc864b4b233045338bcf0bc") },
-                {  60000, uint256S("0x1128e28907b17c292aaa32f3c3d9e06650fb0436683797cd98731a688e408866") },
-                {  62000, uint256S("0xcb32e25b1586aefc293044ea9d9fdd08d8ce36608cec29bc7a4022a5e73e2cb8") },
-                {  64000, uint256S("0xf39de31b4f07eab4202f922e65d0722f2f6c5f12d89fe638fa64297d2c29a63f") },
-                {  66000, uint256S("0xe2f7a9bf0b5ad6630c8623448bd1e6669a52107c74edfc1e33c7cf22030b5cdc") },
-                {  68000, uint256S("0xd4f8fb21c8079683d76efaaa79405f11eb9948e9ea6578dabcbe70a3ed4e0673") },
-                {  70000, uint256S("0x7c0d0abf50bdab5960a6f80d966ad76b6c5fd9098ae66fc09c683deba8ac6ccd") },
-                {  72000, uint256S("0x93065a3b4e43baf4b6dbba22c5cd560ce9c9c04310ed81b9519ef75d2d37cc4e") },
-                {  74000, uint256S("0x52578073a170ba035f5a1d7dc4906cf57dc4aa8392cb64967f8943455fabdbf4") },
-                {  76000, uint256S("0xc6163360b107368ebc89556acb2c27235e210dc11809b92dfb03120f65fdcc99") },
-                {  78000, uint256S("0xb089b8275035b1e07efe568bc33e7169738e50fba59393840aafaa73f4c708e8") },
-                {  80000, uint256S("0x2a099ed535d307ce75ac18638b8bf7dd41cf5624e7b66bda4c100c03caca80cb") },
-                {  82000, uint256S("0x2a3d140578f0edc3905372747311da8827f459f42d68a02fcd8cd9f1bce75978") },
-                {  84000, uint256S("0xe024d36300682e760016801d3497d5cbdf727917bd37e0d1925663978e6126ee") },
-                {  86000, uint256S("0x25fbb338888fd516b38b73c983477309e03f5ec5ce8b46dff476c12e878b490e") },
-                {  88000, uint256S("0x6865a5ccc845095cfdb28a706d209597b5d78f23446a5b02805dc271e205c70e") },
-                {  90000, uint256S("0x827a252f93f32c8def8a5ba64cc9582c8fc199bd711ee85112aef53988ce3b2b") },
-                {  92000, uint256S("0x200146acaf2286c1002b9ba9bb23ff9765ce2f6caf5b544b39f984144e8a9cb4") },
-                {  94000, uint256S("0x014d5732756a32fff1fc6dccb0fd53592b7e2337ca6072fc6316687ab511c4ab") },
-                {  96000, uint256S("0x466ff7bf63a9d47c5f716e39eb525e72f8d5f8d1d3b1c55d6a2c56097c0bc105") },
-                {  98000, uint256S("0x7534314e5ceba6ba39c2c9244dec8816d801d0d0eabbe956ec9c952be5720156") },
-                { 100000, uint256S("0x94e80b2871db28950e9005890a5b5ee875cf453947978462f46b705ce80066d8") },
-                { 102000, uint256S("0x6aa5cbf5e16cbe9e5b44ccac67c9394a49edfc9bcbb3b18974ad093fdf4b5bc6") },
-                { 104000, uint256S("0x44905a3381d8bf3e15daa5258cd9332619bd69670d6df7e94701c4e748cc5de1") },
-                { 106000, uint256S("0x074b174cdffb56727d71f08f2002957d89b3ff39c87abb69a5e990c462a81c8b") },
-                { 106848, uint256S("0xb3482ee2d4fde29559636657de6f1059b4f8b38ba2d8c9842078d4faed53d92e") }, // BHDIP006
-                { 108000, uint256S("0x8e03e9959f26dad803ce5ef10ad8f974854b0f663ac699fcc38fa7999f10d072") },
-                { 110000, uint256S("0x554c11a2da099e48c22e90498b5da50e04f9162cb069f0eb9f7a43704679a019") },
-                { 112000, uint256S("0xaf6fb817d7fdec5cd5aea85dd18ea646a57182a2ab8892a8fedad31fa20f0866") },
-                { 114000, uint256S("0xce229c535d6c171debbb13d17a854f687aaac97d70196e48a881a774c1a9881b") },
-                { 116000, uint256S("0xca2f62d98f3472ae475b412e2e2efc244e2c730d9a6e052bce2d0332f4925c4c") },
-                { 118000, uint256S("0xd8a0956e505d554eb40ba03b02bc2f2d4c36259ec823e72489660793e2c35f63") },
-                { 120000, uint256S("0xeda089d6b3f1e44f3cbf21967f0b839211847f7ed85384700a2d4b45d9873c4d") },
-                { 122000, uint256S("0x860f8c9074dc42756c98579cfdd6141a22266873a8af924663103ba9dd9def6a") },
-                { 124000, uint256S("0x9a7140e32080b11eef74e9a378ec239ddaf5ef5b8246267a0d8c21e60a719648") },
-                { 126000, uint256S("0x4d1a6d4463b75761df780f78abb90e494818f05566fd5c501bb4f4436688d531") },
-                { 128000, uint256S("0x9a4d927604d27eada9d168438832f0dca4bc668cca9f78d69f609f5ebc4d91b9") },
-                { 130000, uint256S("0xc91569c088de17e7370e2b0a13688f5de6b80c4401c7de6020d59553be2cf189") },
-                { 132000, uint256S("0x8d87d70bc77993b56c0145485fc0c566587255e6abc9dcf63ca9a159c99fd215") },
-                { 134000, uint256S("0xcf56a2b1bf2fbf82624f913a4307f2fd391dde80a83ea2fb4a6114377ff9c873") },
-                { 136000, uint256S("0x8a105714f7481b128a760cc6cf342bfb3faad0aa83b07c8dfcf3755313e04a45") },
-                { 138000, uint256S("0x6eebf5313c0a67f70517777701f0eae85086735107f8fcf4ffe96936206a0e9a") },
-                { 140000, uint256S("0x9d1ef311c0e9ad0ecd3038fd305dd893770b323a6877accfaf50c15a13efaf92") },
-                { 142000, uint256S("0x4c28ecd73287267f2da76b993782131ebc9fa322939577ca2cebd42c3e865e21") },
-                { 144000, uint256S("0x529efe2dc010b3e7e897be1e0184fbb7d73477e9823a1f0345ed3cf567f0109e") },
-                { 146000, uint256S("0xbac667b6ea009075487b7dae0fd3a624a203c6b59bb93779ae39fd3068b824b8") },
-                { 148000, uint256S("0xc5c359d9c15726f5093185ae907fa32bf0ce54f39d60386a3e9c91cd0231abc9") },
-                { 150000, uint256S("0x3e44adeb9368c031c0c75a148989f075976b816223dc1d66f1a8419cf0617a92") },
-                { 152000, uint256S("0xddcf380dd55017934569d3914e36c72d46750736824624916866ae21279c5387") },
-                { 154000, uint256S("0x8585cacb5adb6731f1cc1b8085152f7de5d8eb9f8ff1d0a09a00f935db2c1109") },
-                { 156000, uint256S("0x9a8eda2e7ae7c789826df3b122658392b11816d40487c491b77c46ed74af32ec") },
-                { 158000, uint256S("0xede9f122ce344abe903e95c84cbfd7d1344bb8b50f66cd12a7ddb85c60c15de0") },
-                { 160000, uint256S("0xa770605ab2279d96db8c97b39c7de93715d2499e1384c8a8c99c7d0104cf1249") },
-                { 162000, uint256S("0x957f8352e2934f9fbee5b9a8f322feff5f65e8361cb5feb5d14d351f51a3b252") },
-                { 164000, uint256S("0x809f97dbffe1503dca6ff83eb0e86ffa772fdb2559a006ea240912b8cdc0fcd7") },
-                { 166000, uint256S("0x1cc48cfb812a690dd666f6456a88bfc1ee39c16fe1ee0a21cb434c3f378f156a") },
-                { 168000, uint256S("0x9656b667b5997d9a94b492a554ab4883e9acd50de9f99065e11e6a03438e6a76") },
-                { 170000, uint256S("0xb024b68b88c95d69d613844570fc28b5ba540ccf3e3809ea45dca4837bc1c0d5") },
-                { 172000, uint256S("0x9fecdef2b8b1e4990dcc3f2d99a21917af630178861bc928362ffaadcbaa7cb6") },
-                { 174000, uint256S("0xdd85772cd99256f1386175503cf04b1a98dc1329f298ce15e44638c0501040b9") },
-                { 176000, uint256S("0x7a1233cfe99dae5fdac6a545907701aeabf07c0a10fd776b422ae0337a72f079") },
-                { 178000, uint256S("0xe2da831c0c8ede9804e1d71b49737fab74c7c832509a9d39fab5773a8b736e74") },
-                { 180000, uint256S("0xdde05878eab53cbcf5ff83814c728f03a855a0ad210d72415839755a343cce74") },
-                { 182000, uint256S("0x6afd5ad867a8035567f57f4a698d43f94f51bf7eab99ef4e01b3eb56303bde5e") },
-                { 184000, uint256S("0x60d871552852faebceea5d01017a16f14d4f343d7cb9bae379be24e93d2726cc") },
-                { 186000, uint256S("0x880e76784211fa42f8eb9924eed04e291ea3b3e561ca6df2de28e96f628f9a02") },
-                { 188000, uint256S("0x1ee34313ec00ceffed087d0a92441d138dec3f331bb6ea76016a2253da3f2da2") },
-                { 190000, uint256S("0xcdfd601726c2e5c7ee4443a79674339651d81c4198852cf1c65ad4ecd04ab865") },
-                { 192000, uint256S("0x5aadd6edc25eba706a83aaf5b7abe1f420827ec6dd6d89549beec5d4ed859638") },
-                { 194000, uint256S("0x1c7f30eff9b9aceb7431eb053b820b5e21c5a261c6400ea49ad8d4d232e99fe6") },
-                { 196000, uint256S("0x54fa6b78ce2751553e204e986f5044038f8a0af9169d812783f99a49c5ed212e") },
-                { 198000, uint256S("0x591a12e449985d673324f569c5d5beaebf581be2df53518f53d4ee1e5adecf25") },
-                { 200000, uint256S("0xc56879a0132ea9f0de05f5ac44f8bc527bf68c6aa74541cd78a8dfd7a8fafd55") },
-                { 202000, uint256S("0x4f734ab6b3dbdc4c2ed3fb63d40209e11fc2e808b488932fc4f0a8b5dc9685bd") },
-                { 204000, uint256S("0x75e086d5b70d346280c04b4849486c74b1aa4071614c392fb0676fa83e71cca8") },
-                { 206000, uint256S("0x147636459d077dea21eecaec78da5c55660efee74186ea18e3a24c4281f8ac73") },
-                { 208000, uint256S("0x3f42aedc0419dbf0d86e39ba70edc8457f099ef48fd6725b3e70ce6153072c35") },
-                { 210000, uint256S("0xe339c0aa59d9199c75b950fcfdbb69f05219812dced3497b81d985249964dbd3") },
-                { 212000, uint256S("0x231eaaa5f4220ac04ebe007442b456f16ac660055543b384a82cc227b7108609") },
-                { 214000, uint256S("0x5b8cbc40fca53c886dfab0543eb4d3ebeaf67d718d319fd4f9706bfea5eb914e") },
-                { 216000, uint256S("0x619a96266addc25702d05a54f9bb463064f0701cac4e881cec6bd781644956dd") },
-                { 218000, uint256S("0x0b50ca944d3a9ae0f6e28921a7d126e5909f55c1fcdcea1eafeb807baa3eacbd") },
-                { 220000, uint256S("0x108d7bbd4b998f34ae233b26f53bb371fafb74ee5238afb088e8df5071117b59") },
-                { 222000, uint256S("0xcfa80dd8b0163b3b220ca98b323f9f7244ad2602582a8b08e6a31acf3ee26250") },
-                { 224000, uint256S("0x829464d4ffd61b69e4e35825f0a5ca5a3bf108e9febb65e79aaeff24e5de8960") },
-                { 226000, uint256S("0x87ea715185228eaaefada076b0550893e36c3a35e716e33949566ae00d703a3b") },
             }
         };
 
         chainTxData = ChainTxData{
-            // Data from RPC: getchaintxstats 4096 87ea715185228eaaefada076b0550893e36c3a35e716e33949566ae00d703a3b
-            /* nTime    */ 1587626066,
-            /* nTxCount */ 229918,
-            /* dTxRate  */ 0.005529,
+            // Data from RPC: getchaintxstats 4096 915e3ef622459f8b1b04dc274e1097b31111b0c6e0a9e9cd2da60c9d692f2c93
+            /* nTime    */ 1587324676,
+            /* nTxCount */ 496881,
+            /* dTxRate  */ 0.01319561041786995,
         };
     }
 };
@@ -566,7 +505,7 @@ public:
  */
 class CRegTestParams : public CChainParams {
 public:
-    explicit CRegTestParams(const ArgsManager& args) {
+    explicit CRegTestParams(ArgsManager const& args) {
         strNetworkID = "regtest";
         consensus.BIP34Height = 0;
         consensus.BIP65Height = 0;
@@ -677,11 +616,10 @@ public:
         consensus.vDeployments[d].nStartTime = nStartTime;
         consensus.vDeployments[d].nTimeout = nTimeout;
     }
-    void UpdateActivationParametersFromArgs(const ArgsManager& args);
+    void UpdateActivationParametersFromArgs(ArgsManager const& args);
 };
 
-void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
-{
+void CRegTestParams::UpdateActivationParametersFromArgs(ArgsManager const& args) {
     if (gArgs.IsArgSet("-segwitheight")) {
         int64_t height = gArgs.GetArg("-segwitheight", consensus.SegwitHeight);
         if (height < -1 || height >= std::numeric_limits<int>::max()) {
@@ -695,7 +633,7 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 
     if (!args.IsArgSet("-vbparams")) return;
 
-    for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
+    for (std::string const& strDeployment : args.GetArgs("-vbparams")) {
         std::vector<std::string> vDeploymentParams;
         boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
         if (vDeploymentParams.size() != 3) {
@@ -725,13 +663,12 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 
 static std::unique_ptr<const CChainParams> globalChainParams;
 
-const CChainParams &Params() {
+CChainParams const& Params() {
     assert(globalChainParams);
     return *globalChainParams;
 }
 
-std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain)
-{
+std::unique_ptr<const CChainParams> CreateChainParams(std::string const& chain) {
     if (chain == CBaseChainParams::MAIN)
         return std::unique_ptr<CChainParams>(new CMainParams());
     else if (chain == CBaseChainParams::TESTNET)
@@ -741,8 +678,7 @@ std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain)
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
-void SelectParams(const std::string& network)
-{
+void SelectParams(std::string const& network) {
     SelectBaseParams(network);
     globalChainParams = CreateChainParams(network);
 }

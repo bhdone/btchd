@@ -52,11 +52,11 @@ int GetUnbindPlotterLimitHeight(const CBindPlotterInfo& bindInfo, const CCoinsVi
 
 /**
  * Return bind plotter punishment amount
- * 
+ *
  * Change bind require high transaction fee. Diff reward between full-balance and low-balance.
  * Example:
- *   23.75BHD - 7.5BHD = 16.25BHD
- *   16.25BHD pay to black hole
+ *   23.75BHD1 - 7.5BHD1 = 16.25BHD1
+ *   16.25BHD1 pay to black hole
  * */
 CAmount GetBindPlotterPunishmentAmount(int nBindHeight, const Params& params);
 

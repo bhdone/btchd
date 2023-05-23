@@ -156,7 +156,7 @@ std::string mastercore::strMPProperty(uint32_t propertyId)
         str = strprintf("Test token: %d : 0x%08X", 0x7FFFFFFF & propertyId, propertyId);
     } else {
         switch (propertyId) {
-            case OMNI_PROPERTY_BTC: str = "BHD";
+            case OMNI_PROPERTY_BTC: str = "BHD1";
                 break;
             case OMNI_PROPERTY_MSC: str = "OMN";
                 break;
@@ -239,6 +239,8 @@ std::string FormatByType(int64_t amount, uint16_t propertyType)
 
 CMPTally* mastercore::getTally(const std::string& address)
 {
+    AssertLockHeld(cs_tally);
+
     std::unordered_map<std::string, CMPTally>::iterator it = mp_tally_map.find(address);
 
     if (it != mp_tally_map.end()) return &(it->second);
@@ -566,6 +568,8 @@ static int64_t calculate_and_update_devmsc(unsigned int nTime, int block)
 
 uint32_t mastercore::GetNextPropertyId(bool maineco)
 {
+    AssertLockHeld(cs_tally);
+
     if (!pDbSpInfo)
         return 0;
 
@@ -764,6 +768,9 @@ static unsigned int nCacheMiss = 0;
  */
 static bool FillTxInputCache(const CTransaction& tx, const std::shared_ptr<std::map<COutPoint, Coin>> removedCoins, CCoinsViewCache &view)
 {
+    AssertLockHeld(cs_main);
+    AssertLockHeld(cs_tally);
+
     static unsigned int nCacheSize = gArgs.GetArg("-omnitxcache", 500000);
 
     if (view.GetCacheSize() > nCacheSize) {
@@ -1230,7 +1237,7 @@ static int msc_initial_scan(int nFirstBlock)
             CBlock block;
             if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus())) break;
 
-            for(const auto tx : block.vtx) {
+            for(const auto& tx : block.vtx) {
                 if (mastercore_handler_tx(*tx, nBlock, nTxNum, pblockindex, nullptr)) ++nTxsFoundInBlock;
                 ++nTxNum;
             }

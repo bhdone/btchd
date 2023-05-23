@@ -43,6 +43,7 @@ class CScriptCheck;
 class CBlockPolicyEstimator;
 class CTxMemPool;
 class CValidationState;
+class CPlotterBindData;
 struct ChainTxData;
 
 struct DisconnectedBlockTransactions;
@@ -261,8 +262,6 @@ bool GetTransaction(const uint256& hash, CTransactionRef& tx, const Consensus::P
  * validationinterface callback.
  */
 bool ActivateBestChain(CValidationState& state, const CChainParams& chainparams, std::shared_ptr<const CBlock> pblock = std::shared_ptr<const CBlock>()) LOCKS_EXCLUDED(cs_main);
-/** Get block subsidy */
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 /** Get block reward */
 typedef struct {
     CAmount miner;
@@ -270,12 +269,15 @@ typedef struct {
     CAmount fund;
     CAmount accumulate;
     bool fUnconditional;
+    CAmount fund009; //! For BHDIP009, reward to fund addresses
 } BlockReward;
-BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, const CAccountID& generatorAccountID, const uint64_t& nPlotterId, const CCoinsViewCache& view, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+CAmount GetTotalReward(BlockReward const& reward);
+BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, const CAccountID& generatorAccountID, const CPlotterBindData& bindData, const CCoinsViewCache& view, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 BlockReward GetFullMortgageBlockReward(int nHeight, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 BlockReward GetLowMortgageBlockReward(int nHeight, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 int GetFullMortgageFundRoyaltyRatio(int nHeight, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 int GetLowMortgageFundRoyaltyRatio(int nHeight, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+CAmount GetBlockAccumulateSubsidy(const CBlockIndex* pindexPrev, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pindex);
@@ -390,7 +392,7 @@ void InitScriptExecutionCache();
 
 
 /** Functions for disk access for blocks */
-bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
+bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams, int nHeight);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, const CMessageHeader::MessageStartChars& message_start);
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex, const CMessageHeader::MessageStartChars& message_start);

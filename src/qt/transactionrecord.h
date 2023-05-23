@@ -92,6 +92,7 @@ public:
         PointReceived,
         SelfPoint,
         WithdrawPoint,
+        RetargetPoint,
     };
 
     /** Number of confirmation recommended for accepting a transaction */

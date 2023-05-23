@@ -39,9 +39,13 @@ public:
         if (nCode & 0x80000000) {
             ::Serialize(s, VARINT((unsigned int&)txout->extraData->type));
             if (txout->extraData->type == DATACARRIER_TYPE_BINDPLOTTER) {
-                ::Serialize(s, VARINT(BindPlotterPayload::As(txout->extraData)->id));
-            } else if (txout->extraData->type == DATACARRIER_TYPE_POINT) {
+                ::Serialize(s, VARINT(BindPlotterPayload::As(txout->extraData)->GetId().GetBurstPlotterId()));
+            } else if (txout->extraData->type == DATACARRIER_TYPE_BINDCHIAFARMER) {
+                ::Serialize(s, BindPlotterPayload::As(txout->extraData)->GetId().GetChiaFarmerPk());
+            } else if (txout->extraData->type == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint(txout->extraData->type)) {
                 ::Serialize(s, REF(PointPayload::As(txout->extraData)->GetReceiverID()));
+            } else if (txout->extraData->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+                ::Serialize(s, REF(PointRetargetPayload::As(txout->extraData)->GetReceiverID()));
             } else
                 assert(false);
         }
@@ -65,7 +69,7 @@ public:
             // Old versions stored the version number for the last spend of
             // a transaction's outputs. Non-final spends were indicated with
             // height = 0.
-            unsigned int nVersionDummy;
+            unsigned int nVersionDummy{0};
             ::Unserialize(s, VARINT(nVersionDummy));
         }
         ::Unserialize(s, CTxOutCompressor(REF(txout->out)));
@@ -76,11 +80,21 @@ public:
             unsigned int extraDataType = 0;
             ::Unserialize(s, VARINT(extraDataType));
             if (extraDataType == DATACARRIER_TYPE_BINDPLOTTER) {
-                txout->extraData = std::make_shared<BindPlotterPayload>();
-                ::Unserialize(s, VARINT(BindPlotterPayload::As(txout->extraData)->id));
-            } else if (extraDataType == DATACARRIER_TYPE_POINT) {
-                txout->extraData = std::make_shared<PointPayload>();
+                txout->extraData = std::make_shared<BindPlotterPayload>(DATACARRIER_TYPE_BINDPLOTTER);
+                uint64_t nPlotterId{0};
+                ::Unserialize(s, VARINT(nPlotterId));
+                BindPlotterPayload::As(txout->extraData)->SetId(CPlotterBindData(nPlotterId));
+            } else if (extraDataType == DATACARRIER_TYPE_BINDCHIAFARMER) {
+                txout->extraData = std::make_shared<BindPlotterPayload>(DATACARRIER_TYPE_BINDCHIAFARMER);
+                CChiaFarmerPk pk;
+                ::Unserialize(s, pk);
+                BindPlotterPayload::As(txout->extraData)->SetId(CPlotterBindData(pk));
+            } else if (extraDataType == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint((DatacarrierType)extraDataType)) {
+                txout->extraData = std::make_shared<PointPayload>(static_cast<DatacarrierType>(extraDataType));
                 ::Unserialize(s, REF(PointPayload::As(txout->extraData)->GetReceiverID()));
+            } else if (extraDataType == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+                txout->extraData = std::make_shared<PointRetargetPayload>();
+                ::Unserialize(s, REF(PointRetargetPayload::As(txout->extraData)->GetReceiverID()));
             } else
                 assert(false);
         }
@@ -89,7 +103,7 @@ public:
     explicit TxInUndoDeserializer(Coin* coin) : txout(coin) {}
 };
 
-static const size_t MIN_TRANSACTION_INPUT_WEIGHT = WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxIn(), PROTOCOL_VERSION);
+static const size_t MIN_TRANSACTION_INPUT_WEIGHT = WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxIn(), 0, PROTOCOL_VERSION);
 static const size_t MAX_INPUTS_PER_BLOCK = MAX_BLOCK_WEIGHT / MIN_TRANSACTION_INPUT_WEIGHT;
 
 /** Undo information for a CTransaction */

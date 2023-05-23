@@ -30,6 +30,7 @@
 #include <net_processing.h>
 #include <netbase.h>
 #include <poc/poc.h>
+#include <chiapos/post.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -56,6 +57,8 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <walletinitinterface.h>
+#include <netmessagemaker.h>
+#include <key_io.h>
 
 #ifdef ENABLE_OMNICORE
 #include <omnicore_api.h>
@@ -83,6 +86,11 @@
 #include <zmq/zmqrpc.h>
 #endif
 
+#include <plog/Log.h>
+#include <plog/Init.h>
+#include <plog/Formatters/TxtFormatter.h>
+#include <plog/Appenders/ColorConsoleAppender.h>
+
 static bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
@@ -105,6 +113,8 @@ std::unique_ptr<BanMan> g_banman;
 #endif
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
+
+static plog::ConsoleAppender<plog::TxtFormatter> g_consoleAppender;
 
 /**
  * The PID file facilities.
@@ -560,9 +570,10 @@ void SetupServerArgs()
     gArgs.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     gArgs.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
 
-    // BitcoinHD
+    // BitcoinHD1
     gArgs.AddArg("-forcecheckdeadline", strprintf("Force check every block work (default: %u)", DEFAULT_CHECKWORK_ENABLED), ArgsManager::ALLOW_ANY, OptionsCategory::POC);
     gArgs.AddArg("-signprivkey", "Import private key for block signature", ArgsManager::ALLOW_ANY, OptionsCategory::POC);
+    gArgs.AddArg("-skip-ibd", "Skip the checking procedure for `Initial block download`", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
 
 #ifdef ENABLE_OMNICORE
     gArgs.AddArg("-omni", strprintf("Enable omnicore (default: %u)", DEFAULT_OMNICORE), ArgsManager::ALLOW_ANY, OptionsCategory::OMNI);
@@ -611,7 +622,7 @@ void SetupServerArgs()
 std::string LicenseInfo()
 {
     const std::string URL_SOURCE_CODE = "<https://github.com/btchd/btchd>";
-    const std::string URL_WEBSITE = "<https://btchd.org>";
+    const std::string URL_WEBSITE = "<https://bhd.one>";
 
     return CopyrightHolders(_("Copyright (C) %s").translated) + "\n" +
            "\n" +
@@ -1276,6 +1287,10 @@ bool AppInitLockDataDirectory()
 bool AppInitMain(InitInterfaces& interfaces)
 {
     const CChainParams& chainparams = Params();
+
+    std::string strBurnToAddress = EncodeDestination(CTxDestination((ScriptHash)CAccountID()));
+    LogPrintf("%s: Burn to address %s\n", __func__, strBurnToAddress);
+
     // ********************************************************* Step 4a: application initialization
     if (!CreatePidFile()) {
         // Detailed error printed inside CreatePidFile().
@@ -2005,6 +2020,10 @@ bool AppInitMain(InitInterfaces& interfaces)
         return false;
     }
 
+    // PoC module dependency wallets
+    if (!StartPOC())
+        return false;
+
     // ********************************************************* Step 13: finished
 
     SetRPCWarmupFinished();
@@ -2017,10 +2036,6 @@ bool AppInitMain(InitInterfaces& interfaces)
     scheduler.scheduleEvery([]{
         g_banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL * 1000);
-
-    // PoC module dependency wallets
-    if (!StartPOC())
-        return false;
 
     return true;
 }

@@ -72,7 +72,7 @@ public:
 
 CTxDestination DecodeDestination(const std::string& str, const CChainParams& params)
 {
-    // BitcoinHD only support P2SH
+    // BitcoinHD1 only support P2SH
     std::vector<unsigned char> data;
     uint160 hash;
     if (DecodeBase58Check(str, data)) {
@@ -184,4 +184,13 @@ bool IsValidDestinationString(const std::string& str, const CChainParams& params
 bool IsValidDestinationString(const std::string& str)
 {
     return IsValidDestinationString(str, Params());
+}
+
+CAccountID GetBurnToAccountID() {
+    std::vector<unsigned char> raw(CAccountID::WIDTH, 0x23);
+    return CAccountID(raw);
+}
+
+CTxDestination GetBurnToDestination() {
+    return CTxDestination(static_cast<ScriptHash>(GetBurnToAccountID()));
 }
