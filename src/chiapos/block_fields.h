@@ -80,9 +80,6 @@ public:
     CPosProof posProof;
     CVdfProof vdfProof;
 
-    // TODO it should be removed before releasing next version
-    std::vector<CVdfProof> vVoidBlockVdf;
-
     Bytes vchFarmerSignature;  // A signature by farmer, it should be able to verified by farmer-pubkey
 
     CBlockFields() { SetNull(); }
@@ -107,7 +104,6 @@ public:
         READWRITE(nDifficulty);
         READWRITE(posProof);
         READWRITE(vdfProof);
-        READWRITE(vVoidBlockVdf);
         if (!(GetSerializeType(s) & SER_UNSIGNATURED)) {
             READWRITE(LIMITED_VECTOR(vchFarmerSignature, SIG_LEN));
         }
