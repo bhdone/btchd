@@ -5,6 +5,7 @@
 #include <script/standard.h>
 #include <wallet/wallet.h>
 
+#include <key_io.h>
 #include <chainparams.h>
 
 #include <chiapos/kernel/utils.h>
@@ -13,7 +14,7 @@ PointItemModel::PointItemModel(CWallet* pwallet) : m_pwallet(pwallet) {
     reload();
 }
 
-int PointItemModel::columnCount(QModelIndex const& parent) const { return 5; }
+int PointItemModel::columnCount(QModelIndex const& parent) const { return 6; }
 
 QVariant PointItemModel::data(QModelIndex const& index, int role) const {
     auto params = Params().GetConsensus();
@@ -28,12 +29,14 @@ QVariant PointItemModel::data(QModelIndex const& index, int role) const {
             case 0:
                 return pledge.nBlockHeight;
             case 1:
-                return pledge.nBlockHeight + term.nLockHeight;
+                return QString::fromStdString(EncodeDestination(pledge.toDest));
             case 2:
-                return QString::fromStdString(chiapos::MakeNumberStr(itTx->second.tx->vout[0].nValue / COIN));
+                return pledge.nBlockHeight + term.nLockHeight;
             case 3:
-                return PointTypeToTerm(pledge);
+                return QString::fromStdString(chiapos::MakeNumberStr(itTx->second.tx->vout[0].nValue / COIN));
             case 4:
+                return PointTypeToTerm(pledge);
+            case 5:
                 return QString::fromStdString(pledge.txid.GetHex());
         }
     }
@@ -54,12 +57,14 @@ QVariant PointItemModel::headerData(int section, Qt::Orientation orientation, in
             case 0:
                 return tr("Height");
             case 1:
-                return tr("Expires");
+                return tr("To");
             case 2:
-                return tr("Amount");
+                return tr("Expires");
             case 3:
-                return tr("Term");
+                return tr("Amount");
             case 4:
+                return tr("Term");
+            case 5:
                 return tr("TxID");
         }
     }
