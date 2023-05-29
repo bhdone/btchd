@@ -638,7 +638,7 @@ btchdd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-btchdd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS) $(UTF8PROC_LIBS)
+btchdd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(GMP_LIBS) $(UTF8PROC_LIBS)
 
 # bitcoin-cli binary #
 btchd_cli_SOURCES = bitcoin-cli.cpp compat/byteswap.cpp
@@ -677,7 +677,7 @@ btchd_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-btchd_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS) $(UTF8PROC_LIBS)
+btchd_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(CHIAPOS_LIBS) $(GMP_LIBS) $(UTF8PROC_LIBS)
 #
 
 # bitcoin-wallet binary #
@@ -704,7 +704,7 @@ btchd_wallet_LDADD = \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE)
 
-btchd_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(MPIR_LIBS) $(UTF8PROC_LIBS)
+btchd_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(GMP_LIBS) $(UTF8PROC_LIBS)
 #
 
 # bitcoin-miner binary #
@@ -773,7 +773,7 @@ btchd_miner_LDADD = \
   $(CRYPTO_LIBS) \
   $(EVENT_PTHREADS_LIBS) \
   $(CHIAPOS_LIBS) \
-  $(MPIR_LIBS) \
+  $(GMP_LIBS) \
   $(UTF8PROC_LIBS) \
   $(CURL_LIBS) \
   $(TOOLBOX_LIBS) \
@@ -799,7 +799,7 @@ libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(HARD
 libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1) $(LIBBITCOIN_CRYPTO)
 
 if TARGET_WINDOWS
-libbitcoinconsensus_la_LIBADD += $(CHIAPOS_LIBS) $(MPIR_LIBS)
+libbitcoinconsensus_la_LIBADD += $(CHIAPOS_LIBS) $(GMP_LIBS)
 endif
 
 libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
