@@ -7,7 +7,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
 
 // FIXME here is the definition of bswap functions to avoid compiling/linking errors
 uint16_t bswap_16(uint16_t x) { return __bswap_16(x); }
