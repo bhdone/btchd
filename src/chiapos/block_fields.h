@@ -53,9 +53,9 @@ public:
     uint256 challenge;
     Bytes vchY;
     Bytes vchProof;
-    uint8_t nWitnessType{0};
-    uint64_t nVdfIters{0};
-    uint64_t nVdfDuration{0};
+    uint8_t nWitnessType;
+    uint64_t nVdfIters;
+    uint64_t nVdfDuration;
 
     ADD_SERIALIZE_METHODS;
 
