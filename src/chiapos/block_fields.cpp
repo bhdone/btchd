@@ -16,6 +16,10 @@ void CPosProof::SetNull() {
     vchProof.clear();
 }
 
+bool CPosProof::IsNull() const {
+    return challenge.IsNull() && vchPoolPkOrHash.empty() && vchLocalPk.empty() && vchFarmerPk.empty() && nPlotType == 0 && nPlotK == 0 && vchProof.empty();
+}
+
 void CVdfProof::SetNull() {
     challenge.SetNull();
     vchY.clear();
@@ -23,6 +27,10 @@ void CVdfProof::SetNull() {
     nWitnessType = 0;
     nVdfIters = 0;
     nVdfDuration = 0;
+}
+
+bool CVdfProof::IsNull() const {
+    return challenge.IsNull() && vchY.empty() && vchProof.empty() && nWitnessType == 0 && nVdfIters == 0 && nVdfDuration == 0;
 }
 
 void CBlockFields::SetNull() {
@@ -33,8 +41,7 @@ void CBlockFields::SetNull() {
 }
 
 bool CBlockFields::IsNull() const {
-    return vchFarmerSignature.empty() && posProof.vchProof.empty() && posProof.nPlotK == 0 &&
-           posProof.challenge.IsNull() && vdfProof.challenge.IsNull() && vdfProof.vchProof.empty();
+    return nDifficulty == 0 && posProof.IsNull() && vdfProof.IsNull() && vchFarmerSignature.empty();
 }
 
 }  // namespace chiapos
