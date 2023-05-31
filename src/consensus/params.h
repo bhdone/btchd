@@ -120,6 +120,7 @@ struct Params {
     int BHDIP009PlotSizeMax;
     int BHDIP009BaseIters;
     int BHDIP009TotalAmountUpgradeMultiply;
+    int BHDIP009CalculateDistributedAmountEveryHeights;
     int BHDIP009PledgeRetargetMinHeights;
     double BHDIP009DifficultyChangeMaxFactor;
 

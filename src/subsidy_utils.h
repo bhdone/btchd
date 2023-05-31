@@ -15,4 +15,6 @@ CAmount GetTotalSupplyBeforeHeight(int nHeight, Consensus::Params const& params)
 
 CAmount GetTotalSupplyBeforeBHDIP009(Consensus::Params const& params) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+int GetHeightForCalculatingTotalSupply(int nCurrHeight, Consensus::Params const& params);
+
 #endif

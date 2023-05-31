@@ -910,7 +910,8 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
 
     if (nMiningHeight >= params.BHDIP009Height) {
         CBlockIndex* pindex = ::ChainActive().Tip();
-        CAmount nTotalSupplied = GetTotalSupplyBeforeBHDIP009(params) - nBurned;
+        int nHeightForCalculatingTotalSupply = GetHeightForCalculatingTotalSupply(pindex->nHeight, params);
+        CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params) - nBurned;
         auto netspace = poc::CalculateAverageNetworkSpace(pindex, params);
         LogPrint(BCLog::POC, "%s: Average network space %1.6f(Tib), total supplied: %s BHD1 (burned: %s BHD1), params(difficulty=%ld, iters=%ld, DCF(bits)=%ld, Filter(bits)=%ld)\n", __func__,
                 chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())),
