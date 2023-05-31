@@ -14,7 +14,7 @@
 uint256 CBlockHeader::GetHash() const
 {
     int ser_flags = IsChiaBlock() ? SERIALIZE_BLOCK_CHIAPOS : 0;
-    return SerializeHash(*this, 0, ser_flags);
+    return SerializeHash(*this, SER_GETHASH, ser_flags);
 }
 
 uint256 CBlockHeader::GetUnsignaturedHash() const
