@@ -87,7 +87,7 @@ public:
 private:
     CAmount GetBalanceBind(CPlotterBindData::Type type, CAccountID const& accountID, CCoinsMap const& mapChildCoins) const;
 
-    CAmount GetCoinBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins) const;
+    CAmount GetCoinBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, int nHeight) const;
 
     CAmount GetBalancePointSend(DatacarrierType type, CAccountID const& accountID, CCoinsMap const& mapChildCoins) const;
 

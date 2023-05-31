@@ -823,7 +823,7 @@ arith_uint256 CalculateAverageNetworkSpace(CBlockIndex *pindexCurr, Consensus::P
     return result / nActual;
 }
 
-CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlotterBindData& bindData, int nMiningHeight, const CCoinsViewCache& view, int64_t* pMinerCapacity, CAmount* pOldMiningRequireBalance, CAmount nBurned, const Consensus::Params& params, int* pnMinedBlocks, int* pnTotalBlocks)
+CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlotterBindData& bindData, int nMiningHeight, const CCoinsViewCache& view, int64_t* pMinerCapacity, CAmount* pOldMiningRequireBalance, CAmount nBurned, const Consensus::Params& params, int* pnMinedBlocks, int* pnTotalBlocks, int nHeightForCalculatingTotalSupply)
 {
     AssertLockHeld(cs_main);
 
@@ -910,7 +910,7 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
 
     if (nMiningHeight >= params.BHDIP009Height) {
         CBlockIndex* pindex = ::ChainActive().Tip();
-        int nHeightForCalculatingTotalSupply = GetHeightForCalculatingTotalSupply(pindex->nHeight, params);
+        // int nHeightForCalculatingTotalSupply = GetHeightForCalculatingTotalSupply(pindex->nHeight, params);
         CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params) - nBurned;
         auto netspace = poc::CalculateAverageNetworkSpace(pindex, params);
         LogPrint(BCLog::POC, "%s: Average network space %1.6f(Tib), total supplied: %s BHD1 (burned: %s BHD1), params(difficulty=%ld, iters=%ld, DCF(bits)=%ld, Filter(bits)=%ld)\n", __func__,

@@ -696,7 +696,7 @@ CAmount CCoinsViewDB::GetBalance(const CAccountID &accountID, const CCoinsMap &m
         }
     }
 
-    return GetCoinBalance(accountID, mapChildCoins);
+    return GetCoinBalance(accountID, mapChildCoins, nHeight);
 }
 
 CBindPlotterCoinsMap CCoinsViewDB::GetAccountBindPlotterEntries(const CAccountID &accountID, const CPlotterBindData &bindData) const {
@@ -831,7 +831,7 @@ CAmount CCoinsViewDB::GetBalanceBind(CPlotterBindData::Type type, CAccountID con
     return balanceBindPlotter;
 }
 
-CAmount CCoinsViewDB::GetCoinBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins) const {
+CAmount CCoinsViewDB::GetCoinBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, int nHeight) const {
     std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
     CAmount availableBalance = 0;
     CAmount tempAmount = 0;
@@ -845,6 +845,16 @@ CAmount CCoinsViewDB::GetCoinBalance(const CAccountID &accountID, const CCoinsMa
         if (pcursor->GetKey(entry) && entry.key == DB_COIN_INDEX && *entry.accountID == accountID) {
             if (!pcursor->GetValue(REF(VARINT(tempAmount, VarIntMode::NONNEGATIVE_SIGNED))))
                 throw std::runtime_error("Database read error");
+            if (nHeight != 0) {
+                // need to find the height of the coin
+                Coin coin;
+                if (!GetCoin(*entry.outpoint, coin)) {
+                    throw std::runtime_error("Read coin error");
+                }
+                if (coin.nHeight > nHeight) {
+                    continue;
+                }
+            }
             availableBalance += tempAmount;
         } else {
             break;
@@ -858,6 +868,9 @@ CAmount CCoinsViewDB::GetCoinBalance(const CAccountID &accountID, const CCoinsMa
             continue;
 
         if (it->second.coin.refOutAccountID == accountID) {
+            if (nHeight != 0 && it->second.coin.nHeight > nHeight) {
+                continue;
+            }
             if (it->second.coin.IsSpent()) {
                 if (db.Exists(CoinIndexEntry(&it->first, &it->second.coin.refOutAccountID)))
                     availableBalance -= it->second.coin.out.nValue;
