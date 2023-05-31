@@ -44,6 +44,8 @@ public:
     CPosProof() { SetNull(); }
 
     void SetNull();
+
+    bool IsNull() const;
 };
 
 class CVdfProof {
@@ -70,6 +72,8 @@ public:
     CVdfProof() { SetNull(); }
 
     void SetNull();
+
+    bool IsNull() const;
 };
 
 class CBlockFields {
