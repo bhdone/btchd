@@ -1348,10 +1348,14 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
         }
         // Inherit BHDIP008
         CAmount nBurned{0};
+        CAmount miningRequireBalance;
         if (nHeight >= consensusParams.BHDIP009Height) {
-            nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &consensusParams.BHDIP009PledgeTerms);
+            int nHeightForCalculatingTotalSupply = GetHeightForCalculatingTotalSupply(nHeight, consensusParams);
+            nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &consensusParams.BHDIP009PledgeTerms, nHeightForCalculatingTotalSupply);
+            miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, nullptr, nBurned, consensusParams, nullptr, nullptr, nHeightForCalculatingTotalSupply); // Netspace fixed
+        } else {
+            miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, nullptr, nBurned, consensusParams); // Netspace fixed
         }
-        CAmount miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, nullptr, nBurned, consensusParams); // Netspace fixed
         LogPrint(BCLog::POC, "%s: miningRequireBalance=%s BHD1, accountBalance=%s BHD1, balancePointSent=%s BHD1, balancePointReceived=%s BHD1\n", __func__,
                 chiapos::FormatNumberStr(std::to_string(miningRequireBalance / COIN)),
                 chiapos::FormatNumberStr(std::to_string(accountBalance / COIN)),

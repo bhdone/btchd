@@ -1,8 +1,8 @@
 #include "bls_key.h"
 
-// #ifdef __APPLE__
-// #include <gmp.h>
-// #endif
+#ifdef __APPLE__
+#include <gmp.h>
+#endif
 
 #include <openssl/evp.h>
 

@@ -1326,8 +1326,8 @@ else
   fi
 fi
 
-AC_CHECK_HEADER([mpir.h],,AC_MSG_ERROR(mpir headers missing),)
-AC_CHECK_LIB([mpir],[main],MPIR_LIBS=-lmpir,AC_MSG_ERROR(libmpir missing))
+AC_CHECK_HEADER([gmp.h],,AC_MSG_ERROR(gmp headers missing),)
+AC_CHECK_LIB([gmp],[main],GMP_LIBS=-lgmp,AC_MSG_ERROR(libgmp missing))
 
 AC_CHECK_HEADER([vdf_computer.h],,AC_MSG_ERROR(vdf headers missing),)
 AC_CHECK_LIB([bhd_vdf],[main],BHD_VDF_LIBS=-lbhd_vdf,AC_MSG_ERROR(libbhd_vdf missing))
@@ -1681,7 +1681,7 @@ AC_SUBST(CRYPTO_LIBS)
 AC_SUBST(SSL_LIBS)
 AC_SUBST(EVENT_LIBS)
 AC_SUBST(EVENT_PTHREADS_LIBS)
-AC_SUBST(MPIR_LIBS)
+AC_SUBST(GMP_LIBS)
 AC_SUBST(ZMQ_LIBS)
 AC_SUBST(PROTOBUF_LIBS)
 AC_SUBST(QR_LIBS)

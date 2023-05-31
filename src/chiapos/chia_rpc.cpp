@@ -280,10 +280,13 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
     CChiaFarmerPk farmerPk(vchFarmerPk);
     CPlotterBindData bindData(farmerPk);
 
-    CCoinsViewCache const& view = ::ChainstateActive().CoinsTip();
-    CAmount nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &params.BHDIP009PledgeTerms);
     int nMinedCount, nTotalCount, nTargetHeight = pindex->nHeight + 1;
-    CAmount nReq = poc::GetMiningRequireBalance(accountID, bindData, nTargetHeight, view, nullptr, nullptr, nBurned, params, &nMinedCount, &nTotalCount);
+    int nHeightForCalculatingTotalSupply = GetHeightForCalculatingTotalSupply(nTargetHeight, params);
+
+    CCoinsViewCache const& view = ::ChainstateActive().CoinsTip();
+    CAmount nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &params.BHDIP009PledgeTerms, nHeightForCalculatingTotalSupply);
+
+    CAmount nReq = poc::GetMiningRequireBalance(accountID, bindData, nTargetHeight, view, nullptr, nullptr, nBurned, params, &nMinedCount, &nTotalCount, nHeightForCalculatingTotalSupply);
     CAmount nAccumulate = GetBlockAccumulateSubsidy(pindex, params);
     CAmount nTotalSupplied = GetTotalSupplyBeforeBHDIP009(params);
 
@@ -296,6 +299,7 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
     res.pushKV("accumulate", nAccumulate);
     res.pushKV("supplied", nTotalSupplied);
     res.pushKV("height", nTargetHeight);
+    res.pushKV("calc-height", nHeightForCalculatingTotalSupply);
 
     return res;
 }
