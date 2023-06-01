@@ -470,6 +470,60 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
     return res;
 }
 
+static UniValue querySupply(JSONRPCRequest const& request) {
+    RPCHelpMan("querysupply", "Query distributed amount, burned amount from the height",
+            {
+                {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The height to calculate the amounts"}
+            },
+            RPCResult{"\"succ\" (result) The result of the amounts"},
+            RPCExamples{HelpExampleCli("querysupply", "200000")}).Check(request);
+
+    LOCK(cs_main);
+
+    // calculate from last height
+    auto pindex = ::ChainActive().Tip();
+    int nLastHeight = pindex->nHeight;
+
+    int nRequestedHeight = atoi(request.params[0].get_str());
+    if (nRequestedHeight == 0) {
+        nRequestedHeight = nLastHeight;
+    }
+
+    auto const& params = Params().GetConsensus();
+
+    // calculate from the calculation height
+    int nHeightForCalculatingTotalSupply = GetHeightForCalculatingTotalSupply(nRequestedHeight, params);
+    CCoinsViewCache const& view = ::ChainstateActive().CoinsTip();
+
+    CAmount nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &params.BHDIP009PledgeTerms, nHeightForCalculatingTotalSupply);
+    CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params);
+    CAmount nActualAmount = nTotalSupplied - nBurned;
+
+    UniValue calcValue(UniValue::VOBJ);
+    calcValue.pushKV("request_height", nRequestedHeight);
+    calcValue.pushKV("calc_height", nHeightForCalculatingTotalSupply);
+    calcValue.pushKV("total_supplied", static_cast<double>(nTotalSupplied) / COIN);
+    calcValue.pushKV("burned", static_cast<double>(nBurned) / COIN);
+    calcValue.pushKV("actual_supplied", static_cast<double>(nActualAmount) / COIN);
+
+    CAmount nLastBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &params.BHDIP009PledgeTerms, nLastHeight);
+    CAmount nLastTotalSupplied = GetTotalSupplyBeforeHeight(nLastHeight, params);
+    CAmount nLastActualAmount = nLastTotalSupplied - nLastBurned;
+
+    UniValue lastValue(UniValue::VOBJ);
+    lastValue.pushKV("last_height", nLastHeight);
+    lastValue.pushKV("total_supplied", static_cast<double>(nLastTotalSupplied) / COIN);
+    lastValue.pushKV("burned", static_cast<double>(nLastBurned) / COIN);
+    lastValue.pushKV("actual_supplied", static_cast<double>(nLastActualAmount) / COIN);
+
+    UniValue resValue(UniValue::VOBJ);
+    resValue.pushKV("dist_height", params.BHDIP009CalculateDistributedAmountEveryHeights);
+    resValue.pushKV("calc", calcValue);
+    resValue.pushKV("last", lastValue);
+
+    return resValue;
+}
+
 static CRPCCommand const commands[] = {
         {"chia", "checkchiapos", &checkChiapos, {}},
         {"chia", "querychallenge", &queryChallenge, {}},
@@ -478,7 +532,8 @@ static CRPCCommand const commands[] = {
         {"chia", "queryminingrequirement", &queryMiningRequirement, {"address", "farmer-pk"}},
         {"chia", "submitproof", &submitProof, {"challenge", "quality_string", "pos_proof", "k", "pool_pk", "local_pk", "farmer_pk", "farmer_sk", "plot_id", "vdf_proof_vec", "reward_dest"}},
         {"chia", "generateburstblocks", &generateBurstBlocks, {"count"}},
-        {"chia", "queryupdatetiphistory", &queryUpdateTipHistory, {"count"}}
+        {"chia", "queryupdatetiphistory", &queryUpdateTipHistory, {"count"}},
+        {"chia", "querysupply", &querySupply, {"height"}},
 };
 
 void RegisterChiaRPCCommands(CRPCTable& t) {
