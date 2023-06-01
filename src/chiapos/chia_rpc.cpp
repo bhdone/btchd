@@ -502,9 +502,9 @@ static UniValue querySupply(JSONRPCRequest const& request) {
     UniValue calcValue(UniValue::VOBJ);
     calcValue.pushKV("request_height", nRequestedHeight);
     calcValue.pushKV("calc_height", nHeightForCalculatingTotalSupply);
-    calcValue.pushKV("total_supplied", nTotalSupplied);
-    calcValue.pushKV("burned", nBurned);
-    calcValue.pushKV("actual_supplied", nActualAmount);
+    calcValue.pushKV("total_supplied", static_cast<double>(nTotalSupplied) / COIN);
+    calcValue.pushKV("burned", static_cast<double>(nBurned) / COIN);
+    calcValue.pushKV("actual_supplied", static_cast<double>(nActualAmount) / COIN);
 
     CAmount nLastBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &params.BHDIP009PledgeTerms, nLastHeight);
     CAmount nLastTotalSupplied = GetTotalSupplyBeforeHeight(nLastHeight, params);
@@ -512,9 +512,9 @@ static UniValue querySupply(JSONRPCRequest const& request) {
 
     UniValue lastValue(UniValue::VOBJ);
     lastValue.pushKV("last_height", nLastHeight);
-    lastValue.pushKV("total_supplied", nLastTotalSupplied);
-    lastValue.pushKV("burned", nLastBurned);
-    lastValue.pushKV("actual_supplied", nLastActualAmount);
+    lastValue.pushKV("total_supplied", static_cast<double>(nLastTotalSupplied) / COIN);
+    lastValue.pushKV("burned", static_cast<double>(nLastBurned) / COIN);
+    lastValue.pushKV("actual_supplied", static_cast<double>(nLastActualAmount) / COIN);
 
     UniValue resValue(UniValue::VOBJ);
     resValue.pushKV("dist_height", params.BHDIP009CalculateDistributedAmountEveryHeights);
