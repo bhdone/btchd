@@ -114,6 +114,7 @@ public:
     };
 
     struct MiningRequirement {
+        std::string address;
         CAmount req;
         int mined_count;
         int total_count;

@@ -874,23 +874,40 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
                 *pOldMiningRequireBalance = GetCapacityRequireBalance(nOldMinerCapacityTB, miningRatio);
             }
         }
-    } else {
+    } else if (nMiningHeight < params.BHDIP009Height) {
         // Binded plotter
+        assert(bindData.GetType() == CPlotterBindData::Type::BURST);
         const std::set<CPlotterBindData> plotters = view.GetAccountBindPlotters(generatorAccountID, bindData.GetType());
         nNetCapacityTB = GetCompatibleNetCapacity(nMiningHeight, params,
-            [&nBlockCount, &nMinedCount, &plotters] (const CBlockIndex &block) {
+            [&nBlockCount, &nMinedCount, &plotters, &params] (const CBlockIndex &block) {
                 nBlockCount++;
                 for (const CPlotterBindData &bindData : plotters) {
-                    if (bindData.GetType() == CPlotterBindData::Type::BURST) {
-                        if (!block.IsChiaBlock() && bindData == block.nPlotterId) {
-                            ++nMinedCount;
-                            break;
-                        }
-                    } else if (bindData.GetType() == CPlotterBindData::Type::CHIA) {
-                        if (block.IsChiaBlock() && bindData == CChiaFarmerPk(block.chiaposFields.posProof.vchFarmerPk)) {
-                            ++nMinedCount;
-                            break;
-                        }
+                    assert(!block.IsChiaBlock());
+                    if (bindData == block.nPlotterId) {
+                        ++nMinedCount;
+                        break;
+                    }
+                }
+            }
+        );
+        // Remove sugar
+        if (nMinedCount < nBlockCount) nMinedCount++;
+    } else {
+        // Binded farmer-pk
+        assert(bindData.GetType() == CPlotterBindData::Type::CHIA);
+        const std::set<CPlotterBindData> plotters = view.GetAccountBindPlotters(generatorAccountID, bindData.GetType());
+        nNetCapacityTB = GetCompatibleNetCapacity(nMiningHeight, params,
+            [&nBlockCount, &nMinedCount, &plotters, &params] (const CBlockIndex &block) {
+                if (block.nHeight < params.BHDIP009Height) {
+                    // skip the block that doesn't belong to chia
+                    return;
+                }
+                nBlockCount++;
+                for (const CPlotterBindData &bindData : plotters) {
+                    assert(block.IsChiaBlock());
+                    if (bindData == CChiaFarmerPk(block.chiaposFields.posProof.vchFarmerPk)) {
+                        ++nMinedCount;
+                        break;
                     }
                 }
             }

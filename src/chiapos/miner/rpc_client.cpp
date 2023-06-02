@@ -192,6 +192,7 @@ RPCClient::MiningRequirement RPCClient::QueryMiningRequirement(std::string const
                                                                chiapos::PubKey const& farmer_pk) {
     auto res = SendMethod(m_no_proxy, "queryminingrequirement", address, farmer_pk);
     MiningRequirement mining_requirement;
+    mining_requirement.address = res.result["address"].get_str();
     mining_requirement.req = res.result["require"].get_int64();
     mining_requirement.mined_count = res.result["mined"].get_int();
     mining_requirement.total_count = res.result["count"].get_int();
