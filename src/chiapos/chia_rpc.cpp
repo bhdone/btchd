@@ -288,9 +288,10 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
 
     CAmount nReq = poc::GetMiningRequireBalance(accountID, bindData, nTargetHeight, view, nullptr, nullptr, nBurned, params, &nMinedCount, &nTotalCount, nHeightForCalculatingTotalSupply);
     CAmount nAccumulate = GetBlockAccumulateSubsidy(pindex, params);
-    CAmount nTotalSupplied = GetTotalSupplyBeforeBHDIP009(params);
+    CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params);
 
     UniValue res(UniValue::VOBJ);
+    res.pushKV("address", address);
     res.pushKV("farmer-pk", chiapos::BytesToHex(vchFarmerPk));
     res.pushKV("require", nReq);
     res.pushKV("mined", nMinedCount);

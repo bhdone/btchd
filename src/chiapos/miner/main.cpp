@@ -303,6 +303,7 @@ int HandleCommand_MiningRequirement() {
     auto req = pclient->QueryMiningRequirement(miner::g_config.GetRewardDest(),
                                                miner::GetSelectedKeyFromSeeds().GetPubKey());
     int const PREFIX_WIDTH = 14;
+    std::cout << std::setw(PREFIX_WIDTH) << "address: " << std::setw(15) << req.address << std::endl;
     std::cout << std::setw(PREFIX_WIDTH) << "mined: " << std::setw(15)
               << tinyformat::format("%d/%d", req.mined_count, req.total_count) << " BLK" << std::endl;
     std::cout << std::setw(PREFIX_WIDTH) << "supplied: " << std::setw(15) << chiapos::MakeNumberStr(req.supplied / COIN)
