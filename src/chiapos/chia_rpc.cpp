@@ -525,6 +525,26 @@ static UniValue querySupply(JSONRPCRequest const& request) {
     return resValue;
 }
 
+static UniValue queryPledgeInfo(JSONRPCRequest const& request) {
+    auto const& params = Params().GetConsensus();
+
+    UniValue resValue(UniValue::VOBJ);
+    resValue.pushKV("retarget_min_heights", params.BHDIP009PledgeRetargetMinHeights);
+    resValue.pushKV("capacity_eval_window", params.nCapacityEvalWindow);
+
+    UniValue termsValue(UniValue::VARR);
+    for (int i = 0; i < params.BHDIP009PledgeTerms.size(); ++i) {
+        auto const& term = params.BHDIP009PledgeTerms[i];
+        UniValue termValue(UniValue::VOBJ);
+        termValue.pushKV("lock_height", term.nLockHeight);
+        termValue.pushKV("actual_percent", term.nWeightPercent);
+        termsValue.push_back(std::move(termValue));
+    }
+    resValue.pushKV("terms", termsValue);
+
+    return resValue;
+}
+
 static CRPCCommand const commands[] = {
         {"chia", "checkchiapos", &checkChiapos, {}},
         {"chia", "querychallenge", &queryChallenge, {}},
@@ -535,6 +555,7 @@ static CRPCCommand const commands[] = {
         {"chia", "generateburstblocks", &generateBurstBlocks, {"count"}},
         {"chia", "queryupdatetiphistory", &queryUpdateTipHistory, {"count"}},
         {"chia", "querysupply", &querySupply, {"height"}},
+        {"chia", "querypledgeinfo", &queryPledgeInfo, {}},
 };
 
 void RegisterChiaRPCCommands(CRPCTable& t) {
