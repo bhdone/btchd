@@ -1,9 +1,9 @@
 package=bhd_vdf
-$(package)_version=v0.0.54
+$(package)_version=v0.0.55
 $(package)_download_path=https://github.com/bhdone/bhd_vdf/archive/refs/tags/
 $(package)_download_file=$($(package)_version).tar.gz
 $(package)_file_name=$(package)-$($(package)_version).tar.gz
-$(package)_sha256_hash=10f28b59e334f9b3b2e7d6fa5ec447c52ed7fa446c6683eea6959dfce8ca1437
+$(package)_sha256_hash=515619a26b906da3ff61f40797e1c695bac745421cefda95decd5fc58c5acbd9
 
 define $(package)_fetch_cmds
 $(call fetch_file,$(package),$($(package)_download_path),$($(package)_download_file),$($(package)_file_name),$($(package)_sha256_hash))
