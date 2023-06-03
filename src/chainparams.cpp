@@ -159,7 +159,7 @@ public:
         consensus.BHDIP009PledgeTerms[3] = {nHeightsOfADay * 365 * 3, 100};
 
         consensus.BHDIP009TotalAmountUpgradeMultiply = 3; // 21,000,000 * 3 = 63,000,000
-        consensus.BHDIP009CalculateDistributedAmountEveryHeights = nHeightsOfADay * 30; // every 1 hour the distributed amount will be changed
+        consensus.BHDIP009CalculateDistributedAmountEveryHeights = nHeightsOfADay * 30; // every 30 days the distributed amount will be changed
         consensus.BHDIP009PledgeRetargetMinHeights = (SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing) * 7; // minimal number to retarget a pledge is 7 days
         consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
 
