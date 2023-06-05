@@ -852,6 +852,7 @@ CAmount CCoinsViewDB::GetCoinBalance(const CAccountID &accountID, const CCoinsMa
                     throw std::runtime_error("Read coin error");
                 }
                 if (coin.nHeight > nHeight) {
+                    pcursor->Next();
                     continue;
                 }
             }
