@@ -1326,8 +1326,8 @@ else
   fi
 fi
 
-AC_CHECK_HEADER([gmp.h],,AC_MSG_ERROR(gmp headers missing),)
-AC_CHECK_LIB([gmp],[main],GMP_LIBS=-lgmp,AC_MSG_ERROR(libgmp missing))
+AC_CHECK_HEADER([mpir.h],,AC_MSG_ERROR(gmp headers missing),)
+AC_CHECK_LIB([mpir],[main],GMP_LIBS=-lmpir,AC_MSG_ERROR(libgmp missing))
 
 AC_CHECK_HEADER([vdf_computer.h],,AC_MSG_ERROR(vdf headers missing),)
 AC_CHECK_LIB([bhd_vdf],[main],BHD_VDF_LIBS=-lbhd_vdf,AC_MSG_ERROR(libbhd_vdf missing))
