@@ -673,7 +673,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     m_view.SetBackend(m_dummy);
 
     // since the view is prepared, we now check the tx
-    if (!CheckChiaPledgeTx(tx, m_view, state, chainparams.GetConsensus(), ::ChainActive().Height())) {
+    if (!CheckChiaPledgeTx(tx, m_view, state, chainparams.GetConsensus(), ::ChainActive().Height() + 1)) {
         return false;
     }
 
@@ -2398,7 +2398,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             }
 
             // Check pledge related tx
-            if (!CheckChiaPledgeTx(tx, view, state, params, pindex->nHeight + 1)) {
+            if (!CheckChiaPledgeTx(tx, view, state, params, pindex->nHeight)) {
                 return false;
             }
         }
