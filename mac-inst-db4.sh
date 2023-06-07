@@ -1,2 +1,2 @@
 #!/bin/sh
-cd contrib/ && ./install_db4.sh . --disable-mutexsupport
+CFLAGS="-Wno-error=implicit-function-declaration"  ./contrib/install_db4.sh .
