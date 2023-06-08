@@ -621,7 +621,7 @@ void SetupServerArgs()
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/btchd/btchd>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/bhdone/btchd>";
     const std::string URL_WEBSITE = "<https://bhd.one>";
 
     return CopyrightHolders(_("Copyright (C) %s").translated) + "\n" +
