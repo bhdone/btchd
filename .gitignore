@@ -95,7 +95,7 @@ src/qt/bitcoin-qt.includes
 Makefile
 !depends/Makefile
 btchd-qt
-BitcoinHD-Qt.app
+BitcoinHD1-Qt.app
 background.tiff*
 
 # Qt Creator

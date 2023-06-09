@@ -355,7 +355,7 @@
 #define OMNICORE_VERSION_PATCH 1
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/btchd/btchd/issues"
+#define PACKAGE_BUGREPORT "https://github.com/bhdone/btchd/issues"
 
 /* Define to the full name of this package. */
 #define PACKAGE_NAME "BitcoinHD1 Core"

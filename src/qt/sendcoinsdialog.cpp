@@ -89,8 +89,8 @@ SendCoinsDialog::SendCoinsDialog(const PlatformStyle *_platformStyle, QWidget *p
 
     // Operate method
     ui->operateMethodComboBox->addItem(tr("Pay to"), (int)PayOperateMethod::Pay);
-    ui->operateMethodComboBox->addItem(tr("Point to"), (int)PayOperateMethod::Point);
-    ui->operateMethodComboBox->addItem(tr("Bind to"), (int)PayOperateMethod::BindPlotter);
+    // ui->operateMethodComboBox->addItem(tr("Point to"), (int)PayOperateMethod::Point);
+    // ui->operateMethodComboBox->addItem(tr("Bind to"), (int)PayOperateMethod::BindPlotter);
     ui->operateMethodComboBox->addItem(tr("(chia) Bind farmer"), (int)PayOperateMethod::ChiaBindFarmerPk);
     ui->operateMethodComboBox->addItem(tr("(chia) Point to"), (int)PayOperateMethod::ChiaPoint);
     ui->operateMethodComboBox->addItem(tr("(chia) Point to (term1)"), (int)PayOperateMethod::ChiaPointT1);

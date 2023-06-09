@@ -562,7 +562,7 @@ bool CCoinsViewCache::HaveActiveBindPlotter(const CAccountID &accountID, const C
     CBindPlotterInfo lastBindInfo = GetLastBindPlotterInfo(bindData);
     bool res = lastBindInfo.valid && lastBindInfo.accountID == accountID;
     if (!res) {
-        LogPrintf("%s: warning - bind plotter(%s) account(%s) id(%s) can not be found\n", __func__,
+        LogPrint(BCLog::POC, "%s: warning - bind plotter(%s) account(%s) id(%s) can not be found\n", __func__,
                 CPlotterBindData::TypeToString(bindData.GetType()), EncodeDestination(ScriptHash(accountID)),
                 bindData.ToString());
         return false;
