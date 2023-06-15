@@ -4921,11 +4921,11 @@ static UniValue listbindplotters(const JSONRPCRequest& request)
         const CWalletTx& wtx = pairWtx.second;
         auto txBindPlotter = ExtractBindInfo(locked_chain, pwallet, wtx, DATACARRIER_TYPE_BINDPLOTTER, filter, lookingForAddr, fIncludeInvalid);
         if (txBindPlotter) {
-            mapTxBindPlotter.insert(std::pair<int64_t, TxBindPlotter>(wtx.nTimeReceived, *txBindPlotter));
+            mapTxBindPlotter.insert(std::pair<CPlotterBindData, TxBindPlotter>(wtx.nTimeReceived, *txBindPlotter));
         }
         auto txBindChiaFarmer = ExtractBindInfo(locked_chain, pwallet, wtx, DATACARRIER_TYPE_BINDCHIAFARMER, filter, lookingForAddr, fIncludeInvalid);
         if (txBindChiaFarmer) {
-            mapTxBindPlotter.insert(std::pair<int64_t, TxBindPlotter>(wtx.nTimeReceived, *txBindChiaFarmer));
+            mapTxBindPlotter.insert(std::pair<CPlotterBindData, TxBindPlotter>(wtx.nTimeReceived, *txBindChiaFarmer));
         }
     }
     if (nFrom >= (int)mapTxBindPlotter.size())
