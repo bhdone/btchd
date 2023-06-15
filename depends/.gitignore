@@ -2,5 +2,7 @@ SDKs/
 work/
 built/
 sources/
+x86_64-pc-linux-gnu/
+x86_64-linux-gnu/
+x86_64-w64-mingw32/
 config.site
-x86_64-*
