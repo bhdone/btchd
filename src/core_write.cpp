@@ -238,7 +238,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
     entry.pushKV("vout", vout);
 
     if (tx.IsUniform()) {
-        CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(tx, nHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_BINDCHIAFARMER, DATACARRIER_TYPE_POINT, DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_RETARGET});
+        CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(tx, nHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_BINDCHIAFARMER, DATACARRIER_TYPE_POINT, DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1, DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3, DATACARRIER_TYPE_CHIA_POINT_RETARGET});
         if (payload) {
             UniValue extra(UniValue::VOBJ);;
             DatacarrierPayloadToUniv(payload, tx.vout[0], extra);
@@ -257,13 +257,14 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
 void DatacarrierPayloadToUniv(const CDatacarrierPayloadRef& payload, const CTxOut& txOut, UniValue& out)
 {
     assert(payload != nullptr);
+    out.pushKV("subtype", DatacarrierTypeToString(payload->type));
     if (payload->type == DATACARRIER_TYPE_BINDPLOTTER || payload->type == DATACARRIER_TYPE_BINDCHIAFARMER) {
         out.pushKV("type", "bindplotter");
         out.pushKV("amount", ValueFromAmount(txOut.nValue));
         out.pushKV("address", EncodeDestination(ExtractDestination(txOut.scriptPubKey)));
         out.pushKV("id", BindPlotterPayload::As(payload)->GetId().ToString());
     } else if (payload->type == DATACARRIER_TYPE_POINT || DatacarrierTypeIsChiaPoint(payload->type)) {
-        out.pushKV("type", std::string("pledge") + DatacarrierTypeToString(payload->type));
+        out.pushKV("type", "pledge");
         out.pushKV("amount", ValueFromAmount(txOut.nValue));
         out.pushKV("from", EncodeDestination(ExtractDestination(txOut.scriptPubKey)));
         if (payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
