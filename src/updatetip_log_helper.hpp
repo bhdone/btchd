@@ -61,6 +61,7 @@ private:
         AddLogEntry(tinyformat::format("progress=%1.2f", GuessVerificationProgress(m_chainParams.TxData(), m_pindex)));
         auto const& params = m_chainParams.GetConsensus();
         AddLogEntry("work", GetBlockWork(*m_pindex, params).GetLow64());
+        AddLogEntry("type", m_pindex->nHeight >= params.BHDIP009Height ? "chia" : "burst");
         // For BHDIP009?
         if (m_pindex->nHeight >= params.BHDIP009Height) {
             int nBlockDuration = m_pindex->GetBlockTime() - m_pindex->pprev->GetBlockTime();
