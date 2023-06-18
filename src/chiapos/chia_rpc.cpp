@@ -221,6 +221,10 @@ static UniValue submitProof(JSONRPCRequest const& request) {
         LOCK(cs_main);
 
         CBlockIndex* pindexPrev = LookupBlockIndex(hashPrevBlock);
+        if (pindexPrev == nullptr) {
+            LogPrintf("%s: cannot find block by hash: %s, the proof will not be submitted\n", __func__, hashPrevBlock.GetHex());
+            return false;
+        }
         nDifficulty = AdjustDifficulty(GetChiaBlockDifficulty(pindexPrev, params), nTotalDuration,
                                        params.BHDIP008TargetSpacing, params.BHDIP009DifficultyChangeMaxFactor, params.BHDIP009StartDifficulty);
     }
