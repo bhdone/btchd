@@ -2451,7 +2451,12 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
     }
 
     // Check bind
-    if (pindex->nHeight >= chainparams.GetConsensus().BHDIP009Height) {
+    if (pindex->nHeight >= chainparams.GetConsensus().BHDIP009StartVerifyingVdfDurationHeight) {
+        // Check the vdf duration
+        if (block.chiaposFields.vdfProof.nVdfDuration + pindex->pprev->GetBlockTime() > block.GetBlockTime()) {
+            // invalid time
+            return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, error("ConnectBlock(): The vdf duration=%d is fake or the block is in the future, new height=%d, block.time=%ld, pindex.time=%ld", block.chiaposFields.vdfProof.nVdfDuration, pindex->nHeight + 1, block.GetBlockTime(), pindex->GetBlockTime()), REJECT_INVALID, "bad-cb-vdf-duration");
+        }
         // Check bind plotter status
         CChiaFarmerPk farmerPk = CChiaFarmerPk(pindex->chiaposFields.posProof.vchFarmerPk);
         CPlotterBindData bindData(farmerPk);

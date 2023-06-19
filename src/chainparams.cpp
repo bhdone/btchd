@@ -139,6 +139,7 @@ public:
 
         consensus.BHDIP009SkipTestChainChecks = false; // Do not check validation for blocks of burst consensus
         consensus.BHDIP009Height = 860130; // 2023/6/19 13:00 - 17:00
+        consensus.BHDIP009StartVerifyingVdfDurationHeight = consensus.BHDIP009Height + 3360;
         // The reward address should be filled
         consensus.BHDIP009FundAddresses = { "34QSZXwx354rXUZ7W3mJnwfCiomJpHQApp" };
         consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
@@ -424,6 +425,7 @@ public:
 
         consensus.BHDIP009SkipTestChainChecks = true; // Do not check on test-chain construction
         consensus.BHDIP009Height = 200000; // When reach the height the consensus will change to chiapos
+        consensus.BHDIP009StartVerifyingVdfDurationHeight = consensus.BHDIP009Height + 3360;
         consensus.BHDIP009FundAddresses = {"2N7mAbSHzAeCiY2WJzREPJYKTEJbKo7tYke"};
         consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
         consensus.BHDIP009StartBlockIters = AVERAGE_VDF_SPEED * consensus.BHDIP008TargetSpacing;
