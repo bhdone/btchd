@@ -34,6 +34,8 @@
 #include <versionbitsinfo.h>
 #include <warnings.h>
 
+#include <chiapos/kernel/utils.h>
+
 #ifdef ENABLE_WALLET
 // TODO try remove
 #include <wallet/rpcwallet.h>
@@ -1073,13 +1075,28 @@ static UniValue getactivebindplotter(const JSONRPCRequest& request)
             + HelpExampleRpc("getactivebindplotter", "\"12345678900000000000\"")
         );
 
+    if (!request.params[0].isStr()) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "The type of first argument is not a string");
+    }
+
+    CPlotterBindData idData;
+    std::string strArg = request.params[0].get_str();
     uint64_t nPlotterId = 0;
-    if (!request.params[0].isStr() || !IsValidPlotterID(request.params[0].get_str(), &nPlotterId))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID");
+    if (IsValidPlotterID(strArg, &nPlotterId)) {
+        // plotter id
+        idData = CPlotterBindData(nPlotterId);
+    } else {
+        // farmer pk
+        chiapos::Bytes vchFarmerPk = chiapos::BytesFromHex(strArg);
+        if (vchFarmerPk.size() != chiapos::PK_LEN) {
+            throw std::runtime_error("Invalid plotter ID/Farmer pk");
+        }
+        idData = CPlotterBindData(CChiaFarmerPk(vchFarmerPk));
+    }
 
     LOCK(cs_main);
 
-    const CBindPlotterInfo lastBindInfo = ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(CPlotterBindData(nPlotterId));
+    const CBindPlotterInfo lastBindInfo = ::ChainstateActive().CoinsTip().GetLastBindPlotterInfo(idData);
     if (!lastBindInfo.outpoint.IsNull() && lastBindInfo.valid) {
         const Coin &coin = ::ChainstateActive().CoinsTip().AccessCoin(lastBindInfo.outpoint);
         UniValue item(UniValue::VOBJ);
@@ -1093,7 +1110,13 @@ static UniValue getactivebindplotter(const JSONRPCRequest& request)
 
         // Last generate block
         for (const CBlockIndex& block : poc::GetEvalBlocks(::ChainActive().Height(), false, Params().GetConsensus())) {
-            if (block.nPlotterId == nPlotterId) {
+            bool match;
+            if (idData.GetType() == CPlotterBindData::Type::BURST) {
+                match = block.nPlotterId == idData.GetBurstPlotterId();
+            } else {
+                match = block.chiaposFields.posProof.vchFarmerPk == idData.GetChiaFarmerPk().ToBytes();
+            }
+            if (match) {
                 UniValue lastBlock(UniValue::VOBJ);
                 lastBlock.pushKV("blockhash", block.GetBlockHash().GetHex());
                 lastBlock.pushKV("blocktime", block.GetBlockTime());
