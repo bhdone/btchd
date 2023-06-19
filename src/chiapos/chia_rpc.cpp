@@ -243,10 +243,11 @@ static UniValue queryNetspace(JSONRPCRequest const& request) {
 
     LOCK(cs_main);
 
-    auto params = Params().GetConsensus();
-    CAmount nTotalSupplied = GetTotalSupplyBeforeBHDIP009(params);
-
     CBlockIndex* pindex = ::ChainActive().Tip();
+
+    auto params = Params().GetConsensus();
+    CAmount nTotalSupplied = GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1) + GetTotalSupplyBeforeHeight(pindex->nHeight, params);
+
     auto netspace = poc::CalculateAverageNetworkSpace(pindex, params);
 
     UniValue res(UniValue::VOBJ);
@@ -292,7 +293,7 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
 
     CAmount nReq = poc::GetMiningRequireBalance(accountID, bindData, nTargetHeight, view, nullptr, nullptr, nBurned, params, &nMinedCount, &nTotalCount, nHeightForCalculatingTotalSupply);
     CAmount nAccumulate = GetBlockAccumulateSubsidy(pindex, params);
-    CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params);
+    CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params) + GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
 
     UniValue res(UniValue::VOBJ);
     res.pushKV("address", address);
@@ -501,7 +502,7 @@ static UniValue querySupply(JSONRPCRequest const& request) {
     CCoinsViewCache const& view = ::ChainstateActive().CoinsTip();
 
     CAmount nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &params.BHDIP009PledgeTerms, nHeightForCalculatingTotalSupply);
-    CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params);
+    CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params) + GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
     CAmount nActualAmount = nTotalSupplied - nBurned;
 
     UniValue calcValue(UniValue::VOBJ);
@@ -512,7 +513,7 @@ static UniValue querySupply(JSONRPCRequest const& request) {
     calcValue.pushKV("actual_supplied", static_cast<double>(nActualAmount) / COIN);
 
     CAmount nLastBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &params.BHDIP009PledgeTerms, nLastHeight);
-    CAmount nLastTotalSupplied = GetTotalSupplyBeforeHeight(nLastHeight, params);
+    CAmount nLastTotalSupplied = GetTotalSupplyBeforeHeight(nLastHeight, params) + GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
     CAmount nLastActualAmount = nLastTotalSupplied - nLastBurned;
 
     UniValue lastValue(UniValue::VOBJ);
