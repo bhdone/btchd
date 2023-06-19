@@ -28,14 +28,14 @@ private:
     std::unique_ptr<FlatFileSeq> m_filter_fileseq;
 
     bool ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& filter) const;
-    size_t WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& filter);
+    size_t WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& filter, int nVersionMask);
 
 protected:
     bool Init() override;
 
     bool CommitInternal(CDBBatch& batch) override;
 
-    bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) override;
+    bool WriteBlock(const CBlock& block, const CBlockIndex* pindex, int nVersionMask) override;
 
     bool Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_tip) override;
 

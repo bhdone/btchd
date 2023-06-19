@@ -20,6 +20,7 @@ std::unique_ptr<TxIndex> g_txindex;
 struct CDiskTxPos : public FlatFilePos
 {
     unsigned int nTxOffset; // after header
+    unsigned int nVersionMask; // to identify the type of the block
 
     ADD_SERIALIZE_METHODS;
 
@@ -27,9 +28,10 @@ struct CDiskTxPos : public FlatFilePos
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITEAS(FlatFilePos, *this);
         READWRITE(VARINT(nTxOffset));
+        READWRITE(VARINT(nVersionMask));
     }
 
-    CDiskTxPos(const FlatFilePos &blockIn, unsigned int nTxOffsetIn) : FlatFilePos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
+    CDiskTxPos(const FlatFilePos &blockIn, unsigned int nTxOffsetIn, int nVersionMask) : FlatFilePos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn), nVersionMask(nVersionMask) {
     }
 
     CDiskTxPos() {
@@ -39,6 +41,7 @@ struct CDiskTxPos : public FlatFilePos
     void SetNull() {
         FlatFilePos::SetNull();
         nTxOffset = 0;
+        nVersionMask = 0;
     }
 };
 
@@ -244,12 +247,12 @@ bool TxIndex::Init()
     return BaseIndex::Init();
 }
 
-bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
+bool TxIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex, int nVersionMask)
 {
     // Exclude genesis block transaction because outputs are not spendable.
     if (pindex->nHeight == 0) return true;
 
-    CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()));
+    CDiskTxPos pos(pindex->GetBlockPos(), GetSizeOfCompactSize(block.vtx.size()), nVersionMask);
     std::vector<std::pair<uint256, CDiskTxPos>> vPos;
     vPos.reserve(block.vtx.size());
     for (const auto& tx : block.vtx) {
@@ -268,7 +271,7 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
         return false;
     }
 
-    CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION);
+    CAutoFile file(OpenBlockFile(postx, true), SER_DISK, CLIENT_VERSION | postx.nVersionMask);
     if (file.IsNull()) {
         return error("%s: OpenBlockFile failed", __func__);
     }
@@ -283,7 +286,7 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
         return error("%s: Deserialize or I/O error - %s", __func__, e.what());
     }
     if (tx->GetHash() != tx_hash) {
-        return error("%s: txid mismatch, hash=%s, block=%s", __func__, tx_hash.GetHex(), block_hash.GetHex());
+        return error("%s: txid mismatch, hash=%s", __func__, tx_hash.GetHex());
     }
     block_hash = header.GetHash();
     return true;

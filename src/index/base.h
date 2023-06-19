@@ -74,7 +74,7 @@ protected:
     virtual bool Init();
 
     /// Write update index entries for a newly connected block.
-    virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex) { return true; }
+    virtual bool WriteBlock(const CBlock& block, const CBlockIndex* pindex, int nVersionMask) { return true; }
 
     /// Virtual method called internally by Commit that can be overridden to atomically
     /// commit more index state.

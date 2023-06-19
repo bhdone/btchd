@@ -141,7 +141,7 @@ void BaseIndex::ThreadSync()
                            __func__, pindex->GetBlockHash().ToString());
                 return;
             }
-            if (!WriteBlock(block, pindex)) {
+            if (!WriteBlock(block, pindex, (pindex->nHeight >= Params().GetConsensus().BHDIP009Height ? SERIALIZE_BLOCK_CHIAPOS : 0))) {
                 FatalError("%s: Failed to write block %s to index database",
                            __func__, pindex->GetBlockHash().ToString());
                 return;
@@ -222,7 +222,8 @@ void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const
         }
     }
 
-    if (WriteBlock(*block, pindex)) {
+    auto const& params = Params().GetConsensus();
+    if (WriteBlock(*block, pindex, (pindex->nHeight >= Params().GetConsensus().BHDIP009Height ? SERIALIZE_BLOCK_CHIAPOS : 0))) {
         m_best_block_index = pindex;
     } else {
         FatalError("%s: Failed to write block %s to index",

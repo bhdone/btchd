@@ -166,17 +166,17 @@ bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& f
     return true;
 }
 
-size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& filter)
+size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& filter, int nVersionMask)
 {
     assert(filter.GetFilterType() == GetFilterType());
 
     size_t data_size =
-        GetSerializeSize(filter.GetBlockHash(), SER_DISK, CLIENT_VERSION) +
-        GetSerializeSize(filter.GetEncodedFilter(), SER_DISK, CLIENT_VERSION);
+        GetSerializeSize(filter.GetBlockHash(), SER_DISK, CLIENT_VERSION | nVersionMask) +
+        GetSerializeSize(filter.GetEncodedFilter(), SER_DISK, CLIENT_VERSION | nVersionMask);
 
     // If writing the filter would overflow the file, flush and move to the next one.
     if (pos.nPos + data_size > MAX_FLTR_FILE_SIZE) {
-        CAutoFile last_file(m_filter_fileseq->Open(pos), SER_DISK, CLIENT_VERSION);
+        CAutoFile last_file(m_filter_fileseq->Open(pos), SER_DISK, CLIENT_VERSION | nVersionMask);
         if (last_file.IsNull()) {
             LogPrintf("%s: Failed to open filter file %d\n", __func__, pos.nFile);
             return 0;
@@ -202,7 +202,7 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
         return 0;
     }
 
-    CAutoFile fileout(m_filter_fileseq->Open(pos), SER_DISK, CLIENT_VERSION);
+    CAutoFile fileout(m_filter_fileseq->Open(pos), SER_DISK, CLIENT_VERSION | nVersionMask);
     if (fileout.IsNull()) {
         LogPrintf("%s: Failed to open filter file %d\n", __func__, pos.nFile);
         return 0;
@@ -212,7 +212,7 @@ size_t BlockFilterIndex::WriteFilterToDisk(FlatFilePos& pos, const BlockFilter& 
     return data_size;
 }
 
-bool BlockFilterIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
+bool BlockFilterIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex, int nVersionMask)
 {
     CBlockUndo block_undo;
     uint256 prev_header;
@@ -238,7 +238,7 @@ bool BlockFilterIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex
 
     BlockFilter filter(m_filter_type, block, block_undo);
 
-    size_t bytes_written = WriteFilterToDisk(m_next_filter_pos, filter);
+    size_t bytes_written = WriteFilterToDisk(m_next_filter_pos, filter, nVersionMask);
     if (bytes_written == 0) return false;
 
     std::pair<uint256, DBVal> value;
