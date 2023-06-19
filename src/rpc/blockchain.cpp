@@ -225,6 +225,8 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
         result.pushKV("chia_difficulty", blockindex->chiaposFields.nDifficulty);
         result.pushKV("chia_blockWork", chiapos::GetChiaBlockDifficulty(blockindex, params));
         result.pushKV("chia_farmerSignature", chiapos::BytesToHex(blockindex->chiaposFields.vchFarmerSignature));
+        auto netspace = chiapos::MakeNumberTiB(poc::CalculateAverageNetworkSpace(blockindex, params));
+        result.pushKV("chia_netspace_tb", netspace.GetLow64());
     }
 
     if (blockindex->pprev)

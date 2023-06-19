@@ -800,8 +800,8 @@ static inline int64_t GetCompatibleNetCapacity(int nMiningHeight, const Consensu
     }
 }
 
-arith_uint256 CalculateAverageNetworkSpace(CBlockIndex *pindexCurr, Consensus::Params const& params) {
-    CBlockIndex *pindex = pindexCurr;
+arith_uint256 CalculateAverageNetworkSpace(CBlockIndex const* pindexCurr, Consensus::Params const& params) {
+    CBlockIndex const* pindex = pindexCurr;
     int nCount = params.BHDIP009DifficultyEvalWindow;
     int nActual{0};
     arith_uint256 result;

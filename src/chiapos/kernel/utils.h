@@ -119,6 +119,11 @@ T MakeNumberTB(T const& value) {
     return value / 1000 / 1000 / 1000 / 1000;
 }
 
+template <typename T>
+T MakeNumberTiB(T const& value) {
+    return value >> 40;
+}
+
 std::string MakeNumberStr(uint64_t value);
 
 using HostEntry = std::pair<std::string, uint16_t>;
