@@ -283,7 +283,7 @@ bool TxIndex::FindTx(const uint256& tx_hash, uint256& block_hash, CTransactionRe
         return error("%s: Deserialize or I/O error - %s", __func__, e.what());
     }
     if (tx->GetHash() != tx_hash) {
-        return error("%s: txid mismatch", __func__);
+        return error("%s: txid mismatch, hash=%s, block=%s", __func__, tx_hash.GetHex(), block_hash.GetHex());
     }
     block_hash = header.GetHash();
     return true;
