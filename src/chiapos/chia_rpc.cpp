@@ -92,7 +92,8 @@ static UniValue queryChallenge(JSONRPCRequest const& request) {
     res.pushKV("prev_block_height", pindexPrev->nHeight);
     res.pushKV("target_height", nTargetHeight);
     res.pushKV("target_duration", params.BHDIP008TargetSpacing);
-    res.pushKV("filter_bits", nTargetHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter);
+    res.pushKV("filter_bits",
+               nTargetHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter);
     res.pushKV("base_iters", params.BHDIP009BaseIters);
     return res;
 }
@@ -109,8 +110,8 @@ CVdfProof ParseVdfProof(UniValue const& val) {
 }
 
 void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTxDestination const& rewardDest,
-                       uint256 const& initialChallenge, chiapos::Bytes const& vchFarmerSk,
-                       CPosProof const& posProof, CVdfProof const& vdfProof, uint64_t nDifficulty) {
+                       uint256 const& initialChallenge, chiapos::Bytes const& vchFarmerSk, CPosProof const& posProof,
+                       CVdfProof const& vdfProof, uint64_t nDifficulty) {
     CKey farmerSk(MakeArray<SK_LEN>(vchFarmerSk));
     auto params = Params();
     std::shared_ptr<CBlock> pblock;
@@ -222,16 +223,18 @@ static UniValue submitProof(JSONRPCRequest const& request) {
 
         CBlockIndex* pindexPrev = LookupBlockIndex(hashPrevBlock);
         if (pindexPrev == nullptr) {
-            LogPrintf("%s: cannot find block by hash: %s, the proof will not be submitted\n", __func__, hashPrevBlock.GetHex());
+            LogPrintf("%s: cannot find block by hash: %s, the proof will not be submitted\n", __func__,
+                      hashPrevBlock.GetHex());
             return false;
         }
         nDifficulty = AdjustDifficulty(GetChiaBlockDifficulty(pindexPrev, params), nTotalDuration,
-                                       params.BHDIP008TargetSpacing, params.BHDIP009DifficultyChangeMaxFactor, params.BHDIP009StartDifficulty);
+                                       params.BHDIP008TargetSpacing, params.BHDIP009DifficultyChangeMaxFactor,
+                                       params.BHDIP009StartDifficulty);
     }
 
     // We should put it to the chain immediately
-    GenerateChiaBlock(hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge, vchFarmerSk,
-                      posProof, vdfProof, nDifficulty);
+    GenerateChiaBlock(hashPrevBlock, nHeightOfPrevBlock, rewardDest, initialChallenge, vchFarmerSk, posProof, vdfProof,
+                      nDifficulty);
 
     return true;
 }
@@ -246,31 +249,38 @@ static UniValue queryNetspace(JSONRPCRequest const& request) {
     CBlockIndex* pindex = ::ChainActive().Tip();
 
     auto params = Params().GetConsensus();
-    CAmount nTotalSupplied = GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1) + GetTotalSupplyBeforeHeight(pindex->nHeight, params);
+    CAmount nTotalSupplied = GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1) +
+                             GetTotalSupplyBeforeHeight(pindex->nHeight, params);
 
-    auto netspace = poc::CalculateAverageNetworkSpace(pindex, params);
+    auto netspace_avg = poc::CalculateAverageNetworkSpace(pindex, params);
+
+    int nBitsOfFilter = pindex->nHeight >= params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? params.BHDIP009PlotIdBitsOfFilter : 0;
+    auto netspace = chiapos::CalculateNetworkSpace(chiapos::GetChiaBlockDifficulty(pindex, params),
+                                                   pindex->chiaposFields.GetTotalIters(),
+                                                   params.BHDIP009DifficultyConstantFactorBits, nBitsOfFilter);
 
     UniValue res(UniValue::VOBJ);
     res.pushKV("supplied", nTotalSupplied);
     res.pushKV("supplied(BHD1)", MakeNumberStr(nTotalSupplied / COIN));
     res.pushKV("netspace", netspace.GetLow64());
-    res.pushKV("netspace_tib", MakeNumberTiB(netspace).GetLow64());
     res.pushKV("netspace(Bytes)", chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())));
+    res.pushKV("netspace_tib", MakeNumberTiB(netspace).GetLow64());
+    res.pushKV("netspace_avg", netspace_avg.GetLow64());
+    res.pushKV("netspace_avg(Bytes)", chiapos::FormatNumberStr(std::to_string(netspace_avg.GetLow64())));
+    res.pushKV("netspace_avg_tib", MakeNumberTiB(netspace_avg).GetLow64());
 
     return res;
 }
 
 static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
-    RPCHelpMan(
-        "queryminerpledgeinfo",
-        "Query the pledge requirement for the miner",
-        {
-            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The miner address"},
-            {"farmer-pk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The farmer public-key"},
-        },
-        RPCResult("\"{json}\" the requirement for the miner"),
-        RPCExamples(HelpExampleCli("queryminerpledgeinfo", "xxxxxx xxxxxx"))
-    ).Check(request);
+    RPCHelpMan("queryminerpledgeinfo", "Query the pledge requirement for the miner",
+               {
+                       {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The miner address"},
+                       {"farmer-pk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The farmer public-key"},
+               },
+               RPCResult("\"{json}\" the requirement for the miner"),
+               RPCExamples(HelpExampleCli("queryminerpledgeinfo", "xxxxxx xxxxxx")))
+            .Check(request);
 
     LOCK(cs_main);
     CBlockIndex* pindex = ::ChainActive().Tip();
@@ -290,11 +300,14 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
     int nHeightForCalculatingTotalSupply = GetHeightForCalculatingTotalSupply(nTargetHeight, params);
 
     CCoinsViewCache const& view = ::ChainstateActive().CoinsTip();
-    CAmount nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &params.BHDIP009PledgeTerms, nHeightForCalculatingTotalSupply);
+    CAmount nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr,
+                                             &params.BHDIP009PledgeTerms, nHeightForCalculatingTotalSupply);
 
-    CAmount nReq = poc::GetMiningRequireBalance(accountID, bindData, nTargetHeight, view, nullptr, nullptr, nBurned, params, &nMinedCount, &nTotalCount, nHeightForCalculatingTotalSupply);
+    CAmount nReq = poc::GetMiningRequireBalance(accountID, bindData, nTargetHeight, view, nullptr, nullptr, nBurned,
+                                                params, &nMinedCount, &nTotalCount, nHeightForCalculatingTotalSupply);
     CAmount nAccumulate = GetBlockAccumulateSubsidy(pindex, params);
-    CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params) + GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
+    CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params) +
+                             GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
 
     UniValue res(UniValue::VOBJ);
     res.pushKV("address", address);
@@ -312,15 +325,12 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
 }
 
 static UniValue queryChainVdfInfo(JSONRPCRequest const& request) {
-    RPCHelpMan(
-        "querychainvdfinfo",
-        "Query vdf speed and etc from current block chain",
-        {
-            { "height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The summary information will be calculated from this height" }
-        },
-        RPCResult("\"{json}\" the basic information of the vdf from block chain"),
-        RPCExamples(HelpExampleCli("querychainvdfinfo", "200000"))
-    ).Check(request);
+    RPCHelpMan("querychainvdfinfo", "Query vdf speed and etc from current block chain",
+               {{"height", RPCArg::Type::NUM, RPCArg::Optional::NO,
+                 "The summary information will be calculated from this height"}},
+               RPCResult("\"{json}\" the basic information of the vdf from block chain"),
+               RPCExamples(HelpExampleCli("querychainvdfinfo", "200000")))
+            .Check(request);
 
     LOCK(cs_main);
     auto pindex = ::ChainActive().Tip();
@@ -384,11 +394,10 @@ static UniValue generateBurstBlocks(JSONRPCRequest const& request) {
 
 static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
     RPCHelpMan("queryupdatetiphistory", "Query update tip logs",
-            {
-                {"count", RPCArg::Type::NUM, RPCArg::Optional::NO, "how many logs want to be generated"}
-            },
-            RPCResult{"\"succ\" (result) The update tips history"},
-            RPCExamples{HelpExampleCli("queryupdatetiphistory", "")}).Check(request);
+               {{"count", RPCArg::Type::NUM, RPCArg::Optional::NO, "how many logs want to be generated"}},
+               RPCResult{"\"succ\" (result) The update tips history"},
+               RPCExamples{HelpExampleCli("queryupdatetiphistory", "")})
+            .Check(request);
 
     int nCount = atoi(request.params[0].get_str());
     auto params = Params().GetConsensus();
@@ -422,17 +431,16 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
                         // save to entry
                         txVal.push_back(minerVal);
                     } else {
-                        auto payload = ExtractTransactionDatacarrier(*tx, pindex->nHeight,
-                                {DATACARRIER_TYPE_BINDPLOTTER,
-                                 DATACARRIER_TYPE_BINDCHIAFARMER,
-                                 DATACARRIER_TYPE_CHIA_POINT,
-                                 DATACARRIER_TYPE_CHIA_POINT_TERM_1,
-                                 DATACARRIER_TYPE_CHIA_POINT_TERM_2,
-                                 DATACARRIER_TYPE_CHIA_POINT_TERM_3,
+                        auto payload = ExtractTransactionDatacarrier(
+                                *tx, pindex->nHeight,
+                                {DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_BINDCHIAFARMER,
+                                 DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1,
+                                 DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3,
                                  DATACARRIER_TYPE_CHIA_POINT_RETARGET});
                         if (payload) {
                             UniValue payloadVal(UniValue::VOBJ);
-                            if (payload->type == DATACARRIER_TYPE_BINDPLOTTER || payload->type == DATACARRIER_TYPE_BINDCHIAFARMER) {
+                            if (payload->type == DATACARRIER_TYPE_BINDPLOTTER ||
+                                payload->type == DATACARRIER_TYPE_BINDCHIAFARMER) {
                                 auto p = BindPlotterPayload::As(payload);
                                 CAccountID accountID = ExtractAccountID(tx->vout[0].scriptPubKey);
                                 std::string strAddress = EncodeDestination(static_cast<ScriptHash>(accountID));
@@ -451,12 +459,16 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
                                 payloadVal.pushKV("action", "point");
                                 payloadVal.pushKV("type", DatacarrierTypeToString(payload->type));
                                 payloadVal.pushKV("amount", static_cast<double>(tx->vout[0].nValue) / COIN);
-                                payloadVal.pushKV("address", EncodeDestination(CTxDestination(static_cast<ScriptHash>(p->GetReceiverID()))));
+                                payloadVal.pushKV(
+                                        "address",
+                                        EncodeDestination(CTxDestination(static_cast<ScriptHash>(p->GetReceiverID()))));
                             } else if (payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
                                 auto p = PointRetargetPayload::As(payload);
                                 payloadVal.pushKV("action", "retarget");
                                 payloadVal.pushKV("amount", static_cast<double>(tx->vout[0].nValue) / COIN);
-                                payloadVal.pushKV("address", EncodeDestination(CTxDestination(static_cast<ScriptHash>(p->GetReceiverID()))));
+                                payloadVal.pushKV(
+                                        "address",
+                                        EncodeDestination(CTxDestination(static_cast<ScriptHash>(p->GetReceiverID()))));
                                 payloadVal.pushKV("type", DatacarrierTypeToString(p->GetPointType()));
                                 payloadVal.pushKV("height", p->GetPointHeight());
                             }
@@ -479,11 +491,10 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
 
 static UniValue querySupply(JSONRPCRequest const& request) {
     RPCHelpMan("querysupply", "Query distributed amount, burned amount from the height",
-            {
-                {"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The height to calculate the amounts"}
-            },
-            RPCResult{"\"succ\" (result) The result of the amounts"},
-            RPCExamples{HelpExampleCli("querysupply", "200000")}).Check(request);
+               {{"height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The height to calculate the amounts"}},
+               RPCResult{"\"succ\" (result) The result of the amounts"},
+               RPCExamples{HelpExampleCli("querysupply", "200000")})
+            .Check(request);
 
     LOCK(cs_main);
 
@@ -502,8 +513,10 @@ static UniValue querySupply(JSONRPCRequest const& request) {
     int nHeightForCalculatingTotalSupply = GetHeightForCalculatingTotalSupply(nRequestedHeight, params);
     CCoinsViewCache const& view = ::ChainstateActive().CoinsTip();
 
-    CAmount nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &params.BHDIP009PledgeTerms, nHeightForCalculatingTotalSupply);
-    CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params) + GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
+    CAmount nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr,
+                                             &params.BHDIP009PledgeTerms, nHeightForCalculatingTotalSupply);
+    CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params) +
+                             GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
     CAmount nActualAmount = nTotalSupplied - nBurned;
 
     UniValue calcValue(UniValue::VOBJ);
@@ -513,8 +526,10 @@ static UniValue querySupply(JSONRPCRequest const& request) {
     calcValue.pushKV("burned", static_cast<double>(nBurned) / COIN);
     calcValue.pushKV("actual_supplied", static_cast<double>(nActualAmount) / COIN);
 
-    CAmount nLastBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &params.BHDIP009PledgeTerms, nLastHeight);
-    CAmount nLastTotalSupplied = GetTotalSupplyBeforeHeight(nLastHeight, params) + GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
+    CAmount nLastBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr,
+                                                 &params.BHDIP009PledgeTerms, nLastHeight);
+    CAmount nLastTotalSupplied = GetTotalSupplyBeforeHeight(nLastHeight, params) +
+                                 GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
     CAmount nLastActualAmount = nLastTotalSupplied - nLastBurned;
 
     UniValue lastValue(UniValue::VOBJ);
@@ -557,7 +572,11 @@ static CRPCCommand const commands[] = {
         {"chia", "querynetspace", &queryNetspace, {}},
         {"chia", "querychainvdfinfo", &queryChainVdfInfo, {"height"}},
         {"chia", "queryminingrequirement", &queryMiningRequirement, {"address", "farmer-pk"}},
-        {"chia", "submitproof", &submitProof, {"challenge", "quality_string", "pos_proof", "k", "pool_pk", "local_pk", "farmer_pk", "farmer_sk", "plot_id", "vdf_proof_vec", "reward_dest"}},
+        {"chia",
+         "submitproof",
+         &submitProof,
+         {"challenge", "quality_string", "pos_proof", "k", "pool_pk", "local_pk", "farmer_pk", "farmer_sk", "plot_id",
+          "vdf_proof_vec", "reward_dest"}},
         {"chia", "generateburstblocks", &generateBurstBlocks, {"count"}},
         {"chia", "queryupdatetiphistory", &queryUpdateTipHistory, {"count"}},
         {"chia", "querysupply", &querySupply, {"height"}},
