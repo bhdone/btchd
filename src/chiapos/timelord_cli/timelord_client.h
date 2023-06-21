@@ -19,7 +19,7 @@ using error_code = boost::system::error_code;
 
 class UniValue;
 
-class FrontEndClient {
+class FrontEndClient : public std::enable_shared_from_this<FrontEndClient> {
 public:
     enum class ErrorType { CONN, READ, WRITE };
     enum class Status { READY, CONNECTING, CONNECTED, CLOSED };
@@ -63,13 +63,13 @@ struct ProofDetail {
 
 using ProofReceiver = std::function<void(uint256 const& challenge, ProofDetail const& detail)>;
 
-class TimelordClient {
+class TimelordClient : public std::enable_shared_from_this<TimelordClient> {
 public:
     using ConnectionHandler = std::function<void()>;
     using ErrorHandler = std::function<void(FrontEndClient::ErrorType type, std::string const& errs)>;
     using MessageHandler = std::function<void(UniValue const& msg)>;
 
-    explicit TimelordClient(asio::io_context& ioc);
+    static std::shared_ptr<TimelordClient> CreateTimelordClient(asio::io_context& ioc);
 
     void SetConnectionHandler(ConnectionHandler conn_handler);
 
@@ -85,18 +85,14 @@ public:
     void Exit();
 
 private:
+    explicit TimelordClient(asio::io_context& ioc);
+
     void DoWriteNextPing();
 
     void DoWaitPong();
 
-    void HandleMessage_Pong(UniValue const& msg);
-
-    void HandleMessage_Proof(UniValue const& msg);
-
-    void HandleMessage_CalcReply(UniValue const& msg);
-
     asio::io_context& ioc_;
-    FrontEndClient client_;
+    std::shared_ptr<FrontEndClient> pclient_;
     std::map<int, MessageHandler> msg_handlers_;
     std::shared_ptr<asio::steady_timer> ptimer_sender_;
     asio::steady_timer timer_pingpong_;

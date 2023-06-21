@@ -326,7 +326,7 @@ int Miner::Run() {
 
 TimelordClientPtr Miner::PrepareTimelordClient(std::string const& hostname, unsigned short port) {
     PLOGI << "Establishing connection to timelord " << hostname << ":" << port;
-    auto ptimelord_client = std::make_shared<TimelordClient>(m_ioc);
+    auto ptimelord_client = TimelordClient::CreateTimelordClient(m_ioc);
     auto pweak_timelord = std::weak_ptr<TimelordClient>(ptimelord_client);
     ptimelord_client->SetConnectionHandler([this, pweak_timelord]() {
         PLOGI << "Connected to timelord";
