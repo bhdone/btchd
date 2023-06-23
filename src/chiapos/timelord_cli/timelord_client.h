@@ -30,6 +30,8 @@ public:
 
     explicit FrontEndClient(asio::io_context& ioc);
 
+    ~FrontEndClient();
+
     void Connect(std::string const& host, unsigned short port, ConnectionHandler conn_handler,
                  MessageHandler msg_handler, ErrorHandler err_handler);
 
@@ -70,6 +72,8 @@ public:
     using MessageHandler = std::function<void(UniValue const& msg)>;
 
     static std::shared_ptr<TimelordClient> CreateTimelordClient(asio::io_context& ioc);
+
+    ~TimelordClient();
 
     void SetConnectionHandler(ConnectionHandler conn_handler);
 

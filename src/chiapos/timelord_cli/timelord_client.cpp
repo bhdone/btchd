@@ -14,7 +14,18 @@
 static int const SECONDS_TO_PING = 60;
 static int const WAIT_PONG_TIMEOUT_SECONDS = 10;
 
-FrontEndClient::FrontEndClient(asio::io_context& ioc) : ioc_(ioc), s_(ioc) {}
+std::string PointToHex(void const* p) {
+    uint64_t val = reinterpret_cast<uint64_t>(p);
+    std::vector<uint8_t> v(sizeof(val));
+    memcpy(v.data(), &val, sizeof(val));
+    return std::string("0x") + chiapos::BytesToHex(v);
+}
+
+FrontEndClient::FrontEndClient(asio::io_context& ioc) : ioc_(ioc), s_(ioc) {
+    PLOGD << tinyformat::format("%s: %s", __func__, PointToHex(this));
+}
+
+FrontEndClient::~FrontEndClient() { PLOGD << tinyformat::format("%s: %s", __func__, PointToHex(this)); }
 
 void FrontEndClient::Connect(std::string const& host, unsigned short port, ConnectionHandler conn_handler,
                              MessageHandler msg_handler, ErrorHandler err_handler) {
@@ -73,15 +84,16 @@ bool FrontEndClient::SendMessage(UniValue const& msg) {
 }
 
 void FrontEndClient::Exit() {
+    PLOGD << tinyformat::format("%s: FrontEndClient(%s)", __func__, PointToHex(this));
+
     if (st_ == Status::CLOSED || st_ == Status::READY) {
         return;
     }
     st_ = Status::CLOSED;
-    asio::post(ioc_, [self = shared_from_this()]() {
-        error_code ignored_ec;
-        self->s_.shutdown(tcp::socket::shutdown_both, ignored_ec);
-        self->s_.close(ignored_ec);
-    });
+
+    error_code ignored_ec;
+    s_.shutdown(tcp::socket::shutdown_both, ignored_ec);
+    s_.close(ignored_ec);
 }
 
 void FrontEndClient::DoReadNext() {
@@ -89,8 +101,8 @@ void FrontEndClient::DoReadNext() {
         if (ec) {
             if (ec != asio::error::operation_aborted && ec != asio::error::eof) {
                 PLOGE << tinyformat::format("read error, %s", ec.message());
-                self->err_handler_(FrontEndClient::ErrorType::READ, ec.message());
             }
+            self->err_handler_(FrontEndClient::ErrorType::READ, ec.message());
             return;
         }
         std::string result = static_cast<char const*>(self->read_buf_.data().data());
@@ -183,7 +195,10 @@ std::shared_ptr<TimelordClient> TimelordClient::CreateTimelordClient(asio::io_co
 
 TimelordClient::TimelordClient(asio::io_context& ioc) : ioc_(ioc), timer_pingpong_(ioc) {
     pclient_ = std::make_shared<FrontEndClient>(ioc);
+    PLOGD << tinyformat::format("%s: %s", __func__, PointToHex(this));
 }
+
+TimelordClient::~TimelordClient() { PLOGD << tinyformat::format("%s: %s", __func__, PointToHex(this)); }
 
 void TimelordClient::SetConnectionHandler(ConnectionHandler conn_handler) { conn_handler_ = std::move(conn_handler); }
 
@@ -221,13 +236,22 @@ void TimelordClient::Calc(uint256 const& challenge, uint64_t iters, uint256 cons
 }
 
 void TimelordClient::Connect(std::string const& host, unsigned short port) {
+    auto weak_self = std::weak_ptr<TimelordClient>(shared_from_this());
     pclient_->Connect(
             host, port,
-            [self = shared_from_this()]() {
+            [weak_self]() {
+                auto self = weak_self.lock();
+                if (self == nullptr) {
+                    return;
+                }
                 self->conn_handler_();
                 self->DoWriteNextPing();
             },
-            [self = shared_from_this()](UniValue const& msg) {
+            [weak_self](UniValue const& msg) {
+                auto self = weak_self.lock();
+                if (self == nullptr) {
+                    return;
+                }
                 auto msg_id = msg["id"].get_int();
                 PLOGD << tinyformat::format("(timelord): msgid=%s",
                                             TimelordMsgIdToString(static_cast<TimelordMsgs>(msg_id)));
@@ -236,16 +260,20 @@ void TimelordClient::Connect(std::string const& host, unsigned short port) {
                     it->second(msg);
                 }
             },
-            [self = shared_from_this()](FrontEndClient::ErrorType type, std::string const& errs) {
+            [weak_self](FrontEndClient::ErrorType type, std::string const& errs) {
+                auto self = weak_self.lock();
+                if (self == nullptr) {
+                    return;
+                }
                 self->err_handler_(type, errs);
             });
 }
 
 void TimelordClient::Exit() {
-    asio::post(ioc_, [self = shared_from_this()]() {
-        error_code ignored_ec;
-        self->timer_pingpong_.cancel(ignored_ec);
-    });
+    PLOGD << tinyformat::format("%s: TimelordClient(%s)", __func__, PointToHex(this));
+
+    error_code ignored_ec;
+    timer_pingpong_.cancel(ignored_ec);
     pclient_->Exit();
 }
 
