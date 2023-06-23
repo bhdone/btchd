@@ -248,7 +248,7 @@ private:
         }
         char const* psz = reinterpret_cast<char const*>(received_data.data());
         UniValue res;
-        res.read(psz);
+        res.read(psz, received_data.size());
 
         // Build result and return
         PLOG_DEBUG << "received: `" << res.write() << "`";
