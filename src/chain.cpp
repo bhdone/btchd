@@ -196,7 +196,10 @@ arith_uint256 GetBlockWork(const CBlockHeader& header, const Consensus::Params& 
 {
     AssertLockHeld(cs_main);
     const CBlockIndex *pindex = LookupBlockIndex(header.GetHash());
-    if (pindex && pindex->nHeight < params.BHDIP009Height) {
+    if (pindex == nullptr) {
+        return 0;
+    }
+    if (pindex->nHeight < params.BHDIP009Height) {
         //! Same nDifficulty select biggest hash
         if (header.nBaseTarget == 0) {
             LogPrintf("%s(CBlockHeader): header.nBaseTarget is zero, nHeight=%d\n", __func__, pindex->nHeight);
