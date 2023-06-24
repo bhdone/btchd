@@ -665,17 +665,25 @@ size_t CCoinsViewDB::EstimateSize() const
     return db.EstimateSize(DB_COIN, (char)(DB_COIN+1));
 }
 
-CAmount CCoinsViewDB::GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const
+CAmount CCoinsViewDB::GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight, bool includeBurst) const
 {
     if (balanceBindPlotter != nullptr) {
-        *balanceBindPlotter = GetBalanceBind(CPlotterBindData::Type::BURST, accountID, mapChildCoins);
+        if (includeBurst) {
+            *balanceBindPlotter = GetBalanceBind(CPlotterBindData::Type::BURST, accountID, mapChildCoins);
+        } else {
+            *balanceBindPlotter = 0;
+        }
         *balanceBindPlotter += GetBalanceBind(CPlotterBindData::Type::CHIA, accountID, mapChildCoins);
 
         assert(*balanceBindPlotter >= 0);
     }
 
     if (balancePointSend != nullptr) {
-        *balancePointSend = GetBalancePointSend(DATACARRIER_TYPE_POINT, accountID, mapChildCoins);
+        if (includeBurst) {
+            *balancePointSend = GetBalancePointSend(DATACARRIER_TYPE_POINT, accountID, mapChildCoins);
+        } else {
+            *balancePointSend = 0;
+        }
         if (terms) {
             *balancePointSend += GetBalancePointSend(DATACARRIER_TYPE_CHIA_POINT, accountID, mapChildCoins);
             *balancePointSend += GetBalancePointSend(DATACARRIER_TYPE_CHIA_POINT_TERM_1, accountID, mapChildCoins);
@@ -686,7 +694,11 @@ CAmount CCoinsViewDB::GetBalance(const CAccountID &accountID, const CCoinsMap &m
     }
 
     if (balancePointReceive != nullptr) {
-        *balancePointReceive = GetBalancePointReceive(DATACARRIER_TYPE_POINT, accountID, mapChildCoins, nullptr, 0);
+        if (includeBurst) {
+            *balancePointReceive = GetBalancePointReceive(DATACARRIER_TYPE_POINT, accountID, mapChildCoins, nullptr, 0);
+        } else {
+            *balancePointReceive = 0;
+        }
         if (terms) {
             *balancePointReceive += GetBalancePointReceive(DATACARRIER_TYPE_CHIA_POINT, accountID, mapChildCoins, terms, nHeight);
             *balancePointReceive += GetBalancePointReceive(DATACARRIER_TYPE_CHIA_POINT_TERM_1, accountID, mapChildCoins, terms, nHeight);

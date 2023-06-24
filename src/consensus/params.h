@@ -109,6 +109,7 @@ struct Params {
     bool BHDIP009SkipTestChainChecks; // flag set to True only when building a test chain (skip the check procedure for burst blocks)
     int BHDIP009Height;
     int BHDIP009StartVerifyingVdfDurationHeight;
+    int BHDIP009OldPledgesDisableOnHeight;
     std::vector<std::string> BHDIP009FundAddresses;
     int BHDIP009FundRoyaltyForLowMortgage;
     uint64_t BHDIP009StartDifficulty;

@@ -1467,9 +1467,11 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
     if (accountID.IsNull()) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address, must from BitcoinHD1 wallet (P2SH address)");
     }
+    const Consensus::Params &params = Params().GetConsensus();
+    int nChainHeight = ::ChainActive().Height();
 
     CAmount balance = 0, balanceBindPlotter = 0, balancePointSend = 0, balancePointReceive = 0;
-    balance = ::ChainstateActive().CoinsTip().GetAccountBalance(accountID, &balanceBindPlotter, &balancePointSend, &balancePointReceive);
+    balance = ::ChainstateActive().CoinsTip().GetAccountBalance(nChainHeight < params.BHDIP009OldPledgesDisableOnHeight, accountID, &balanceBindPlotter, &balancePointSend, &balancePointReceive);
 
     UniValue result(UniValue::VOBJ);
     //! This balance belong to your
@@ -1485,8 +1487,7 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
     //! This balance include point sent and avaliable balance. For mining require balance
     result.pushKV("availableMiningBalance", ValueFromAmount(balance - balancePointSend + balancePointReceive));
 
-    const Consensus::Params &params = Params().GetConsensus();
-    const CAmount miningRatio = poc::GetMiningRatio(::ChainActive().Height() + 1, params);
+    const CAmount miningRatio = poc::GetMiningRatio(nChainHeight + 1, params);
 
     typedef struct {
         int minedCount;
@@ -1495,7 +1496,6 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
     std::map<CPlotterBindData, PlotterItem> mapBindPlotter; // Plotter ID => PlotterItem
 
     int nBlockCount = 0, nMinedBlockCount = 0;
-    int nChainHeight = ::ChainActive().Height();
     int64_t nNetCapacityTB = 0, nCapacityTB = 0;
     if (::ChainActive().Height() + 1 < params.BHDIP006BindPlotterActiveHeight) {
         nNetCapacityTB = poc::GetNetCapacity(::ChainActive().Height(), params,
@@ -1569,7 +1569,7 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
                 item.pushKV("capacity", ValueFromCapacity(nCapacityTB));
                 item.pushKV("pledge", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, miningRatio)));
             } else {
-                CAmount nBurned = ::ChainstateActive().CoinsTip().GetAccountBalance(GetBurnToAccountID());
+                CAmount nBurned = ::ChainstateActive().CoinsTip().GetAccountBalance(nChainHeight < params.BHDIP009OldPledgesDisableOnHeight, GetBurnToAccountID());
                 auto nReqBalance = poc::GetMiningRequireBalance(accountID, it->first, nChainHeight + 1, ::ChainstateActive().CoinsTip(), &nCapacityTB, nullptr, nBurned, params);
                 item.pushKV("burned", nBurned);
                 item.pushKV("pledge", nReqBalance);
@@ -1981,7 +1981,9 @@ static UniValue getbalanceofheight(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address, BitcoinHD1 address of P2SH");
     }
 
-    return ValueFromAmount(::ChainstateActive().CoinsTip().GetAccountBalance(accountID));
+    int nChainHeight = ::ChainActive().Height();
+    auto const& params = Params().GetConsensus();
+    return ValueFromAmount(::ChainstateActive().CoinsTip().GetAccountBalance(nChainHeight < params.BHDIP009OldPledgesDisableOnHeight, accountID));
 }
 
 // clang-format off

@@ -300,7 +300,7 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
     int nHeightForCalculatingTotalSupply = GetHeightForCalculatingTotalSupply(nTargetHeight, params);
 
     CCoinsViewCache const& view = ::ChainstateActive().CoinsTip();
-    CAmount nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr,
+    CAmount nBurned = view.GetAccountBalance(false, GetBurnToAccountID(), nullptr, nullptr, nullptr,
                                              &params.BHDIP009PledgeTerms, nHeightForCalculatingTotalSupply);
 
     CAmount nReq = poc::GetMiningRequireBalance(accountID, bindData, nTargetHeight, view, nullptr, nullptr, nBurned,
@@ -513,7 +513,7 @@ static UniValue querySupply(JSONRPCRequest const& request) {
     int nHeightForCalculatingTotalSupply = GetHeightForCalculatingTotalSupply(nRequestedHeight, params);
     CCoinsViewCache const& view = ::ChainstateActive().CoinsTip();
 
-    CAmount nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr,
+    CAmount nBurned = view.GetAccountBalance(false, GetBurnToAccountID(), nullptr, nullptr, nullptr,
                                              &params.BHDIP009PledgeTerms, nHeightForCalculatingTotalSupply);
     CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params) +
                              GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
@@ -526,7 +526,7 @@ static UniValue querySupply(JSONRPCRequest const& request) {
     calcValue.pushKV("burned", static_cast<double>(nBurned) / COIN);
     calcValue.pushKV("actual_supplied", static_cast<double>(nActualAmount) / COIN);
 
-    CAmount nLastBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr,
+    CAmount nLastBurned = view.GetAccountBalance(false, GetBurnToAccountID(), nullptr, nullptr, nullptr,
                                                  &params.BHDIP009PledgeTerms, nLastHeight);
     CAmount nLastTotalSupplied = GetTotalSupplyBeforeHeight(nLastHeight, params) +
                                  GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);

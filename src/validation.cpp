@@ -1305,7 +1305,7 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
         //
         CAmount miningRequireBalanceAtOldConsensus;
         CAmount miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, &miningRequireBalanceAtOldConsensus, 0, consensusParams);
-        CAmount accountBalance = view.GetAccountBalance(generatorAccountID);
+        CAmount accountBalance = view.GetAccountBalance(true, generatorAccountID);
         if (accountBalance >= miningRequireBalance) {
             // Full mortgage
             reward.fund = (nSubsidy * consensusParams.BHDIP001FundRoyaltyForFullMortgage) / 1000;
@@ -1323,7 +1323,7 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
     {
         // BHDIP006
         CAmount balancePointSent = 0, balancePointReceived = 0;
-        CAmount accountBalance = view.GetAccountBalance(generatorAccountID, nullptr, &balancePointSent, &balancePointReceived);
+        CAmount accountBalance = view.GetAccountBalance(true, generatorAccountID, nullptr, &balancePointSent, &balancePointReceived);
         CAmount miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, nullptr, 0, consensusParams);
         if (accountBalance - balancePointSent + balancePointReceived >= miningRequireBalance) {
             // Full mortgage
@@ -1342,16 +1342,16 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
 
         CAmount accountBalance;
         if (nHeight >= consensusParams.BHDIP009Height) {
-            accountBalance = view.GetAccountBalance(generatorAccountID, nullptr, &balancePointSent, &balancePointReceived, &consensusParams.BHDIP009PledgeTerms, nHeight);
+            accountBalance = view.GetAccountBalance(nHeight < consensusParams.BHDIP009OldPledgesDisableOnHeight, generatorAccountID, nullptr, &balancePointSent, &balancePointReceived, &consensusParams.BHDIP009PledgeTerms, nHeight);
         } else {
-            accountBalance = view.GetAccountBalance(generatorAccountID, nullptr, &balancePointSent, &balancePointReceived);
+            accountBalance = view.GetAccountBalance(true, generatorAccountID, nullptr, &balancePointSent, &balancePointReceived);
         }
         // Inherit BHDIP008
         CAmount nBurned{0};
         CAmount miningRequireBalance;
         if (nHeight >= consensusParams.BHDIP009Height) {
             int nHeightForCalculatingTotalSupply = GetHeightForCalculatingTotalSupply(nHeight, consensusParams);
-            nBurned = view.GetAccountBalance(GetBurnToAccountID(), nullptr, nullptr, nullptr, &consensusParams.BHDIP009PledgeTerms, nHeightForCalculatingTotalSupply);
+            nBurned = view.GetAccountBalance(false, GetBurnToAccountID(), nullptr, nullptr, nullptr, &consensusParams.BHDIP009PledgeTerms, nHeightForCalculatingTotalSupply);
             miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, nullptr, nBurned, consensusParams, nullptr, nullptr, nHeightForCalculatingTotalSupply); // Netspace fixed
         } else {
             miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, nullptr, nBurned, consensusParams); // Netspace fixed

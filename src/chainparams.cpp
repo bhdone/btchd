@@ -137,9 +137,11 @@ public:
         assert(consensus.BHDIP008FundRoyaltyForLowMortgage < consensus.BHDIP001FundRoyaltyForLowMortgage);
         assert(consensus.BHDIP008FundRoyaltyForLowMortgage > consensus.BHDIP001FundRoyaltyForFullMortgage);
 
+        int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009SkipTestChainChecks = false; // Do not check validation for blocks of burst consensus
         consensus.BHDIP009Height = 860130; // 2023/6/19 13:00 - 17:00
-        consensus.BHDIP009StartVerifyingVdfDurationHeight = consensus.BHDIP009Height + 3360;
+        consensus.BHDIP009StartVerifyingVdfDurationHeight = consensus.BHDIP009Height + nHeightsOfADay * 7;
+        consensus.BHDIP009OldPledgesDisableOnHeight = consensus.BHDIP009Height + nHeightsOfADay * 14;; // TODO change to two weeks after hard-fork
         // The reward address should be filled
         consensus.BHDIP009FundAddresses = { "34QSZXwx354rXUZ7W3mJnwfCiomJpHQApp" };
         consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
@@ -153,7 +155,6 @@ public:
         consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
         consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(chiapos::MIN_K) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
 
-        int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 5, 8};
         consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 365, 20};
         consensus.BHDIP009PledgeTerms[2] = {nHeightsOfADay * 365 * 2, 50};
@@ -423,9 +424,11 @@ public:
         assert(consensus.BHDIP008FundRoyaltyForLowMortgage < consensus.BHDIP001FundRoyaltyForLowMortgage);
         assert(consensus.BHDIP008FundRoyaltyForLowMortgage > consensus.BHDIP001FundRoyaltyForFullMortgage);
 
+        int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009SkipTestChainChecks = true; // Do not check on test-chain construction
         consensus.BHDIP009Height = 200000; // When reach the height the consensus will change to chiapos
-        consensus.BHDIP009StartVerifyingVdfDurationHeight = consensus.BHDIP009Height + 3360;
+        consensus.BHDIP009StartVerifyingVdfDurationHeight = consensus.BHDIP009Height + nHeightsOfADay * 7;
+        consensus.BHDIP009OldPledgesDisableOnHeight = consensus.BHDIP009Height + nHeightsOfADay * 14; // TODO change to two weeks after hard-fork
         consensus.BHDIP009FundAddresses = {"2N7mAbSHzAeCiY2WJzREPJYKTEJbKo7tYke"};
         consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
         consensus.BHDIP009StartBlockIters = AVERAGE_VDF_SPEED * consensus.BHDIP008TargetSpacing;
@@ -437,7 +440,6 @@ public:
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
         consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
         consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(32) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
-        int nHeightsOfADay = SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 1, 8};
         consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 2, 20};
         consensus.BHDIP009PledgeTerms[2] = {nHeightsOfADay * 3, 50};

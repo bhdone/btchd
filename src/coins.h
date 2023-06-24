@@ -326,7 +326,7 @@ public:
     virtual size_t EstimateSize() const { return 0; }
 
     //! Get balance. Return amount of account
-    virtual CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const;
+    virtual CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight, bool includeBurst) const;
 
     //! Get account bind plotter all coin entries. if plotterId is 0 then return all coin entries for account.
     virtual CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const CPlotterBindData &bindData = {}) const;
@@ -355,7 +355,7 @@ public:
     CCoinsViewCursorRef PointSendCursor(const CAccountID &accountID, PointType pt) const override;
     CCoinsViewCursorRef PointReceiveCursor(const CAccountID &accountID, PointType pt) const override;
     size_t EstimateSize() const override;
-    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const override;
+    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight, bool includeBurst) const override;
     CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const CPlotterBindData &bindData = {}) const override;
     CBindPlotterCoinsMap GetBindPlotterEntries(const CPlotterBindData &bindData) const override;
 };
@@ -401,7 +401,7 @@ public:
     CCoinsViewCursorRef PointReceiveCursor(const CAccountID &accountID, PointType pt) const override {
         throw std::logic_error("CCoinsViewCache cursor iteration not supported.");
     }
-    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const override;
+    CAmount GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight, bool includeBurst) const override;
 
     CBindPlotterCoinsMap GetAccountBindPlotterEntries(const CAccountID &accountID, const CPlotterBindData &bindData = {}) const override;
     CBindPlotterCoinsMap GetBindPlotterEntries(const CPlotterBindData &bindData) const override;
@@ -471,7 +471,7 @@ public:
     bool HaveInputs(const CTransaction& tx) const;
 
     /** Scan UTXO for the account. Return total balance. */
-    CAmount GetAccountBalance(const CAccountID &accountID, CAmount *balanceBindPlotter = nullptr, CAmount *balancePointSend = nullptr, CAmount *balancePointReceive = nullptr, PledgeTerms const* terms = nullptr, int nHeight = 0) const;
+    CAmount GetAccountBalance(bool includeBurst, const CAccountID &accountID, CAmount *balanceBindPlotter = nullptr, CAmount *balancePointSend = nullptr, CAmount *balancePointReceive = nullptr, PledgeTerms const* terms = nullptr, int nHeight = 0) const;
 
     /** Return a reference to lastest bind plotter information, or a pruned one if not found. */
     CBindPlotterInfo GetChangeBindPlotterInfo(const CBindPlotterInfo &sourceBindInfo, bool compatible = false) const;

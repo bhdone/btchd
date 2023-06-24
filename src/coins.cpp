@@ -24,7 +24,7 @@ CCoinsViewCursorRef CCoinsView::Cursor() const { return nullptr; }
 CCoinsViewCursorRef CCoinsView::Cursor(const CAccountID &accountID) const { return nullptr; }
 CCoinsViewCursorRef CCoinsView::PointSendCursor(const CAccountID &accountID, PointType pt) const { return nullptr; }
 CCoinsViewCursorRef CCoinsView::PointReceiveCursor(const CAccountID &accountID, PointType pt) const { return nullptr; }
-CAmount CCoinsView::GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const {
+CAmount CCoinsView::GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight, bool includeBurst) const {
     if (balanceBindPlotter != nullptr) *balanceBindPlotter = 0;
     if (balancePointSend != nullptr) *balancePointSend = 0;
     if (balancePointReceive != nullptr) *balancePointReceive = 0;
@@ -49,8 +49,8 @@ CCoinsViewCursorRef CCoinsViewBacked::Cursor(const CAccountID &accountID) const 
 CCoinsViewCursorRef CCoinsViewBacked::PointSendCursor(const CAccountID &accountID, PointType pt) const { return base->PointSendCursor(accountID, pt); }
 CCoinsViewCursorRef CCoinsViewBacked::PointReceiveCursor(const CAccountID &accountID, PointType pt) const { return base->PointReceiveCursor(accountID, pt); }
 size_t CCoinsViewBacked::EstimateSize() const { return base->EstimateSize(); }
-CAmount CCoinsViewBacked::GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const {
-    return base->GetBalance(accountID, mapChildCoins, balanceBindPlotter, balancePointSend, balancePointReceive, terms, nHeight);
+CAmount CCoinsViewBacked::GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight, bool includeBurst) const {
+    return base->GetBalance(accountID, mapChildCoins, balanceBindPlotter, balancePointSend, balancePointReceive, terms, nHeight, includeBurst);
 }
 CBindPlotterCoinsMap CCoinsViewBacked::GetAccountBindPlotterEntries(const CAccountID &accountID, const CPlotterBindData &bindData) const {
     return base->GetAccountBindPlotterEntries(accountID, bindData);
@@ -322,11 +322,11 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
     return true;
 }
 
-CAmount CCoinsViewCache::GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const {
+CAmount CCoinsViewCache::GetBalance(const CAccountID &accountID, const CCoinsMap &mapChildCoins, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight, bool includeBurst) const {
     if (cacheCoins.empty()) {
-        return base->GetBalance(accountID, mapChildCoins, balanceBindPlotter, balancePointSend, balancePointReceive, terms, nHeight);
+        return base->GetBalance(accountID, mapChildCoins, balanceBindPlotter, balancePointSend, balancePointReceive, terms, nHeight, includeBurst);
     } else if (mapChildCoins.empty()) {
-        return base->GetBalance(accountID, cacheCoins, balanceBindPlotter, balancePointSend, balancePointReceive, terms, nHeight);
+        return base->GetBalance(accountID, cacheCoins, balanceBindPlotter, balancePointSend, balancePointReceive, terms, nHeight, includeBurst);
     } else {
         CCoinsMap mapCoinsMerged;
         // Copy mine relative coins
@@ -343,7 +343,7 @@ CAmount CCoinsViewCache::GetBalance(const CAccountID &accountID, const CCoinsMap
         }
         if (mapCoinsMerged.empty()) {
             // Cannot find any coin that's related to the account(accountID)
-            return base->GetBalance(accountID, mapChildCoins, balanceBindPlotter, balancePointSend, balancePointReceive, terms, nHeight);
+            return base->GetBalance(accountID, mapChildCoins, balanceBindPlotter, balancePointSend, balancePointReceive, terms, nHeight, includeBurst);
         } else {
             // Merge child and mine coins
             // See CCoinsViewCache::BatchWrite()
@@ -395,7 +395,7 @@ CAmount CCoinsViewCache::GetBalance(const CAccountID &accountID, const CCoinsMap
                     }
                 }
             }
-            return base->GetBalance(accountID, mapCoinsMerged, balanceBindPlotter, balancePointSend, balancePointReceive, terms, nHeight);
+            return base->GetBalance(accountID, mapCoinsMerged, balanceBindPlotter, balancePointSend, balancePointReceive, terms, nHeight, includeBurst);
         }
     }
 }
@@ -487,9 +487,9 @@ CBindPlotterCoinsMap CCoinsViewCache::GetBindPlotterEntries(const CPlotterBindDa
     return outpoints;
 }
 
-CAmount CCoinsViewCache::GetAccountBalance(const CAccountID &accountID, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const {
+CAmount CCoinsViewCache::GetAccountBalance(bool includeBurst, const CAccountID &accountID, CAmount *balanceBindPlotter, CAmount *balancePointSend, CAmount *balancePointReceive, PledgeTerms const* terms, int nHeight) const {
     // Merge to parent
-    return base->GetBalance(accountID, cacheCoins, balanceBindPlotter, balancePointSend, balancePointReceive, terms, nHeight);
+    return base->GetBalance(accountID, cacheCoins, balanceBindPlotter, balancePointSend, balancePointReceive, terms, nHeight, includeBurst);
 }
 
 CBindPlotterInfo CCoinsViewCache::GetChangeBindPlotterInfo(const CBindPlotterInfo &sourceBindInfo, bool compatible) const {

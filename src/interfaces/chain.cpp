@@ -417,7 +417,7 @@ public:
     {
         LOCK(::cs_main);
         AccountBanalces balances;
-        balances.balance = ::ChainstateActive().CoinsTip().GetAccountBalance(accountID, &balances.frozen_balance,
+        balances.balance = ::ChainstateActive().CoinsTip().GetAccountBalance(true, accountID, &balances.frozen_balance,
                 &balances.point_sent_balance, &balances.point_received_balance);
         balances.frozen_balance += balances.point_sent_balance; // include point sent and bind plotter frozen
         return balances;
