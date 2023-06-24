@@ -273,7 +273,7 @@ static UniValue queryNetspace(JSONRPCRequest const& request) {
 }
 
 static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
-    RPCHelpMan("queryminerpledgeinfo", "Query the pledge requirement for the miner",
+    RPCHelpMan("queryminingrequirement", "Query the pledge requirement for the miner",
                {
                        {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The miner address"},
                        {"farmer-pk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The farmer public-key"},
