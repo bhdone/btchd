@@ -830,7 +830,7 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
     int nSpendHeight = GetSpendHeight(view);
     if (nSpendHeight != nMiningHeight) {
         LogPrintf("%s: nSpendHeight(%d) != nMiningHeight(%d)\n", __func__, nSpendHeight, nMiningHeight);
-        throw std::runtime_error("the height of spend and mining mismatch");
+        throw std::runtime_error(tinyformat::format("the height of spend and mining mismatch, nMiningHeight=%ld, nSpendHeight=%ld", nMiningHeight, nSpendHeight));
     }
 
     if (pMinerCapacity != nullptr) *pMinerCapacity = 0;
