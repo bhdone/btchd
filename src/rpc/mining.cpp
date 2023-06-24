@@ -1492,9 +1492,10 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
         int minedCount;
         const CBlockIndex *pindexLast;
     } PlotterItem;
-    std::map<uint64_t, PlotterItem> mapBindPlotter; // Plotter ID => PlotterItem
+    std::map<CPlotterBindData, PlotterItem> mapBindPlotter; // Plotter ID => PlotterItem
 
     int nBlockCount = 0, nMinedBlockCount = 0;
+    int nChainHeight = ::ChainActive().Height();
     int64_t nNetCapacityTB = 0, nCapacityTB = 0;
     if (::ChainActive().Height() + 1 < params.BHDIP006BindPlotterActiveHeight) {
         nNetCapacityTB = poc::GetNetCapacity(::ChainActive().Height(), params,
@@ -1502,8 +1503,7 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
                 nBlockCount++;
                 if (block.generatorAccountID == accountID) {
                     nMinedBlockCount++;
-
-                    PlotterItem &item = mapBindPlotter[block.nPlotterId];
+                    PlotterItem &item = mapBindPlotter[CPlotterBindData(block.nPlotterId)];
                     item.minedCount++;
                     item.pindexLast = &block;
                 }
@@ -1513,18 +1513,33 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
             nCapacityTB = std::max((int64_t) ((nNetCapacityTB * nMinedBlockCount) / nBlockCount), (int64_t) 1);
     } else {
         std::set<CPlotterBindData> plotters = ::ChainstateActive().CoinsTip().GetAccountBindPlotters(accountID, CPlotterBindData::Type::BURST);
+        auto plottersChia = ::ChainstateActive().CoinsTip().GetAccountBindPlotters(accountID, CPlotterBindData::Type::CHIA);
+        for (auto i = std::cbegin(plottersChia); i != std::cend(plottersChia); ++i) {
+            plotters.insert(*i);
+        }
         if (!plotters.empty()) {
-            for (const CPlotterBindData &bindData : plotters) {
-                mapBindPlotter[bindData.GetBurstPlotterId()] = PlotterItem{0, nullptr};
-            }
-            nNetCapacityTB = poc::GetNetCapacity(::ChainActive().Height(), params,
-                [&nBlockCount, &nMinedBlockCount, &plotters, &mapBindPlotter](const CBlockIndex &block) {
+            nNetCapacityTB = poc::GetNetCapacity(nChainHeight, params,
+                [&params, &nBlockCount, &nMinedBlockCount, &plotters, &mapBindPlotter](const CBlockIndex &block) {
                     nBlockCount++;
-                    if (plotters.count(CPlotterBindData(block.nPlotterId))) {
+                    bool fMatch, fChia;
+                    if (block.nHeight >= params.BHDIP009Height) {
+                        fMatch = plotters.count(CPlotterBindData(CChiaFarmerPk(block.chiaposFields.posProof.vchFarmerPk))) > 0;
+                        fChia = true;
+                    } else {
+                        fMatch = plotters.count(CPlotterBindData(block.nPlotterId)) > 0;
+                        fChia = false;
+                    }
+                    if (fMatch) {
                         nMinedBlockCount++;
-                        PlotterItem &item = mapBindPlotter[block.nPlotterId];
-                        item.minedCount++;
-                        item.pindexLast = &block;
+                        if (fChia) {
+                            auto& item = mapBindPlotter[CPlotterBindData(CChiaFarmerPk(block.chiaposFields.posProof.vchFarmerPk))];
+                            item.minedCount++;
+                            item.pindexLast = &block;
+                        } else {
+                            PlotterItem &item = mapBindPlotter[CPlotterBindData(block.nPlotterId)];
+                            item.minedCount++;
+                            item.pindexLast = &block;
+                        }
                     }
                 }
             );
@@ -1535,6 +1550,7 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
         }
     }
 
+    // poc::GetMiningRequireBalance(const CAccountID &generatorAccountID, const CPlotterBindData &bindData, int nMiningHeight, const CCoinsViewCache &view, int64_t *pMinerCapacityTB, CAmount *pOldMiningRequireBalance, CAmount nBurned, const Consensus::Params &params)
     result.pushKV("capacity", ValueFromCapacity(nCapacityTB));
     result.pushKV("miningRequireBalance", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, miningRatio)));
     result.pushKV("height", ::ChainActive().Height());
@@ -1542,13 +1558,22 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
 
     // Bind plotter
     if (fVerbose) {
-        UniValue objBindPlotters(UniValue::VOBJ);
+        UniValue objBindData(UniValue::VOBJ);
         for (auto it = mapBindPlotter.cbegin(); it != mapBindPlotter.cend(); it++) {
             nCapacityTB = nBlockCount > 0 ? (int64_t) ((nNetCapacityTB * it->second.minedCount) / nBlockCount) : 0;
 
             UniValue item(UniValue::VOBJ);
-            item.pushKV("capacity", ValueFromCapacity(nCapacityTB));
-            item.pushKV("pledge", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, miningRatio)));
+            item.pushKV("minedCount", it->second.minedCount);
+            item.pushKV("blockCount", nBlockCount);
+            if (nChainHeight + 1 < params.BHDIP009Height) {
+                item.pushKV("capacity", ValueFromCapacity(nCapacityTB));
+                item.pushKV("pledge", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, miningRatio)));
+            } else {
+                CAmount nBurned = ::ChainstateActive().CoinsTip().GetAccountBalance(GetBurnToAccountID());
+                auto nReqBalance = poc::GetMiningRequireBalance(accountID, it->first, nChainHeight + 1, ::ChainstateActive().CoinsTip(), &nCapacityTB, nullptr, nBurned, params);
+                item.pushKV("burned", nBurned);
+                item.pushKV("pledge", nReqBalance);
+            }
             if (it->second.pindexLast != nullptr) {
                 UniValue lastBlock(UniValue::VOBJ);
                 lastBlock.pushKV("blockhash", it->second.pindexLast->GetBlockHash().GetHex());
@@ -1556,9 +1581,9 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
                 item.pushKV("lastBlock", lastBlock);
             }
 
-            objBindPlotters.pushKV(std::to_string(it->first), item);
+            objBindData.pushKV(it->first.ToString(), item);
         }
-        result.pushKV("plotters", objBindPlotters);
+        result.pushKV("bindData", objBindData);
     }
 
     return result;
@@ -1655,8 +1680,12 @@ static UniValue getpledgeofaddress(const JSONRPCRequest& request)
 
     uint64_t plotterId = 0;
     if (!request.params[1].isNull()) {
-        if (!request.params[1].isStr() || (!request.params[1].get_str().empty() && !IsValidPlotterID(request.params[1].get_str(), &plotterId)))
-            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID");
+        plotterId = atoi(request.params[1].get_str());
+        if (plotterId != 0) {
+            if (!request.params[1].isStr() || (!request.params[1].get_str().empty() && !IsValidPlotterID(request.params[1].get_str(), &plotterId))) {
+                throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID");
+            }
+        }
     }
 
     bool fVerbose = false;
