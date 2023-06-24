@@ -124,8 +124,14 @@ std::vector<RPCClient::BindRecord> RPCClient::ListBindTxs(std::string const& add
         rec.tx_id = chiapos::BytesFromHex(entry["txid"].get_str());
         rec.address = entry["address"].get_str();
         rec.farmer_pk = entry["plotterId"].get_str();
-        rec.block_hash = chiapos::BytesFromHex(entry["blockhash"].get_str());
-        rec.block_height = entry["blockheight"].get_int();
+        if (entry.exists("blockhash")) {
+            rec.block_hash = chiapos::BytesFromHex(entry["blockhash"].get_str());
+        }
+        if (entry.exists("blockheight")) {
+            rec.block_height = entry["blockheight"].get_int();
+        } else {
+            rec.block_height = 0;
+        }
         rec.active = entry["active"].get_bool();
         rec.valid = entry["valid"].getBool();
         records.push_back(std::move(rec));
