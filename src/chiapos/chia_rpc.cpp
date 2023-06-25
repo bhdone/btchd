@@ -162,6 +162,27 @@ void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTx
             LogPrintf("%s: the chain is reset to previous block in order to release a new block\n", __func__);
         }
 
+        // Check bind
+        const CAccountID accountID = ExtractAccountID(rewardDest);
+        if (accountID.IsNull()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD1 address");
+        }
+        bool fFundAccount { false };
+        for (auto const& fundAddr : params.GetConsensus().BHDIP009FundAddresses) {
+            auto fundAccountID = ExtractAccountID(DecodeDestination(fundAddr));
+            if (fundAccountID == accountID) {
+                fFundAccount = true;
+                break;
+            }
+        }
+        if (!fFundAccount) {
+            auto vchFarmerPk = MakeBytes(farmerSk.GetPubKey());
+            if (!::ChainstateActive().CoinsTip().HaveActiveBindPlotter(accountID, CPlotterBindData(CChiaFarmerPk(vchFarmerPk)))) {
+                throw JSONRPCError(RPC_INVALID_REQUEST,
+                    strprintf("%s with %s not active bind", BytesToHex(vchFarmerPk), EncodeDestination(rewardDest)));
+            }
+        }
+
         // Trying to release a new block
         PubKeyOrHash poolPkOrHash =
                 MakePubKeyOrHash(static_cast<PlotPubKeyType>(posProof.nPlotType), posProof.vchPoolPkOrHash);
