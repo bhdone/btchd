@@ -82,7 +82,7 @@ private:
             AddLogEntry("k", m_pindex->chiaposFields.posProof.nPlotK);
             AddLogEntry("farmer-pk", chiapos::BytesToHex(m_pindex->chiaposFields.posProof.vchFarmerPk));
             // netspace
-            auto netspace = chiapos::CalculateNetworkSpace(chiapos::GetChiaBlockDifficulty(m_pindex, params), m_pindex->chiaposFields.GetTotalIters(), params.BHDIP009DifficultyConstantFactorBits, m_pindex->nHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter);
+            auto netspace = chiapos::CalculateNetworkSpace(chiapos::GetDifficultyForNextIterations(m_pindex->pprev, params), m_pindex->chiaposFields.GetTotalIters(), params.BHDIP009DifficultyConstantFactorBits);
             AddLogEntry("netspace", netspace.GetLow64());
         }
     }

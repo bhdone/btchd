@@ -276,19 +276,18 @@ static UniValue queryNetspace(JSONRPCRequest const& request) {
     auto netspace_avg = poc::CalculateAverageNetworkSpace(pindex, params);
 
     int nBitsOfFilter = pindex->nHeight >= params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? params.BHDIP009PlotIdBitsOfFilter : 0;
-    auto netspace = chiapos::CalculateNetworkSpace(chiapos::GetChiaBlockDifficulty(pindex, params),
+    auto netspace = chiapos::CalculateNetworkSpace(GetDifficultyForNextIterations(pindex->pprev, params),
                                                    pindex->chiaposFields.GetTotalIters(),
-                                                   params.BHDIP009DifficultyConstantFactorBits, nBitsOfFilter);
+                                                   params.BHDIP009DifficultyConstantFactorBits);
 
     UniValue res(UniValue::VOBJ);
     res.pushKV("supplied", nTotalSupplied);
+    res.pushKV("supplied(Human)", chiapos::FormatNumberStr(std::to_string(nTotalSupplied)));
     res.pushKV("supplied(BHD1)", MakeNumberStr(nTotalSupplied / COIN));
-    res.pushKV("netspace", netspace.GetLow64());
-    res.pushKV("netspace(Bytes)", chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())));
     res.pushKV("netspace_tib", MakeNumberTiB(netspace).GetLow64());
-    res.pushKV("netspace_avg", netspace_avg.GetLow64());
-    res.pushKV("netspace_avg(Bytes)", chiapos::FormatNumberStr(std::to_string(netspace_avg.GetLow64())));
+    res.pushKV("netspace_tib(Human)", chiapos::FormatNumberStr(std::to_string(MakeNumberTiB(netspace).GetLow64())));
     res.pushKV("netspace_avg_tib", MakeNumberTiB(netspace_avg).GetLow64());
+    res.pushKV("netspace_avg_tib(Human)", chiapos::FormatNumberStr(std::to_string(MakeNumberTiB(netspace_avg).GetLow64())));
 
     return res;
 }

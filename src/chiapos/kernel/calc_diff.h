@@ -39,12 +39,13 @@ uint64_t AdjustDifficulty(uint64_t prev_block_difficulty, uint64_t curr_block_du
 
 uint256 GenerateMixedQualityString(CPosProof const& posProof);
 
+double CalculateQuality(uint256 const& mixed_quality_string);
+
 uint64_t CalculateIterationsQuality(uint256 const& mixed_quality_string, uint64_t difficulty, int bits_filter,
                                     int difficulty_constant_factor_bits, uint8_t k, uint64_t base_iters,
                                     double* quality_in_plot = nullptr, arith_uint256* quality = nullptr);
 
-arith_uint256 CalculateNetworkSpace(uint64_t difficulty, uint64_t iters, int difficulty_constant_factor_bits,
-                                    int bits_filter);
+arith_uint256 CalculateNetworkSpace(uint64_t difficulty, uint64_t iters, int difficulty_constant_factor_bits);
 
 }  // namespace chiapos
 

@@ -800,15 +800,15 @@ static inline int64_t GetCompatibleNetCapacity(int nMiningHeight, const Consensu
     }
 }
 
-arith_uint256 CalculateAverageNetworkSpace(CBlockIndex const* pindexCurr, Consensus::Params const& params) {
+arith_uint256 CalculateAverageNetworkSpace(CBlockIndex const* pindexCurr, Consensus::Params const& params, int nCountBlocks) {
     CBlockIndex const* pindex = pindexCurr;
-    int nCount = params.BHDIP009DifficultyEvalWindow;
+    int nCount = nCountBlocks > 0 ? nCountBlocks : params.BHDIP009DifficultyEvalWindow;
     int nActual{0};
     arith_uint256 result;
     while (nCount > 0 && pindex->nHeight >= params.BHDIP009Height) {
         int nBitsOfFilter = pindex->nHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter;
-        auto netspace = chiapos::CalculateNetworkSpace(chiapos::GetChiaBlockDifficulty(pindex, params),
-                pindex->chiaposFields.GetTotalIters(), params.BHDIP009DifficultyConstantFactorBits, nBitsOfFilter);
+        auto netspace = chiapos::CalculateNetworkSpace(chiapos::GetDifficultyForNextIterations(pindex->pprev, params),
+                pindex->chiaposFields.GetTotalIters(), params.BHDIP009DifficultyConstantFactorBits);
         LogPrint(BCLog::POC, "%s: calculated netspace %s on height %ld\n", __func__, chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())), pindex->nHeight);
         ++nActual;
         result += netspace;
