@@ -116,7 +116,7 @@ bool CPlotterBindData::operator==(uint64_t rhs) const {
         return false;
     }
     if (GetType() != Type::BURST) {
-        throw std::runtime_error("compare plotter-id with an invalid type");
+        return false;
     }
     return boost::get<uint64_t>(m_data) == rhs;
 }
@@ -126,7 +126,7 @@ bool CPlotterBindData::operator==(CChiaFarmerPk const& rhs) const {
         return false;
     }
     if (GetType() != Type::CHIA) {
-        throw std::runtime_error("compare plotter-id with an invalid type");
+        return false;
     }
     return boost::get<CChiaFarmerPk>(m_data) == rhs;
 }
@@ -160,7 +160,7 @@ bool CPlotterBindData::operator<(CChiaFarmerPk const& rhs) const {
 
 bool CPlotterBindData::operator<(CPlotterBindData const& rhs) const {
     if (GetType() != rhs.GetType()) {
-        throw std::runtime_error("compare two plotter-id with different type");
+        return GetType() < rhs.GetType();
     }
     if (GetType() == Type::BURST) {
         return *this < rhs.GetBurstPlotterId();
