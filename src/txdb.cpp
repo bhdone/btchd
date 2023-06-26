@@ -711,16 +711,15 @@ CAmount CCoinsViewDB::GetBalance(const CAccountID &accountID, const CCoinsMap &m
     return GetCoinBalance(accountID, mapChildCoins, nHeight);
 }
 
-CBindPlotterCoinsMap CCoinsViewDB::GetAccountBindPlotterEntries(const CAccountID &accountID, const CPlotterBindData &bindData) const {
+CBindPlotterCoinsMap ReadAccountBindPlotterEntriesFromDB(CDBWrapper& db, CAccountID const& accountID, CPlotterBindData::Type type, CPlotterBindData const& bindData) {
     CBindPlotterCoinsMap outpoints;
-
     std::unique_ptr<CDBIterator> pcursor(db.NewIterator());
     COutPoint tempOutpoint(uint256(), 0);
     CAccountID tempAccountID = accountID;
     CPlotterBindData tempPlotterId;
+    bool tempValid = false;
     uint32_t tempHeight = 0;
-    bool tempValid = 0;
-    BindPlotterEntry entry(&tempOutpoint, &tempAccountID, GetBindKeyFromPlotterIdType(bindData.GetType()));
+    BindPlotterEntry entry(&tempOutpoint, &tempAccountID, GetBindKeyFromPlotterIdType(type));
     BindPlotterValue value(&tempPlotterId, &tempHeight, &tempValid);
     pcursor->Seek(entry);
     while (pcursor->Valid()) {
@@ -746,8 +745,21 @@ CBindPlotterCoinsMap CCoinsViewDB::GetAccountBindPlotterEntries(const CAccountID
         }
         pcursor->Next();
     }
-
     return outpoints;
+}
+
+CBindPlotterCoinsMap CCoinsViewDB::GetAccountBindPlotterEntries(const CAccountID &accountID, const CPlotterBindData &bindData) const {
+    if (bindData.GetType() != CPlotterBindData::Type::UNKNOWN) {
+        return ReadAccountBindPlotterEntriesFromDB(db, accountID, bindData.GetType(), bindData);
+    } else {
+        // entries of both types are all required
+        CBindPlotterCoinsMap outpoints;
+        auto entriesOfBurst = ReadAccountBindPlotterEntriesFromDB(db, accountID, CPlotterBindData::Type::BURST, bindData);
+        auto entriesOfChia = ReadAccountBindPlotterEntriesFromDB(db, accountID, CPlotterBindData::Type::CHIA, bindData);
+        std::copy(std::begin(entriesOfBurst), std::end(entriesOfBurst), std::inserter(outpoints, std::end(outpoints)));
+        std::copy(std::begin(entriesOfChia), std::end(entriesOfChia), std::inserter(outpoints, std::end(outpoints)));
+        return outpoints;
+    }
 }
 
 CBindPlotterCoinsMap CCoinsViewDB::GetBindPlotterEntries(const CPlotterBindData &bindData) const {

@@ -1139,7 +1139,7 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
             "\nReturns up to binded plotter of address.\n"
             "\nArguments:\n"
             "1. address             (string, required) The BitcoinHD1 address\n"
-            "2. plotterId           (string, optional) The filter plotter ID. If 0 or not set then output all binded plotter ID\n"
+            "2. plotterId(farmerPk) (string, optional) The filter plotter ID. If 0 or not set then output all binded plotter ID\n"
             "3. count               (numeric, optional) The result of count binded to list. If not set then output all binded plotter ID\n"
             "4. verbose             (bool, optional, default=false) If true, return bindheightlimit, unbindheightlimit and active\n"
             "\nResult:\n"
@@ -1169,11 +1169,27 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
     const CAccountID accountID = ExtractAccountID(DecodeDestination(request.params[0].get_str()));
     if (accountID.IsNull())
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid address");
-    uint64_t nPlotterId = 0;
+
+    CPlotterBindData bindData;
     if (request.params.size() >= 2) {
-        if (!request.params[1].isStr() || (!request.params[1].get_str().empty() && !IsValidPlotterID(request.params[1].get_str(), &nPlotterId)))
-            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID");
+        uint64_t nPlotterId = 0;
+        if (!request.params[1].isStr() || (!request.params[1].get_str().empty())) {
+            if (IsValidPlotterID(request.params[1].get_str(), &nPlotterId)) {
+                // burst: plotterId
+                bindData = nPlotterId;
+            } else {
+                // chia: farmerPk
+                auto vchFarmerPk = chiapos::BytesFromHex(request.params[1].get_str());
+                if (vchFarmerPk.size() != chiapos::PK_LEN) {
+                    throw std::runtime_error("invalid farmer PK");
+                }
+                bindData = CChiaFarmerPk(vchFarmerPk);
+            }
+        } else {
+            throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID or farmer PK");
+        }
     }
+
     int count = std::numeric_limits<int>::max();
     if (request.params.size() >= 3)
         count = request.params[2].get_int();
@@ -1195,7 +1211,8 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
     typedef std::map<uint32_t, CBindPlotterCoinsMap, std::greater<uint32_t> > CCoinsOrderByHeightMap;
     CCoinsOrderByHeightMap mapOrderedCoins;
     {
-        for (auto pair : ::ChainstateActive().CoinsTip().GetAccountBindPlotterEntries(accountID, CPlotterBindData(nPlotterId))) {
+        // we always pass a zero plotter bind-data, thus arg `nPlotterId` is ignored
+        for (auto pair : ::ChainstateActive().CoinsTip().GetAccountBindPlotterEntries(accountID, bindData)) {
             if (!pair.second.valid)
                 continue;
 
@@ -1207,12 +1224,16 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
     // Capacity
     uint64_t nNetCapacityTB = 0;
     int nBlockCount = 0;
-    std::map<uint64_t, int> mapPlotterMiningCount;
+    std::map<CPlotterBindData, int> mapPlotterMiningCount;
     if (!mapOrderedCoins.empty()) {
         nNetCapacityTB = poc::GetNetCapacity(::ChainActive().Height(), Params().GetConsensus(),
             [&mapPlotterMiningCount, &nBlockCount](const CBlockIndex &block) {
                 nBlockCount++;
-                mapPlotterMiningCount[block.nPlotterId]++;
+                if (block.IsChiaBlock()) {
+                    mapPlotterMiningCount[CPlotterBindData(CChiaFarmerPk(block.chiaposFields.posProof.vchFarmerPk))]++;
+                } else {
+                    mapPlotterMiningCount[CPlotterBindData(block.nPlotterId)]++;
+                }
             }
         );
     }
@@ -1223,13 +1244,13 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
         for (CBindPlotterCoinsMap::const_reverse_iterator it = mapCoins.rbegin(); fContinue && it != mapCoins.rend(); ++it) {
             UniValue item(UniValue::VOBJ);
             item.pushKV("address", EncodeDestination(ExtractDestination(::ChainstateActive().CoinsTip().AccessCoin(it->first).out.scriptPubKey)));
-            item.pushKV("plotterId", it->second.bindData.ToString());
+            item.pushKV("plotterId/farmerPk", it->second.bindData.ToString());
             item.pushKV("txid", it->first.hash.GetHex());
             item.pushKV("blockhash", ::ChainActive()[static_cast<int>(it->second.nHeight)]->GetBlockHash().GetHex());
             item.pushKV("blocktime", ::ChainActive()[static_cast<int>(it->second.nHeight)]->GetBlockTime());
             item.pushKV("blockheight", it->second.nHeight);
             if (nBlockCount > 0) {
-                item.pushKV("capacity", ValueFromCapacity((nNetCapacityTB * mapPlotterMiningCount[it->second.bindData.GetBurstPlotterId()]) / nBlockCount));
+                item.pushKV("capacity", ValueFromCapacity((nNetCapacityTB * mapPlotterMiningCount[it->second.bindData]) / nBlockCount));
             } else {
                 item.pushKV("capacity", ValueFromCapacity(0));
             }
