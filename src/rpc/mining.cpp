@@ -1481,7 +1481,7 @@ static UniValue getunbindplotterlimit(const JSONRPCRequest& request)
     return Consensus::GetUnbindPlotterLimitHeight(CBindPlotterInfo(coinEntry, coin), ::ChainstateActive().CoinsTip(), Params().GetConsensus());
 }
 
-static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotterId, bool fVerbose)
+static UniValue getpledgeofaddress(const std::string &address, CPlotterBindData const& bindData, bool fVerbose)
 {
     LOCK(cs_main);
     const CAccountID accountID = ExtractAccountID(DecodeDestination(address));
@@ -1571,7 +1571,6 @@ static UniValue getpledgeofaddress(const std::string &address, uint64_t nPlotter
         }
     }
 
-    // poc::GetMiningRequireBalance(const CAccountID &generatorAccountID, const CPlotterBindData &bindData, int nMiningHeight, const CCoinsViewCache &view, int64_t *pMinerCapacityTB, CAmount *pOldMiningRequireBalance, CAmount nBurned, const Consensus::Params &params)
     result.pushKV("capacity", ValueFromCapacity(nCapacityTB));
     result.pushKV("miningRequireBalance", ValueFromAmount(poc::GetCapacityRequireBalance(nCapacityTB, miningRatio)));
     result.pushKV("height", ::ChainActive().Height());
@@ -1652,16 +1651,26 @@ static UniValue getpledge(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Inner error! Invalid primary address.");
     }
 
-    uint64_t nPlotterId = 0;
-    if (!request.params[0].isNull() && (!request.params[0].isStr() || !IsValidPlotterID(request.params[0].get_str(), &nPlotterId)))
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID");
+    CPlotterBindData bindData;
+    if (!request.params[0].isNull() && (!request.params[0].isStr())) {
+        uint64_t nPlotterId = 0;
+        if (IsValidPlotterID(request.params[0].get_str(), &nPlotterId)) {
+            bindData = nPlotterId;
+        } else {
+            auto vchFarmerPk = chiapos::BytesFromHex(request.params[0].get_str());
+            if (vchFarmerPk.size() != chiapos::PK_LEN) {
+                throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID");
+            }
+            bindData = CChiaFarmerPk(vchFarmerPk);
+        }
+    }
 
     bool fVerbose = false;
     if (!request.params[1].isNull()) {
         fVerbose = request.params[1].isNum() ? (request.params[1].get_int() != 0) : request.params[1].get_bool();
     }
 
-    return getpledgeofaddress(EncodeDestination(dest), nPlotterId, fVerbose);
+    return getpledgeofaddress(EncodeDestination(dest), bindData, fVerbose);
 }
 #endif
 
@@ -1699,22 +1708,22 @@ static UniValue getpledgeofaddress(const JSONRPCRequest& request)
     if (!request.params[0].isStr())
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
 
-    uint64_t plotterId = 0;
-    if (!request.params[1].isNull()) {
-        plotterId = atoi(request.params[1].get_str());
-        if (plotterId != 0) {
-            if (!request.params[1].isStr() || (!request.params[1].get_str().empty() && !IsValidPlotterID(request.params[1].get_str(), &plotterId))) {
-                throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID");
-            }
-        }
-    }
+    // CPlotterBindData bindData;
+    // if (!request.params[1].isNull()) {
+    //     plotterId = atoi(request.params[1].get_str());
+    //     if (plotterId != 0) {
+    //         if (!request.params[1].isStr() || (!request.params[1].get_str().empty() && !IsValidPlotterID(request.params[1].get_str(), &plotterId))) {
+    //             throw JSONRPCError(RPC_TYPE_ERROR, "Invalid plotter ID");
+    //         }
+    //     }
+    // }
 
     bool fVerbose = false;
     if (!request.params[2].isNull()) {
         fVerbose = request.params[2].isNum() ? (request.params[2].get_int() != 0) : request.params[2].get_bool();
     }
 
-    return getpledgeofaddress(request.params[0].get_str(), plotterId, fVerbose);
+    return getpledgeofaddress(request.params[0].get_str(), CPlotterBindData(), fVerbose);
 }
 
 static UniValue getplottermininginfo(const JSONRPCRequest& request)
