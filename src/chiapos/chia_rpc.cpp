@@ -586,6 +586,32 @@ static UniValue queryPledgeInfo(JSONRPCRequest const& request) {
     return resValue;
 }
 
+static UniValue dumpBurstCheckpoints(JSONRPCRequest const& request) {
+    RPCHelpMan("dumpburstcheckpoints", "Dump checkpoints for burst blocks", {
+        {"from_height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "From this number of heights"}
+    }, RPCResult("\"hash list\""), RPCExamples(HelpExampleCli("dumpburstcheckpoints", "xxx"))).Check(request);
+
+    const int GAP_NUM = 2000;
+    int nFromHeight = 310000;
+    if (!request.params[0].isNull()) {
+        nFromHeight = request.params[0].get_int();
+    }
+
+    LOCK(cs_main);
+    auto const& params = Params().GetConsensus();
+    UniValue res(UniValue::VARR);
+
+    for (int nCurrHeight = nFromHeight; nCurrHeight < params.BHDIP009Height; nCurrHeight += GAP_NUM) {
+        auto pindex = ::ChainActive()[nCurrHeight];
+        UniValue entry(UniValue::VOBJ);
+        entry.pushKV("height", nCurrHeight);
+        entry.pushKV("hash", pindex->GetBlockHash().GetHex());
+        res.push_back(std::move(entry));
+    }
+
+    return res;
+}
+
 static CRPCCommand const commands[] = {
         {"chia", "checkchiapos", &checkChiapos, {}},
         {"chia", "querychallenge", &queryChallenge, {}},
@@ -601,6 +627,7 @@ static CRPCCommand const commands[] = {
         {"chia", "queryupdatetiphistory", &queryUpdateTipHistory, {"count"}},
         {"chia", "querysupply", &querySupply, {"height"}},
         {"chia", "querypledgeinfo", &queryPledgeInfo, {}},
+        {"chia", "dumpburstcheckpoints", &dumpBurstCheckpoints, {}}
 };
 
 void RegisterChiaRPCCommands(CRPCTable& t) {
