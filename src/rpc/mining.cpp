@@ -1490,9 +1490,11 @@ static UniValue getpledgeofaddress(const std::string &address, CPlotterBindData 
     }
     const Consensus::Params &params = Params().GetConsensus();
     int nChainHeight = ::ChainActive().Height();
-
+    auto const& view = ::ChainstateActive().CoinsTip();
+    int nHeightForCalculatingTotalSupply = GetHeightForCalculatingTotalSupply(nChainHeight, params);
+    CAmount nBurned = view.GetAccountBalance(false, GetBurnToAccountID(), nullptr, nullptr, nullptr, nullptr, nHeightForCalculatingTotalSupply);
     CAmount balance = 0, balanceBindPlotter = 0, balancePointSend = 0, balancePointReceive = 0;
-    balance = ::ChainstateActive().CoinsTip().GetAccountBalance(nChainHeight < params.BHDIP009OldPledgesDisableOnHeight, accountID, &balanceBindPlotter, &balancePointSend, &balancePointReceive);
+    balance = view.GetAccountBalance(nChainHeight < params.BHDIP009OldPledgesDisableOnHeight, accountID, &balanceBindPlotter, &balancePointSend, &balancePointReceive, &params.BHDIP009PledgeTerms, nChainHeight);
 
     UniValue result(UniValue::VOBJ);
     //! This balance belong to your
