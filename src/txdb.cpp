@@ -958,7 +958,7 @@ CAmount CCoinsViewDB::CalculateTermAmount(CAmount coinAmount, PledgeTerm const& 
     int nLockedHeights = nHeight - nPointHeight;
     if (nLockedHeights < 0) {
         nLockedHeights = 0;
-        LogPrintf("%s: (warning) nLockedHeight < 0, nPointHeight=%ld, nHeight=%ld, nLockedHeight is set to 0", __func__, nPointHeight, nHeight);
+        LogPrintf("%s: (warning) nLockedHeight < 0, nPointHeight=%ld, nHeight=%ld, nLockedHeight is set to 0\n", __func__, nPointHeight, nHeight);
     }
     if (nLockedHeights >= term.nLockHeight) {
         // Fallback with term 0

@@ -1356,7 +1356,7 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
         } else {
             miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, nullptr, nBurned, consensusParams); // Netspace fixed
         }
-        LogPrint(BCLog::POC, "%s: miningRequireBalance=%s BHD1, accountBalance=%s BHD1, balancePointSent=%s BHD1, balancePointReceived=%s BHD1\n", __func__,
+        LogPrint(BCLog::POC, "%s: address %s, miningRequireBalance=%s BHD1, accountBalance=%s BHD1, balancePointSent=%s BHD1, balancePointReceived=%s BHD1\n", __func__, strGeneratorAddr,
                 chiapos::FormatNumberStr(std::to_string(miningRequireBalance / COIN)),
                 chiapos::FormatNumberStr(std::to_string(accountBalance / COIN)),
                 chiapos::FormatNumberStr(std::to_string(balancePointSent / COIN)),
