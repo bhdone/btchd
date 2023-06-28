@@ -99,6 +99,8 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     CAmount nDebit = wtx.debit;
     CAmount nNet = nCredit - nDebit;
 
+    strHTML += "<b>" + tr("Type") + ":</b> " + TransactionRecord::typeToString(rec->type) + "<br>";
+
     if ((rec->type == TransactionRecord::PointSent || rec->type == TransactionRecord::PointReceived || rec->type == TransactionRecord::SelfPoint) && rec->status.status == TransactionStatus::Disabled)
     {
         strHTML += "<b>" + tr("Status") + ":</b> " + tr("Has withdraw") + " (" + FormatTxStatus(wtx, status, inMempool, numBlocks) + ")";

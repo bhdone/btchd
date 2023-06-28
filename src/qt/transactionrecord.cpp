@@ -13,6 +13,38 @@
 
 #include <QDateTime>
 
+QString TransactionRecord::typeToString(Type type) {
+    switch (type) {
+    case Type::Other:
+        return QString("Other");
+    case Type::Generated:
+        return QString("Generated");
+    case Type::SendToAddress:
+        return QString("Send to address");
+    case Type::SendToOther:
+        return QString("Send to other");
+    case Type::RecvWithAddress:
+        return QString("Recv with address");
+    case Type::SendToSelf:
+        return QString("Send to self");
+    case Type::BindPlotter:
+        return QString("Bind plotter");
+    case Type::UnbindPlotter:
+        return QString("Unbind plotter");
+    case Type::PointSent:
+        return QString("Point sent");
+    case Type::PointReceived:
+        return QString("Point received");
+    case Type::SelfPoint:
+        return ("Self point");
+    case Type::WithdrawPoint:
+        return QString("Withdraw point");
+    case Type::RetargetPoint:
+        return QString("Retarget point");
+    }
+    return "(Unknown)";
+}
+
 /* Return positive answer if transaction should be shown in list.
  */
 bool TransactionRecord::showTransaction()

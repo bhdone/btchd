@@ -95,6 +95,8 @@ public:
         RetargetPoint,
     };
 
+    static QString typeToString(Type type);
+
     /** Number of confirmation recommended for accepting a transaction */
     static const int RecommendedNumConfirmations = 6;
 
