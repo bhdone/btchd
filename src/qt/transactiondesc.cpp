@@ -185,7 +185,7 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     }
     else if (rec->type == TransactionRecord::RetargetPoint)
     {
-        strHTML += "<b>" + tr("Relevant transaction ID") + ":</b> " + QString::fromStdString(wtx.value_map["txid"]) + "<br>";
+        strHTML += "<b>" + tr("Relevant transaction ID") + ":</b> " + QString::fromStdString(wtx.value_map["relevant_txid"]) + "<br>";
     }
 
     //
