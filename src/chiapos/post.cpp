@@ -238,9 +238,13 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
 
     // Check vdf-proof
     LogPrint(BCLog::POC, "%s: checking VDF proof\n", __func__);
-    if (!CheckVdfProof(fields.vdfProof, state)) {
-        return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
-                             "vdf proof cannot be verified");
+    try {
+        if (!CheckVdfProof(fields.vdfProof, state)) {
+            return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
+                    "vdf proof cannot be verified");
+        }
+    } catch (std::exception const& e) {
+        return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT, e.what());
     }
 
     return true;
