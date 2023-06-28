@@ -267,10 +267,14 @@ void DatacarrierPayloadToUniv(const CDatacarrierPayloadRef& payload, const CTxOu
         out.pushKV("type", "pledge");
         out.pushKV("amount", ValueFromAmount(txOut.nValue));
         out.pushKV("from", EncodeDestination(ExtractDestination(txOut.scriptPubKey)));
-        if (payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
-            out.pushKV("to", EncodeDestination(ScriptHash(PointRetargetPayload::As(payload)->GetReceiverID())));
-        } else {
-            out.pushKV("to", EncodeDestination(ScriptHash(PointPayload::As(payload)->GetReceiverID())));
-        }
+    } else if (payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+        auto retargetPayload = PointRetargetPayload::As(payload);
+        out.pushKV("from", EncodeDestination(ExtractDestination(txOut.scriptPubKey)));
+        out.pushKV("amount", ValueFromAmount(txOut.nValue));
+        out.pushKV("point_type", DatacarrierTypeToString(retargetPayload->GetPointType()));
+        out.pushKV("point_height", retargetPayload->GetPointHeight());
+        out.pushKV("to", EncodeDestination(ScriptHash(retargetPayload->GetReceiverID())));
+    } else {
+        out.pushKV("to", EncodeDestination(ScriptHash(PointPayload::As(payload)->GetReceiverID())));
     }
 }
