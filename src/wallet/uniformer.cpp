@@ -348,6 +348,7 @@ Result CreateUnfreezeTransaction(CWallet* wallet, COutPoint const& outpoint, CCo
     if (txNew.vout[0].nValue >= txfee) {
         txNew.vout[0].nValue -= txfee;
     } else {
+        errors.push_back("There is not enough amount to pay the tx fee for withdrawal, you might need to wait for a few blocks before trying to withdraw the pledge.");
         return Result::UNBIND_LIMIT_ERROR;
     }
 
