@@ -192,29 +192,25 @@ void CBlockIndex::BuildSkip()
         pskip = pprev->GetAncestor(GetSkipHeight(nHeight));
 }
 
-arith_uint256 GetBlockWork(const CBlockHeader& header, const Consensus::Params& params)
+arith_uint256 GetBlockWork(const CBlockHeader& header)
 {
     AssertLockHeld(cs_main);
-    const CBlockIndex *pindex = LookupBlockIndex(header.GetHash());
-    if (pindex == nullptr) {
-        return 0;
-    }
-    if (pindex->nHeight < params.BHDIP009Height) {
+    if (header.chiaposFields.nDifficulty == 0) {
         //! Same nDifficulty select biggest hash
         if (header.nBaseTarget == 0) {
-            LogPrintf("%s(CBlockHeader): header.nBaseTarget is zero, nHeight=%d\n", __func__, pindex->nHeight);
+            LogPrintf("%s(CBlockHeader): header.nBaseTarget is zero, hash=%s\n", __func__, header.GetHash().GetHex());
         }
         return (poc::TWO64 / header.nBaseTarget) * 100 + (header.vchSignature.empty() ? 0 : header.vchSignature.back()) % 100;
     }
-    return pindex->chiaposFields.nDifficulty;
+    return header.chiaposFields.nDifficulty;
 }
 
-arith_uint256 GetBlockWork(const CBlockIndex& block, const Consensus::Params& params)
+arith_uint256 GetBlockWork(const CBlockIndex& block)
 {
-    if (block.nHeight < params.BHDIP009Height) {
+    if (block.chiaposFields.nDifficulty == 0) {
         //! Same nDifficulty select biggest hash
         if (block.nBaseTarget == 0) {
-            LogPrintf("%s(CBlockIndex): block.nBaseTarget is zero, nHeight=%d\n", __func__, block.nHeight);
+            LogPrintf("%s(CBlockIndex): block.nBaseTarget is zero, hash=%s\n", __func__, block.GetBlockHash().GetHex());
         }
         return (poc::TWO64 / block.nBaseTarget) * 100 + (block.vchSignature.empty() ? 0 : block.vchSignature.back()) % 100;
     }
@@ -231,7 +227,7 @@ int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& fr
         r = from.nChainWork - to.nChainWork;
         sign = -1;
     }
-    r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockWork(tip, params);
+    r = r * arith_uint256(params.nPowTargetSpacing) / GetBlockWork(tip);
     if (r.bits() > 63) {
         return sign * std::numeric_limits<int64_t>::max();
     }

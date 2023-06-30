@@ -60,7 +60,7 @@ private:
         AddLogEntry("date", FormatISO8601DateTime(m_pindex->GetBlockTime()));
         AddLogEntry(tinyformat::format("progress=%1.2f", GuessVerificationProgress(m_chainParams.TxData(), m_pindex)));
         auto const& params = m_chainParams.GetConsensus();
-        AddLogEntry("work", GetBlockWork(*m_pindex, params).GetLow64());
+        AddLogEntry("work", GetBlockWork(*m_pindex).GetLow64());
         AddLogEntry("type", m_pindex->nHeight >= params.BHDIP009Height ? "chia" : "burst");
         // For BHDIP009?
         if (m_pindex->nHeight >= params.BHDIP009Height) {

@@ -159,7 +159,7 @@ void CheckDeadlineThread()
                         if (!pblock) {
                             LogPrintf("Snatch block fail: height=%d, nonce=%" PRIu64 ", plotterId=%" PRIu64 "\n",
                                 itDummyProof->second.height, itDummyProof->second.nonce, itDummyProof->second.plotterId);
-                        } else if (GetBlockWork(*pblock, Params().GetConsensus()) <= GetBlockWork(*pTrySnatchTip, Params().GetConsensus())) {
+                        } else if (GetBlockWork(*pblock) <= GetBlockWork(*pTrySnatchTip)) {
                             //! Lowest chainwork, give up
                             LogPrintf("Snatch block give up: height=%d, nonce=%" PRIu64 ", plotterId=%" PRIu64 "\n",
                                 itDummyProof->second.height, itDummyProof->second.nonce, itDummyProof->second.plotterId);

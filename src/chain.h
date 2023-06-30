@@ -395,8 +395,8 @@ public:
     }
 };
 
-arith_uint256 GetBlockWork(const CBlockHeader& header, const Consensus::Params&);
-arith_uint256 GetBlockWork(const CBlockIndex& block, const Consensus::Params&);
+arith_uint256 GetBlockWork(const CBlockHeader& header);
+arith_uint256 GetBlockWork(const CBlockIndex& block);
 /** Return the time it would take to redo the work difference between from and to, assuming the current hashrate corresponds to the difficulty at tip, in seconds. */
 int64_t GetBlockProofEquivalentTime(const CBlockIndex& to, const CBlockIndex& from, const CBlockIndex& tip, const Consensus::Params&);
 /** Find the forking point between two chain tips. */

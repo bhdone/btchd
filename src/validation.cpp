@@ -1588,7 +1588,7 @@ static void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     if (pindexBestForkTip && ::ChainActive().Height() - pindexBestForkTip->nHeight >= 24)
         pindexBestForkTip = nullptr;
 
-    if (pindexBestForkTip || (pindexBestInvalid && pindexBestInvalid->nChainWork > ::ChainActive().Tip()->nChainWork + (GetBlockWork(*::ChainActive().Tip(), Params().GetConsensus()) * 6)))
+    if (pindexBestForkTip || (pindexBestInvalid && pindexBestInvalid->nChainWork > ::ChainActive().Tip()->nChainWork + (GetBlockWork(*::ChainActive().Tip()) * 6)))
     {
         if (!GetfLargeWorkForkFound() && pindexBestForkBase)
         {
@@ -1639,7 +1639,7 @@ static void CheckForkWarningConditionsOnNewFork(CBlockIndex* pindexNewForkTip) E
     // We define it this way because it allows us to only store the highest fork tip (+ base) which meets
     // the 7-block condition and from this always have the most-likely-to-cause-warning fork
     if (pfork && (!pindexBestForkTip || pindexNewForkTip->nHeight > pindexBestForkTip->nHeight) &&
-            pindexNewForkTip->nChainWork - pfork->nChainWork > (GetBlockWork(*pfork, Params().GetConsensus()) * 7) &&
+            pindexNewForkTip->nChainWork - pfork->nChainWork > (GetBlockWork(*pfork) * 7) &&
             ::ChainActive().Height() - pindexNewForkTip->nHeight < 24)
     {
         pindexBestForkTip = pindexNewForkTip;
@@ -3676,7 +3676,7 @@ CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block)
         pindexNew->BuildSkip();
     }
     pindexNew->nTimeMax = (pindexNew->pprev ? std::max(pindexNew->pprev->nTimeMax, pindexNew->nTime) : pindexNew->nTime);
-    arith_uint256 workOfTheBlock = GetBlockWork(*pindexNew, Params().GetConsensus());
+    arith_uint256 workOfTheBlock = GetBlockWork(*pindexNew);
     LogPrintf("The work of the block(height=%d): %d, the work of the best chain: %d\n",
             pindexNew->nHeight, workOfTheBlock.getdouble(), pindexBestHeader ? pindexBestHeader->nChainWork.getdouble() : 0);
     pindexNew->nChainWork = (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) + workOfTheBlock;
@@ -4313,16 +4313,16 @@ bool ProcessNewBlockHeaders(const std::vector<CBlockHeader>& headers, CValidatio
                         //! Long fork
                         arith_uint256 nChainWork = pindexLast->nChainWork;
                         for (std::size_t index = (std::size_t) (pindexLast->nHeight - pindexPrev->nHeight); index < headers.size(); index++) {
-                            nChainWork += GetBlockWork(headers[index], chainparams.GetConsensus());
+                            nChainWork += GetBlockWork(headers[index]);
                         }
                         //! Long fork chain work less then 24 blocks, we reject
-                        if (nChainWork < ::ChainActive().Tip()->nChainWork + GetBlockWork(*(::ChainActive().Tip()), chainparams.GetConsensus()) * 24)
+                        if (nChainWork < ::ChainActive().Tip()->nChainWork + GetBlockWork(*(::ChainActive().Tip())) * 24)
                             return state.Invalid(ValidationInvalidReason::BLOCK_LONG_FORK, error("%s: Recv small chain work long fork blocks", __func__), 0, "dos-suspicion");
                     } else {
                         //! Short fork
                         arith_uint256 nChainWork = pindexLast->nChainWork;
                         for (std::size_t index = (std::size_t) (pindexLast->nHeight - pindexPrev->nHeight); index < headers.size(); index++) {
-                            nChainWork += GetBlockWork(headers[index], chainparams.GetConsensus());
+                            nChainWork += GetBlockWork(headers[index]);
                             if (nChainWork > ::ChainActive().Tip()->nChainWork)
                                 break;
                         }
@@ -4801,7 +4801,7 @@ bool BlockManager::LoadBlockIndex(
     {
         if (ShutdownRequested()) return false;
         CBlockIndex* pindex = item.second;
-        pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockWork(*pindex, consensus_params);
+        pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) + GetBlockWork(*pindex);
         pindex->nTimeMax = (pindex->pprev ? std::max(pindex->pprev->nTimeMax, pindex->nTime) : pindex->nTime);
         // We can link the chain of blocks for which we've received transactions at some point.
         // Pruned nodes may have deleted the block.
