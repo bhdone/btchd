@@ -148,3 +148,4 @@ dist/
 
 # misc
 config.json
+macos-build-outputdir
