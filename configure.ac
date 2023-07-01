@@ -1329,9 +1329,6 @@ fi
 AC_CHECK_HEADER([mpir.h],,AC_MSG_ERROR(gmp headers missing),)
 AC_CHECK_LIB([mpir],[main],GMP_LIBS=-lmpir,AC_MSG_ERROR(libgmp missing))
 
-AC_CHECK_HEADER([vdf_computer.h],,AC_MSG_ERROR(vdf headers missing),)
-AC_CHECK_LIB([bhd_vdf],[main],BHD_VDF_LIBS=-lbhd_vdf,AC_MSG_ERROR(libbhd_vdf missing))
-
 save_CXXFLAGS="${CXXFLAGS}"
 CXXFLAGS="${CXXFLAGS} ${CRYPTO_CFLAGS} ${SSL_CFLAGS}"
 AC_CHECK_DECLS([EVP_MD_CTX_new],,,[AC_INCLUDES_DEFAULT
