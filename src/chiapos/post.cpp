@@ -172,7 +172,7 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
     int64_t nAbsDuration = nDuration - nDurationVDF;
     if (nAbsDuration > 30) {
         // should we mark this issue as a failure?
-        LogPrintf("%s (warning): duration mismatch block duration: %ld secs, vdf duration %ld secs, distance=%ld secs\n", __func__,
+        LogPrintf("%s (warning): duration mismatch on height=%d, block duration: %ld secs, vdf duration %ld secs, distance=%ld secs\n", __func__, nTargetHeight,
                   nDuration, nDurationVDF, nAbsDuration);
     }
 
