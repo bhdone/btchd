@@ -20,7 +20,7 @@ outputdir:
 	mkdir -p $(INSTALL_PREFIX)
 
 Makefile: outputdir configure $(INSTALL_PREFIX)/db-$(DB4_VERSION).NC.tar.gz $(INSTALL_PREFIX)/$(PLOG_VERSION).tar.gz $(INSTALL_PREFIX)/v$(BHD_VDF_VERSION).tar.gz $(INSTALL_PREFIX)/$(BLS_SIGNATURES_VERSION).tar.gz
-	./configure LDFLAGS="-L$(INSTALL_PREFIX)/lib" CPPFLAGS="-I$(INSTALL_PREFIX)/include" CXXFLAGS="-I$(INSTALL_PREFIX)/include" BDB_LIBS="-L$(BDB_PREFIX)/lib -ldb_cxx-4.8" BDB_CFLAGS="-I$(BDB_PREFIX)/include" --enable-debug
+	./configure LDFLAGS="-L$(INSTALL_PREFIX)/lib" CPPFLAGS="-I$(INSTALL_PREFIX)/include" CXXFLAGS="-I$(INSTALL_PREFIX)/include" BDB_LIBS="-L$(BDB_PREFIX)/lib -ldb_cxx-4.8" BDB_CFLAGS="-I$(BDB_PREFIX)/include" $(ADD_FLAGS)
 
 $(INSTALL_PREFIX)/db-$(DB4_VERSION).NC.tar.gz:
 	cd $(INSTALL_PREFIX) && CFLAGS="-Wno-error=implicit-function-declaration" ../contrib/install_db4.sh .
