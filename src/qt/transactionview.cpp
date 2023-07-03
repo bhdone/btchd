@@ -663,7 +663,9 @@ void TransactionView::focusTransaction(const uint256& txid)
 void TransactionView::resizeEvent(QResizeEvent* event)
 {
     QWidget::resizeEvent(event);
-    columnResizingFixer->stretchColumnWidth(TransactionTableModel::ToAddress);
+    if (columnResizingFixer != nullptr) {
+        columnResizingFixer->stretchColumnWidth(TransactionTableModel::ToAddress);
+    }
 }
 
 // Need to override default Ctrl+C action for amount as default behaviour is just to copy DisplayRole text

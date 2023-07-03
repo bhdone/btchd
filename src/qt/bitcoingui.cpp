@@ -486,6 +486,9 @@ void BitcoinGUI::createMenuBar()
         qApp->focusWindow()->showMinimized();
     });
     connect(qApp, &QApplication::focusWindowChanged, [minimize_action] (QWindow* window) {
+        if (window == nullptr) {
+            return;
+        }
         minimize_action->setEnabled(window != nullptr && (window->flags() & Qt::Dialog) != Qt::Dialog && window->windowState() != Qt::WindowMinimized);
     });
 
@@ -501,6 +504,9 @@ void BitcoinGUI::createMenuBar()
     });
 
     connect(qApp, &QApplication::focusWindowChanged, [zoom_action] (QWindow* window) {
+        if (window == nullptr) {
+            return;
+        }
         zoom_action->setEnabled(window != nullptr);
     });
 #endif
