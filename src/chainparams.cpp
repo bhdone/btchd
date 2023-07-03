@@ -25,7 +25,7 @@
 #include <chiapos/kernel/calc_diff.h>
 
 const uint32_t SECONDS_OF_A_DAY = 60 * 60 * 24;
-const int AVERAGE_VDF_SPEED = 200 * 1000; // 100k ips we assume
+const int AVERAGE_VDF_SPEED = 200 * 1000; // 200k ips we assume
 
 static CBlock CreateGenesisBlock(char const* pszTimestamp, CScript const& genesisOutputScript, uint32_t nTime,
                                  uint64_t nNonce, uint64_t nBaseTarget, int32_t nVersion,
@@ -153,6 +153,7 @@ public:
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
         consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
+        consensus.BHDIP009BaseItersTurnOffHeight = 9999999; // TODO turn off base iters after this height
         consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(chiapos::MIN_K) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
 
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 5, 8};
@@ -714,6 +715,7 @@ public:
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K_TEST_NET;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
         consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
+        consensus.BHDIP009BaseItersTurnOffHeight = 200910;
         consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(32) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 1, 8};
         consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 2, 20};

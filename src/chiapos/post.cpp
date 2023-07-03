@@ -224,7 +224,7 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
                              "mixed quality-string is null(wrong PoS)\n");
     }
-    uint64_t nBaseIters = params.BHDIP009BaseIters;
+    uint64_t nBaseIters = nTargetHeight >= params.BHDIP009BaseItersTurnOffHeight ? 0 : params.BHDIP009BaseIters;
     int nBitsFilter =
             nTargetHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter;
     uint64_t nItersRequired = CalculateIterationsQuality(
