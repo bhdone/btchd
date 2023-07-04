@@ -42,6 +42,8 @@ uint64_t GetChiaBlockDifficulty(CBlockIndex const* pindex, Consensus::Params con
 
 uint64_t GetDifficultyForNextIterations(CBlockIndex const* pindex, Consensus::Params const& params);
 
+int GetBaseIters(int nTargetHeight, Consensus::Params const& params);
+
 }  // namespace chiapos
 
 #endif

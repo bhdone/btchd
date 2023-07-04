@@ -224,7 +224,7 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
                              "mixed quality-string is null(wrong PoS)\n");
     }
-    uint64_t nBaseIters = nTargetHeight >= params.BHDIP009BaseItersTurnOffHeight ? 0 : params.BHDIP009BaseIters;
+    uint64_t nBaseIters = GetBaseIters(nTargetHeight, params);
     int nBitsFilter =
             nTargetHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter;
     uint64_t nItersRequired = CalculateIterationsQuality(
@@ -307,6 +307,15 @@ uint64_t GetDifficultyForNextIterations(CBlockIndex const* pindex, Consensus::Pa
         return params.BHDIP009StartDifficulty;
     }
     return (totalDifficulty / nBlocksCalc).GetLow64();
+}
+
+int GetBaseIters(int nTargetHeight, Consensus::Params const& params) {
+    for (auto i = std::crbegin(params.BHDIP009BaseItersVec); i != std::crend(params.BHDIP009BaseItersVec); ++i) {
+        if (nTargetHeight >= i->first) {
+            return i->second;
+        }
+    }
+    return params.BHDIP009BaseIters;
 }
 
 }  // namespace chiapos

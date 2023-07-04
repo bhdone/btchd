@@ -121,7 +121,7 @@ struct Params {
     int BHDIP009PlotSizeMin;
     int BHDIP009PlotSizeMax;
     int BHDIP009BaseIters;
-    int BHDIP009BaseItersTurnOffHeight;
+    std::vector<std::pair<int, int>> BHDIP009BaseItersVec;
     int BHDIP009TotalAmountUpgradeMultiply;
     int BHDIP009CalculateDistributedAmountEveryHeights;
     int BHDIP009PledgeRetargetMinHeights;

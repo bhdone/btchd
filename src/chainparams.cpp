@@ -153,7 +153,6 @@ public:
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
         consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
-        consensus.BHDIP009BaseItersTurnOffHeight = 9999999; // TODO turn off base iters after this height
         consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(chiapos::MIN_K) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
 
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 5, 8};
@@ -714,8 +713,9 @@ public:
         consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 0;
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K_TEST_NET;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
-        consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60;
-        consensus.BHDIP009BaseItersTurnOffHeight = 200910;
+        consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60 * 2;
+        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200210, AVERAGE_VDF_SPEED * 60 * 2));
+        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200240, AVERAGE_VDF_SPEED * 60 * 1.5));
         consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(32) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 1, 8};
         consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 2, 20};
