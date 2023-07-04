@@ -51,6 +51,18 @@ public:
     }
 
 private:
+    uint64_t CalculateReqIters(Consensus::Params const& params) const {
+        // calculate required vdf iterations
+        chiapos::PubKeyOrHash poolPkOrHash = chiapos::MakePubKeyOrHash(static_cast<chiapos::PlotPubKeyType>(m_pindex->chiaposFields.posProof.nPlotType), m_pindex->chiaposFields.posProof.vchPoolPkOrHash);
+        uint256 mixed_quality_string = chiapos::MakeMixedQualityString(
+                chiapos::MakeArray<chiapos::PK_LEN>(m_pindex->chiaposFields.posProof.vchLocalPk), chiapos::MakeArray<chiapos::PK_LEN>(m_pindex->chiaposFields.posProof.vchFarmerPk), poolPkOrHash,
+                m_pindex->chiaposFields.posProof.nPlotK, m_pindex->chiaposFields.posProof.challenge, m_pindex->chiaposFields.posProof.vchProof);
+        int nTargetHeight = m_pindex->nHeight;
+        int nBitsFilter = nTargetHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter;
+        uint64_t nBaseIters = chiapos::GetBaseIters(nTargetHeight, params);
+        return chiapos::CalculateIterationsQuality(mixed_quality_string, chiapos::GetDifficultyForNextIterations(m_pindex->pprev, params), nBitsFilter, params.BHDIP009DifficultyConstantFactorBits, m_pindex->chiaposFields.posProof.nPlotK, nBaseIters);
+    }
+
     void ApplyLogFromCurrIndex() {
         AddLogEntry("new best", m_pindex->GetBlockHash().GetHex());
         AddLogEntry("height", m_pindex->nHeight);
@@ -67,7 +79,9 @@ private:
             int nBlockDuration = m_pindex->GetBlockTime() - m_pindex->pprev->GetBlockTime();
             AddLogEntry("block-time", chiapos::FormatTime(nBlockDuration));
             // vdf related
+            AddLogEntry("vdf-iters", m_pindex->chiaposFields.vdfProof.nVdfIters);
             AddLogEntry("vdf-time", chiapos::FormatTime(m_pindex->chiaposFields.vdfProof.nVdfDuration));
+            AddLogEntry("vdf-iters-req", CalculateReqIters(params));
             std::string strVdfSpeed = chiapos::FormatNumberStr(std::to_string(m_pindex->chiaposFields.GetTotalIters() / m_pindex->chiaposFields.GetTotalDuration()));
             AddLogEntry(tinyformat::format("vdf=%s(%s ips)", chiapos::MakeNumberStr(m_pindex->chiaposFields.GetTotalIters()), strVdfSpeed));
             // filter bits
