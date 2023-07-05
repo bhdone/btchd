@@ -126,6 +126,7 @@ struct Params {
     int BHDIP009CalculateDistributedAmountEveryHeights;
     int BHDIP009PledgeRetargetMinHeights;
     double BHDIP009DifficultyChangeMaxFactor;
+    std::vector<std::pair<int, double>> BHDIP009DifficultyChangeMaxFactors;
 
     std::array<PledgeTerm, 4> BHDIP009PledgeTerms;
 

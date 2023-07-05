@@ -725,6 +725,7 @@ public:
         consensus.BHDIP009CalculateDistributedAmountEveryHeights = 20; // every 1 hour the distributed amount will be changed
         consensus.BHDIP009PledgeRetargetMinHeights = 10; // minimal number to retarget a pledge is 10 blocks in testnet3
         consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
+        consensus.BHDIP009DifficultyChangeMaxFactors.push_back(std::make_pair(200710, 1.5));
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
