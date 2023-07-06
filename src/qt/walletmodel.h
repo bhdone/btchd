@@ -170,6 +170,8 @@ public:
         BindPlotterExist,
         SmallPointAmount,
         SmallPointAmountExcludeFee,
+        // For BHDIP009
+        RetargetTooEarlier,
     };
 
     enum EncryptionStatus

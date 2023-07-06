@@ -972,6 +972,9 @@ void SendCoinsDialog::processSendCoinsReturn(const WalletModel::SendCoinsReturn 
         msgParams.first = tr("Point amount must be larger than %1 on exclude fee %2.")
             .arg(BitcoinUnits::formatHtmlWithUnit(model->getOptionsModel()->getDisplayUnit(), PROTOCOL_POINT_AMOUNT_MIN), msgArg);
         break;
+    case WalletModel::RetargetTooEarlier:
+        msgParams.first = tr("Retarget a tx is too earlier, please wait until after %1 height since the tx.").arg(Params().GetConsensus().BHDIP009PledgeRetargetMinHeights);
+        break;
     // included to prevent a compiler warning.
     case WalletModel::OK:
     default:

@@ -284,6 +284,15 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(PayOperateMethod pa
             COutPoint previousOutPoint(recipients[0].retargetTxid, 0);
             coinControl.Select(previousOutPoint);
             Coin const& coin = m_wallet->chain().accessCoin(previousOutPoint);
+            // check before creating the tx
+            auto const& params = Params().GetConsensus();
+            LOCK(cs_main);
+            auto pindex = ::ChainActive().Tip();
+            int nTargetHeight = pindex->nHeight + 1;
+            if (coin.nHeight + params.BHDIP009PledgeRetargetMinHeights > nTargetHeight) {
+                // cannot create the tx for retargeting
+                return SendCoinsReturn(RetargetTooEarlier, QString::fromStdString(tinyformat::format("Retarget a tx too earlier, you need to wait for %d blocks before retargeting it, please wait until height %d", params.BHDIP009PledgeRetargetMinHeights, coin.nHeight + params.BHDIP009PledgeRetargetMinHeights)));
+            }
             // prepare transaction
             DatacarrierType pointType = recipients[0].pointType;
             int nPointHeight = recipients[0].pointHeight;
