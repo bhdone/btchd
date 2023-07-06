@@ -15,6 +15,7 @@
 #include <qt/recentrequeststablemodel.h>
 #include <qt/sendcoinsdialog.h>
 #include <qt/transactiontablemodel.h>
+#include <qt/walletmodeltransaction.h>
 
 #include <consensus/tx_verify.h>
 #include <interfaces/chain.h>

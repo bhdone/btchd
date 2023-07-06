@@ -17,6 +17,7 @@
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/sendcoinsentry.h>
+#include <qt/walletmodeltransaction.h>
 
 #include <chainparams.h>
 #include <consensus/tx_verify.h>

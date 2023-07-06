@@ -17,7 +17,6 @@
 #ifdef ENABLE_BIP70
 #include <qt/paymentrequestplus.h>
 #endif
-#include <qt/walletmodeltransaction.h>
 
 #include <interfaces/wallet.h>
 #include <support/allocators/secure.h>
