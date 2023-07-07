@@ -443,7 +443,7 @@ public:
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
     // memory only
-    enum AmountType { DEBIT, CREDIT, IMMATURE_CREDIT, AVAILABLE_CREDIT, FREEZE_CREDIT, POINT_SEND_CREDIT, POINT_RECEIVE_CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
+    enum AmountType { DEBIT, CREDIT, IMMATURE_CREDIT, AVAILABLE_CREDIT, FREEZE_CREDIT, POINT_SEND_CREDIT, POINT_RECEIVE_CREDIT, RETARGET_RECEIVE_CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
     CAmount GetCachableAmount(AmountType type, const isminefilter& filter, bool recalculate = false) const;
     mutable CachableAmount m_amounts[AMOUNTTYPE_ENUM_ELEMENTS];
     mutable bool fChangeCached;
@@ -572,6 +572,7 @@ public:
         m_amounts[FREEZE_CREDIT].Reset();
         m_amounts[POINT_SEND_CREDIT].Reset();
         m_amounts[POINT_RECEIVE_CREDIT].Reset();
+        m_amounts[RETARGET_RECEIVE_CREDIT].Reset();
         fChangeCached = false;
     }
 
@@ -597,6 +598,7 @@ public:
     CAmount GetFreezeCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
     CAmount GetPointSendCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
     CAmount GetPointReceiveCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
+    CAmount GetRetargetReceiveCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
 
     // Get the marginal bytes if spending the specified output from this transaction
     int GetSpendSize(unsigned int out, bool use_max_sig = false) const
@@ -1172,12 +1174,14 @@ public:
         CAmount m_mine_frozen{0};            //!< Freeze by bind plotter or point
         CAmount m_mine_point_sent{0};        //!< Point sent
         CAmount m_mine_point_received{0};    //!< Point received
+        CAmount m_mine_retarget_received{0}; //!< Retarget received
         CAmount m_watchonly_trusted{0};
         CAmount m_watchonly_untrusted_pending{0};
         CAmount m_watchonly_immature{0};
         CAmount m_watchonly_frozen{0};
         CAmount m_watchonly_point_sent{0};
         CAmount m_watchonly_point_received{0};
+        CAmount m_watchonly_retarget_received{0};
     };
     Balance GetBalance(int min_depth = 0, bool avoid_reuse = true) const;
     CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const;

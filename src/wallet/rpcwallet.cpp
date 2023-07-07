@@ -2511,6 +2511,7 @@ static UniValue getbalances(const JSONRPCRequest& request)
         balances_mine.pushKV("frozen", ValueFromAmount(bal.m_mine_frozen));
         balances_mine.pushKV("point_sent", ValueFromAmount(bal.m_mine_point_sent));
         balances_mine.pushKV("point_received", ValueFromAmount(bal.m_mine_point_received));
+        balances_mine.pushKV("retarget_received", ValueFromAmount(bal.m_mine_retarget_received));
         balances.pushKV("mine", balances_mine);
     }
     if (wallet.HaveWatchOnly()) {
@@ -2521,6 +2522,7 @@ static UniValue getbalances(const JSONRPCRequest& request)
         balances_watchonly.pushKV("frozen", ValueFromAmount(bal.m_watchonly_frozen));
         balances_watchonly.pushKV("point_sent", ValueFromAmount(bal.m_watchonly_point_sent));
         balances_watchonly.pushKV("point_received", ValueFromAmount(bal.m_watchonly_point_received));
+        balances_watchonly.pushKV("retarget_received", ValueFromAmount(bal.m_watchonly_retarget_received));
         balances.pushKV("watchonly", balances_watchonly);
     }
     return balances;

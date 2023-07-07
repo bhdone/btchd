@@ -2546,6 +2546,28 @@ CAmount CWalletTx::GetPointReceiveCredit(interfaces::Chain::Lock& locked_chain, 
     return amount.m_value[filter];
 }
 
+CAmount CWalletTx::GetRetargetReceiveCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache, const isminefilter& filter) const
+{
+    if (pwallet == nullptr || IsCoinBase())
+        return 0;
+
+    AssertLockHeld(pwallet->cs_wallet);
+
+    auto& amount = m_amounts[RETARGET_RECEIVE_CREDIT];
+    if (!fUseCache || !amount.m_cached[filter]) {
+        CAmount nAmount = 0;
+        auto itType = mapValue.find("type");
+        auto itTo = mapValue.find("to");
+        if (itType != mapValue.end() && itTo != mapValue.end() && itType->second == "retarget" &&
+            !pwallet->IsSpent(locked_chain, GetHash(), 0) && (::IsMine(*pwallet, DecodeDestination(itTo->second))&filter))
+        {
+            nAmount = tx->vout[0].nValue;
+        }
+        amount.Set(filter, nAmount);
+    }
+    return amount.m_value[filter];
+}
+
 CAmount CWalletTx::GetImmatureWatchOnlyCredit(interfaces::Chain::Lock& locked_chain, const bool fUseCache) const
 {
     if (IsImmatureCoinBase(locked_chain) && IsInMainChain(locked_chain)) {
@@ -2706,6 +2728,8 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
             ret.m_watchonly_point_sent += wtx.GetPointSendCredit(*locked_chain, /* fUseCache */ true, ISMINE_WATCH_ONLY);
             ret.m_mine_point_received += wtx.GetPointReceiveCredit(*locked_chain, /* fUseCache */ true, ISMINE_SPENDABLE);
             ret.m_watchonly_point_received += wtx.GetPointReceiveCredit(*locked_chain, /* fUseCache */ true, ISMINE_WATCH_ONLY);
+            ret.m_mine_retarget_received += wtx.GetRetargetReceiveCredit(*locked_chain, /* fUseCache */ true, ISMINE_SPENDABLE);
+            ret.m_watchonly_retarget_received += wtx.GetRetargetReceiveCredit(*locked_chain, /* fUseCache */ true, ISMINE_WATCH_ONLY);
         }
     }
     return ret;
