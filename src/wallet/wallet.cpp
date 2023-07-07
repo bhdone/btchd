@@ -1223,7 +1223,7 @@ bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
             CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(*(wtx.tx), blockHeight);
             if (!payload) {
                 // Check relevant unlock tx
-                if (wtx.tx->vin.size() == 1 && wtx.tx->vout.size() == 1) {
+                if (wtx.tx->vin.size() == 1 && wtx.tx->vout.size() <= 2) {
                     std::map<uint256, CWalletTx>::iterator itWalletTx = mapWallet.find(wtx.tx->vin[0].prevout.hash);
                     if (itWalletTx != mapWallet.end() && itWalletTx->second.mapValue.count("type")) {
                         CWalletTx& relevantWalletTx = itWalletTx->second;
