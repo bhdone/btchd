@@ -90,6 +90,7 @@ static UniValue queryChallenge(JSONRPCRequest const& request) {
     }
     res.pushKV("prev_block_hash", pindexPrev->GetBlockHash().GetHex());
     res.pushKV("prev_block_height", pindexPrev->nHeight);
+    res.pushKV("prev_block_time", pindexPrev->GetBlockTime());
     res.pushKV("target_height", nTargetHeight);
     res.pushKV("target_duration", params.BHDIP008TargetSpacing);
     res.pushKV("filter_bits",
