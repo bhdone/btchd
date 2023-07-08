@@ -343,6 +343,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewChiaBlock(const CBlockI
         0.001 * (nTime1 - nTimeStart), nPackagesSelected, nDescendantsUpdated, 0.001 * (nTime2 - nTime1),
         0.001 * (nTime2 - nTimeStart));
 
+    CValidationState state;
+    if (!TestBlockValidity(state, chainparams, *pblock, const_cast<CBlockIndex*>(pindexPrev), false, false)) {
+        throw std::runtime_error(
+            strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
+    }
+
     return std::move(pblocktemplate);
 }
 
