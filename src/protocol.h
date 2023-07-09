@@ -238,6 +238,18 @@ extern const char *GETBLOCKTXN;
  * @since protocol version 70014 as described by BIP 152
  */
 extern const char *BLOCKTXN;
+/**
+ * Request vdf proof to other node
+ * Sent it when a local miner request the proof
+ * @Since protocol version 80027
+ */
+extern const char *VDFREQ;
+/**
+ * Send vdf proof to other node
+ * Sent it when a local timelord obtained a proof of request vdf
+ * @Since protocol version 80027
+ */
+extern const char *VDF;
 };
 
 /* Get a vector of all valid message types (see above) */

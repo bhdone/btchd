@@ -365,6 +365,12 @@ struct CNodeState {
     //! Whether this peer is a manual connection
     bool m_is_manual_connection;
 
+    //! vdf requests, the requests from the node we've received, key is the challenge
+    std::map<uint256, std::set<int>> m_vdf_requests;
+
+    //! vdf proofs, all the proofs from the node we've learned, key is the challenge
+    std::map<uint256, std::vector<chiapos::CVdfProof>> m_vdf_proofs;
+
     CNodeState(CAddress addrIn, std::string addrNameIn, bool is_inbound, bool is_manual) :
         address(addrIn), name(std::move(addrNameIn)), m_is_inbound(is_inbound),
         m_is_manual_connection (is_manual)
@@ -3260,6 +3266,82 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
         }
         return true;
+    }
+
+    if (strCommand == NetMsgType::VDFREQ) {
+        // parse the packet
+        uint256 challenge;
+        int nReqIters;
+        vRecv >> challenge;
+        vRecv >> nReqIters;
+
+        // TODO check the request and ensure it is valid
+
+        auto update_node_state_func = [](CNode *pnode, uint256 const& challenge, int nReqIters) -> bool {
+            CNodeState *state = State(pnode->GetId());
+            auto it = state->m_vdf_requests.find(challenge);
+            if (it == std::cend(state->m_vdf_requests)) {
+                state->m_vdf_requests.insert(std::make_pair(challenge, std::set<int>{nReqIters}));
+            } else {
+                if (it->second.find(nReqIters) != std::cend(it->second)) {
+                    // the request is sent from the node more than one time
+                    return false;
+                }
+                it->second.insert(nReqIters);
+            }
+            return true;
+        };
+
+        if (!update_node_state_func(pfrom, challenge, nReqIters)) {
+            // TODO double sent
+        }
+
+        connman->ForEachNode([&challenge, &nReqIters, connman, &msgMaker, fromNodeId = pfrom->GetId(), &update_node_state_func](CNode *pnode) {
+            if (fromNodeId == pnode->GetId()) {
+                return;
+            }
+            if (update_node_state_func(pnode, challenge, nReqIters)) {
+                connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VDFREQ, challenge, nReqIters));
+            }
+        });
+    }
+
+    if (strCommand == NetMsgType::VDF) {
+        chiapos::CVdfProof vdfProof;
+        vRecv >> vdfProof;
+
+        // TODO check the proof and ensure it is valid
+
+        auto update_node_state_func = [](CNode *pnode, chiapos::CVdfProof const& vdfProof) -> bool {
+            CNodeState *state = State(pnode->GetId());
+            auto it = state->m_vdf_proofs.find(vdfProof.challenge);
+            if (it == std::cend(state->m_vdf_proofs)) {
+                state->m_vdf_proofs.insert(std::make_pair(vdfProof.challenge, std::vector<chiapos::CVdfProof>{vdfProof}));
+            } else {
+                auto it2 = std::find_if(std::cbegin(it->second), std::cend(it->second), [&vdfProof](chiapos::CVdfProof const& vdf) {
+                    return vdf.nVdfIters == vdfProof.nVdfIters && vdf.vchProof == vdfProof.vchProof;
+                });
+                if (it2 != std::cend(it->second)) {
+                    return false;
+                }
+                // save vdf proof
+                it->second.push_back(vdfProof);
+            }
+            return true;
+        };
+
+        if (!update_node_state_func(pfrom, vdfProof)) {
+            // TODO double sent
+        }
+
+        connman->ForEachNode([fromNodeId = pfrom->GetId(), &update_node_state_func, &vdfProof, connman, &msgMaker](CNode *pnode) {
+            if (fromNodeId == pnode->GetId()) {
+                return;
+            }
+            if (update_node_state_func(pnode, vdfProof)) {
+                connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VDF, vdfProof));
+            }
+        });
     }
 
     // Ignore unknown commands for extensibility
