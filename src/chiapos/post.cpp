@@ -22,6 +22,10 @@
 
 namespace chiapos {
 
+std::map<uint256, std::set<int>> g_vdf_requests;
+
+std::map<uint256, std::vector<CVdfProof>> g_vdf_proofs;
+
 uint256 MakeChallenge(CBlockIndex const* pindex, Consensus::Params const& params) {
     assert(pindex);
     int nTargetHeight = pindex->nHeight + 1;
@@ -325,6 +329,72 @@ double GetDifficultyChangeMaxFactor(int nTargetHeight, Consensus::Params const& 
         }
     }
     return params.BHDIP009DifficultyChangeMaxFactor;
+}
+
+bool AddLocalVdfRequest(uint256 const& challenge, int nIters) {
+    AssertLockHeld(cs_main);
+    auto it = g_vdf_requests.find(challenge);
+    if (it == std::cend(g_vdf_requests)) {
+        g_vdf_requests.insert(std::make_pair(challenge, std::set<int>{nIters}));
+        return true;
+    }
+    if (it->second.find(nIters) == std::cend(it->second)) {
+        it->second.insert(nIters);
+        return true;
+    }
+    return false;
+}
+
+std::set<int> QueryLocalVdfRequests(uint256 const& challenge) {
+    AssertLockHeld(cs_main);
+    auto it = g_vdf_requests.find(challenge);
+    if (it == std::cend(g_vdf_requests)) {
+        return {};
+    }
+    return it->second;
+}
+
+bool AddLocalVdfProof(CVdfProof vdfProof) {
+    AssertLockHeld(cs_main);
+    auto it = g_vdf_proofs.find(vdfProof.challenge);
+    if (it == std::cend(g_vdf_proofs)) {
+        g_vdf_proofs.insert(std::make_pair(vdfProof.challenge, std::vector<CVdfProof>{std::move(vdfProof)}));
+        return true;
+    }
+    auto it_vdfProof = std::find_if(std::cbegin(it->second), std::cend(it->second), [&vdfProof](CVdfProof const& vdfProofItem) {
+        return vdfProofItem.vchProof == vdfProof.vchProof;
+    });
+    if (it_vdfProof == std::cend(it->second)) {
+        it->second.push_back(std::move(vdfProof));
+        return true;
+    }
+    return false;
+}
+
+bool FindLocalVdfProof(uint256 const& challenge, int nIters, CVdfProof* pvdfProof) {
+    AssertLockHeld(cs_main);
+    auto it = g_vdf_proofs.find(challenge);
+    if (it == std::cend(g_vdf_proofs)) {
+        return false;
+    }
+    auto it_vdfProof = std::find_if(std::cbegin(it->second), std::cend(it->second), [nIters](CVdfProof const& vdfProof) {
+        return vdfProof.nVdfIters >= nIters;
+    });
+    if (it_vdfProof == std::cend(it->second)) {
+        return false;
+    }
+    if (pvdfProof) {
+        *pvdfProof = *it_vdfProof;
+    }
+    return true;
+}
+
+std::vector<CVdfProof> QueryLocalVdfProof(uint256 const& challenge) {
+    auto it = g_vdf_proofs.find(challenge);
+    if (it == std::cend(g_vdf_proofs)) {
+        return {};
+    }
+    return it->second;
 }
 
 }  // namespace chiapos

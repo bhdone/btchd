@@ -46,6 +46,16 @@ int GetBaseIters(int nTargetHeight, Consensus::Params const& params);
 
 double GetDifficultyChangeMaxFactor(int nTargetHeight, Consensus::Params const& params);
 
+bool AddLocalVdfRequest(uint256 const& challenge, int nIters);
+
+std::set<int> QueryLocalVdfRequests(uint256 const& challenge);
+
+bool AddLocalVdfProof(CVdfProof vdfProof);
+
+bool FindLocalVdfProof(uint256 const& challenge, int nIters, CVdfProof* pvdfProof = nullptr);
+
+std::vector<CVdfProof> QueryLocalVdfProof(uint256 const& challenge);
+
 }  // namespace chiapos
 
 #endif

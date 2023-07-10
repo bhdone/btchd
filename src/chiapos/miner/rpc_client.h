@@ -55,6 +55,15 @@ public:
         int id;
     };
 
+    struct VdfProof {
+        uint256 challenge;
+        chiapos::VdfForm y;
+        chiapos::Bytes proof;
+        uint64_t iters;
+        uint8_t witness_type;
+        uint64_t duration;
+    };
+
     struct Challenge {
         uint256 challenge;
         uint64_t difficulty;
@@ -66,6 +75,7 @@ public:
         uint64_t target_duration;
         int filter_bits;
         int base_iters;
+        std::vector<VdfProof> vdf_proofs;
     };
 
     struct PosProof {
@@ -77,15 +87,6 @@ public:
         chiapos::PubKeyOrHash pool_pk_or_hash;
         chiapos::PubKey local_pk;
         chiapos::Bytes proof;
-    };
-
-    struct VdfProof {
-        uint256 challenge;
-        chiapos::VdfForm y;
-        chiapos::Bytes proof;
-        uint64_t iters;
-        uint8_t witness_type;
-        uint64_t duration;
     };
 
     struct ProofPack {
