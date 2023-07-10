@@ -411,6 +411,14 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
                 // Challenge is changed
                 return BreakReason::ChallengeIsChanged;
             }
+            // Find vdf proofs
+            for (auto const& vdf_proof : ch.vdf_proofs) {
+                if (vdf_proof.iters >= iters && vdf_proof.challenge == current_challenge) {
+                    // found
+                    out_vdf = vdf_proof;
+                    return BreakReason::VDFIsAcquired;
+                }
+            }
             // Query proof from timelord if it is created
             if (m_pthread_timelord) {
                 auto detail = QueryProofFromTimelord(current_challenge, iters);

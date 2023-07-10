@@ -25,7 +25,10 @@
 
 #include "poc/poc.h"
 
+extern std::unique_ptr<CConnman> g_connman;
+
 namespace chiapos {
+
 namespace utils {
 
 std::shared_ptr<CBlock> CreateFakeBlock(CTxDestination const& dest) {
@@ -75,19 +78,22 @@ static UniValue queryChallenge(JSONRPCRequest const& request) {
 
     UniValue res(UniValue::VOBJ);
     int nTargetHeight = pindexPrev->nHeight + 1;
+    uint256 challenge;
     res.pushKV("difficulty", GetDifficultyForNextIterations(pindexPrev, params));
     if (nTargetHeight == params.BHDIP009Height) {
         Bytes initialVdfProof(100, 0);
-        res.pushKV("challenge", MakeChallenge(pindexPrev->GetBlockHash(), initialVdfProof).GetHex());
+        challenge = MakeChallenge(pindexPrev->GetBlockHash(), initialVdfProof);
+        res.pushKV("challenge", challenge.GetHex());
         res.pushKV("prev_vdf_iters", params.BHDIP009StartBlockIters);
         res.pushKV("prev_vdf_duration", params.BHDIP008TargetSpacing);
     } else {
         // We need to read the challenge from last block
-        uint256 challenge = MakeChallenge(pindexPrev->GetBlockHash(), pindexPrev->chiaposFields.vdfProof.vchProof);
+        challenge = MakeChallenge(pindexPrev->GetBlockHash(), pindexPrev->chiaposFields.vdfProof.vchProof);
         res.pushKV("challenge", challenge.GetHex());
         res.pushKV("prev_vdf_iters", pindexPrev->chiaposFields.vdfProof.nVdfIters);
         res.pushKV("prev_vdf_duration", pindexPrev->chiaposFields.vdfProof.nVdfDuration);
     }
+    assert(!challenge.IsNull());
     res.pushKV("prev_block_hash", pindexPrev->GetBlockHash().GetHex());
     res.pushKV("prev_block_height", pindexPrev->nHeight);
     res.pushKV("prev_block_time", pindexPrev->GetBlockTime());
@@ -96,7 +102,82 @@ static UniValue queryChallenge(JSONRPCRequest const& request) {
     res.pushKV("filter_bits",
                nTargetHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter);
     res.pushKV("base_iters", GetBaseIters(nTargetHeight, params));
+
+    // vdf requests
+    UniValue vdf_reqs(UniValue::VARR);
+    auto iters_vec = QueryLocalVdfRequests(challenge);
+    for (auto iters : iters_vec) {
+        vdf_reqs.push_back(iters);
+    }
+    res.pushKV("vdf_reqs", vdf_reqs);
+
+    // vdf proofs
+    auto vVdfProofs = QueryLocalVdfProof(challenge);
+    UniValue vdf_proofs(UniValue::VARR);
+    for (auto const& vdfProof : vVdfProofs) {
+        UniValue vdf_proof(UniValue::VOBJ);
+        vdf_proof.pushKV("challenge", vdfProof.challenge.GetHex());
+        vdf_proof.pushKV("y", BytesToHex(vdfProof.vchY));
+        vdf_proof.pushKV("proof", BytesToHex(vdfProof.vchProof));
+        vdf_proof.pushKV("witness_type", vdfProof.nWitnessType);
+        vdf_proof.pushKV("iters", vdfProof.nVdfIters);
+        vdf_proof.pushKV("duration", vdfProof.nVdfDuration);
+        vdf_proofs.push_back(std::move(vdf_proof));
+    }
+    res.pushKV("vdf_proofs", vdf_proofs);
     return res;
+}
+
+static UniValue submitVdfProof(JSONRPCRequest const& request) {
+    RPCHelpMan("submitvdfproof", "Submit vdf proof to P2P network", {
+        {"challenge", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The challenge of the vdf proof"},
+        {"y", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Y of the proof"},
+        {"proof", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Proof of the proof"},
+        {"witness_type", RPCArg::Type::NUM, RPCArg::Optional::NO, "Witness type of the proof"},
+        {"iters", RPCArg::Type::NUM, RPCArg::Optional::NO, "Iterations of the proof"},
+        {"duration", RPCArg::Type::NUM, RPCArg::Optional::NO, "Time consumed to calculate the proof"}
+    }, RPCResult{"{boolean} True means the proof is submitted to P2P network, otherwise the proof is not accepted"},
+    RPCExamples{
+        HelpExampleCli("submitvdfproof", "xxxx xxxx xxxx 0 20000 60")
+    }).Check(request);
+
+    CVdfProof vdfProof;
+    vdfProof.challenge = ParseHashV(request.params[0], "challenge");
+    vdfProof.vchY = ParseHexV(request.params[1], "y");
+    vdfProof.vchProof = ParseHexV(request.params[2], "proof");
+    int nWitnessType;
+    if (!ParseInt32(request.params[3].get_str(), &nWitnessType) || nWitnessType < 0 || nWitnessType > 255) {
+        throw std::runtime_error("invalid value of witness_type");
+    }
+    vdfProof.nWitnessType = nWitnessType;
+    if (!ParseInt64(request.params[4].get_str(), reinterpret_cast<int64_t*>(&vdfProof.nVdfIters))) {
+        throw std::runtime_error("invalid witness type");
+    }
+    if (!ParseInt64(request.params[5].get_str(), reinterpret_cast<int64_t*>(vdfProof.nVdfDuration))) {
+        throw std::runtime_error("invalid duration");
+    }
+
+    // verify the proof
+    CValidationState state;
+    if (!CheckVdfProof(vdfProof, state)) {
+        throw std::runtime_error(tinyformat::format("%s: the vdf proof (challenge=%s, proof=%s) is invalid", __func__, vdfProof.challenge.GetHex(), BytesToHex(vdfProof.vchProof)));
+    }
+
+    LOCK(cs_main);
+
+    // save the proof
+    if (!AddLocalVdfProof(vdfProof)) {
+        throw std::runtime_error(tinyformat::format("%s: the vdf proof (challenge=%s, proof=%s) already exists, cannot submit it to P2P network", __func__, vdfProof.challenge.GetHex(), BytesToHex(vdfProof.vchProof)));
+    }
+
+    // dispatch the message to P2P network
+    g_connman->ForEachNode([&vdfProof](CNode *pnode) {
+        CNetMsgMaker msgMaker(pnode->GetSendVersion());
+        // TODO check before send the message
+        g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VDF, vdfProof));
+    });
+
+    return false;
 }
 
 CVdfProof ParseVdfProof(UniValue const& val) {
@@ -628,7 +709,8 @@ static CRPCCommand const commands[] = {
         {"chia", "queryupdatetiphistory", &queryUpdateTipHistory, {"count"}},
         {"chia", "querysupply", &querySupply, {"height"}},
         {"chia", "querypledgeinfo", &queryPledgeInfo, {}},
-        {"chia", "dumpburstcheckpoints", &dumpBurstCheckpoints, {}}
+        {"chia", "dumpburstcheckpoints", &dumpBurstCheckpoints, {}},
+        {"chia", "submitvdfproof", &submitVdfProof, {"challenge", "y", "proof", "witness_type", "iters", "duration"}},
 };
 
 void RegisterChiaRPCCommands(CRPCTable& t) {

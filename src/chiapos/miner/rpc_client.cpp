@@ -90,6 +90,21 @@ RPCClient::Challenge RPCClient::QueryChallenge() {
     ch.target_duration = res.result["target_duration"].get_int64();
     ch.filter_bits = res.result["filter_bits"].get_int();
     ch.base_iters = res.result["base_iters"].get_int();
+    if (res.result.exists("vdf_proofs")) {
+        auto vdf_proofs = res.result["vdf_proofs"];
+        if (vdf_proofs.isArray()) {
+            for (auto const& vdf_proof : vdf_proofs.getValues()) {
+                VdfProof local_vdf_proof;
+                local_vdf_proof.challenge = uint256S(vdf_proof["challenge"].get_str());
+                local_vdf_proof.y = chiapos::MakeVDFForm(chiapos::BytesFromHex(vdf_proof["y"].get_str()));
+                local_vdf_proof.proof = chiapos::BytesFromHex(vdf_proof["proof"].get_str());
+                local_vdf_proof.witness_type = vdf_proof["witness_type"].get_int();
+                local_vdf_proof.iters = vdf_proof["iters"].get_int();
+                local_vdf_proof.duration = vdf_proof["duration"].get_int();
+                ch.vdf_proofs.push_back(std::move(local_vdf_proof));
+            }
+        }
+    }
     return ch;
 }
 
