@@ -142,9 +142,7 @@ static UniValue submitVdfRequest(JSONRPCRequest const& request) {
     int nIters = request.params[1].get_int();
 
     LOCK(cs_main);
-    if (!AddLocalVdfRequest(challenge, nIters)) {
-        throw std::runtime_error("the vdf request is already sent");
-    }
+    AddLocalVdfRequest(challenge, nIters);
 
     // send the request to P2P network
     g_connman->ForEachNode(
