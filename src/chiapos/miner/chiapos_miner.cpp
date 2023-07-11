@@ -385,6 +385,12 @@ Miner::BreakReason Miner::CheckAndBreak(std::atomic_bool& running, int timeout_s
                                         uint256 const& initial_challenge, uint256 const& current_challenge,
                                         uint64_t iters, uint256 const& group_hash, uint64_t total_size,
                                         chiapos::optional<RPCClient::VdfProof>& out_vdf) {
+    // submit request to RPC server
+    try {
+        m_client.SubmitVdfRequest(current_challenge, iters);
+    } catch (std::exception const&) {
+        // ignore the exception
+    }
     // before we get in the loop, we need to send the request to timelord if it is running
     if (m_pthread_timelord) {
         PLOGD << "request proof from timelord";

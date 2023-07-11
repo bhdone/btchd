@@ -225,6 +225,11 @@ RPCClient::MiningRequirement RPCClient::QueryMiningRequirement(std::string const
     return mining_requirement;
 }
 
+bool RPCClient::SubmitVdfRequest(uint256 const& challenge, int iters) {
+    auto res = SendMethod(m_no_proxy, "submitvdfrequest", challenge.GetHex(), iters);
+    return res.result.get_bool();
+}
+
 void RPCClient::BuildRPCJson(UniValue& params, std::string const& val) { params.push_back(val); }
 
 void RPCClient::BuildRPCJson(UniValue& params, chiapos::Bytes const& val) {
