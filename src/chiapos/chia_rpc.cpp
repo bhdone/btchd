@@ -122,10 +122,39 @@ static UniValue queryChallenge(JSONRPCRequest const& request) {
         vdf_proof.pushKV("witness_type", vdfProof.nWitnessType);
         vdf_proof.pushKV("iters", vdfProof.nVdfIters);
         vdf_proof.pushKV("duration", vdfProof.nVdfDuration);
+        LogPrint(BCLog::NET, "%s (VDF proof): challenge=%s, iters=%d, duration=%d (secs)\n", __func__, vdfProof.challenge.GetHex(), vdfProof.nVdfIters, vdfProof.nVdfDuration);
         vdf_proofs.push_back(std::move(vdf_proof));
     }
     res.pushKV("vdf_proofs", vdf_proofs);
     return res;
+}
+
+static UniValue submitVdfRequest(JSONRPCRequest const& request) {
+    RPCHelpMan("submitvdfrequest", "Submit vdf request to P2P network",
+        {
+            {"challenge", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The challenge of the request"},
+            {"iters", RPCArg::Type::NUM, RPCArg::Optional::NO, "The number of iters of the request"},
+        },
+        RPCResult{"{boolean} True means the request is submitted successfully, otherwise the request is not accepted"},
+        RPCExamples{HelpExampleCli("submitvdfrequest", "xxxxxxxx 10239")}).Check(request);
+
+    uint256 challenge = ParseHashV(request.params[0], "challenge");
+    int nIters = request.params[1].get_int();
+
+    LOCK(cs_main);
+    if (!AddLocalVdfRequest(challenge, nIters)) {
+        throw std::runtime_error("the vdf request is already sent");
+    }
+
+    // send the request to P2P network
+    g_connman->ForEachNode(
+        [&challenge, nIters](CNode* pnode) {
+            CNetMsgMaker maker(pnode->GetSendVersion());
+            g_connman->PushMessage(pnode, maker.Make(NetMsgType::VDFREQ, challenge, nIters));
+        }
+    );
+
+    return true;
 }
 
 static UniValue submitVdfProof(JSONRPCRequest const& request) {
@@ -710,6 +739,7 @@ static CRPCCommand const commands[] = {
         {"chia", "querysupply", &querySupply, {"height"}},
         {"chia", "querypledgeinfo", &queryPledgeInfo, {}},
         {"chia", "dumpburstcheckpoints", &dumpBurstCheckpoints, {}},
+        {"chia", "submitvdfrequest", &submitVdfRequest, {"challenge", "iters"}},
         {"chia", "submitvdfproof", &submitVdfProof, {"challenge", "y", "proof", "witness_type", "iters", "duration"}},
 };
 
