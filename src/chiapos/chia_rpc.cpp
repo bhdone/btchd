@@ -174,17 +174,12 @@ static UniValue submitVdfProof(JSONRPCRequest const& request) {
     vdfProof.challenge = ParseHashV(request.params[0], "challenge");
     vdfProof.vchY = ParseHexV(request.params[1], "y");
     vdfProof.vchProof = ParseHexV(request.params[2], "proof");
-    int nWitnessType;
-    if (!ParseInt32(request.params[3].get_str(), &nWitnessType) || nWitnessType < 0 || nWitnessType > 255) {
+    vdfProof.nWitnessType = request.params[3].get_int();
+    if (vdfProof.nWitnessType < 0 || vdfProof.nWitnessType > 255) {
         throw std::runtime_error("invalid value of witness_type");
     }
-    vdfProof.nWitnessType = nWitnessType;
-    if (!ParseInt64(request.params[4].get_str(), reinterpret_cast<int64_t*>(&vdfProof.nVdfIters))) {
-        throw std::runtime_error("invalid witness type");
-    }
-    if (!ParseInt64(request.params[5].get_str(), reinterpret_cast<int64_t*>(vdfProof.nVdfDuration))) {
-        throw std::runtime_error("invalid duration");
-    }
+    vdfProof.nVdfIters = request.params[4].get_int();
+    vdfProof.nVdfDuration = request.params[5].get_int();
 
     // verify the proof
     CValidationState state;
