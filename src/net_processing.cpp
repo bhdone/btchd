@@ -3305,6 +3305,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         vRecv >> nReqIters;
 
         // TODO check the request and ensure it is valid
+        if (nReqIters < 1) {
+            // request iters is invalid
+            return true;
+        }
 
         CNodeState *state = State(pfrom->GetId());
         if (!state->add_vdf_request(challenge, nReqIters)) {

@@ -141,6 +141,10 @@ static UniValue submitVdfRequest(JSONRPCRequest const& request) {
     uint256 challenge = ParseHashV(request.params[0], "challenge");
     int nIters = request.params[1].get_int();
 
+    if (nIters < 1) {
+        throw std::runtime_error(tinyformat::format("%s: invalid iters=(%d)", __func__, nIters));
+    }
+
     LOCK(cs_main);
     AddLocalVdfRequest(challenge, nIters);
 
