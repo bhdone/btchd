@@ -139,7 +139,7 @@ static UniValue submitVdfRequest(JSONRPCRequest const& request) {
         RPCExamples{HelpExampleCli("submitvdfrequest", "xxxxxxxx 10239")}).Check(request);
 
     uint256 challenge = ParseHashV(request.params[0], "challenge");
-    int nIters = request.params[1].get_int();
+    int64_t nIters = request.params[1].get_int64();
 
     if (nIters < 1) {
         throw std::runtime_error(tinyformat::format("%s: invalid iters=(%d)", __func__, nIters));
@@ -183,7 +183,7 @@ static UniValue submitVdfProof(JSONRPCRequest const& request) {
     if (vdfProof.nWitnessType < 0 || vdfProof.nWitnessType > 255) {
         throw std::runtime_error("invalid value of witness_type");
     }
-    vdfProof.nVdfIters = request.params[4].get_int();
+    vdfProof.nVdfIters = request.params[4].get_int64();
     vdfProof.nVdfDuration = request.params[5].get_int();
 
     // verify the proof

@@ -22,7 +22,7 @@
 
 namespace chiapos {
 
-std::map<uint256, std::set<int>> g_vdf_requests;
+std::map<uint256, std::set<uint64_t>> g_vdf_requests;
 
 std::map<uint256, std::vector<CVdfProof>> g_vdf_proofs;
 
@@ -331,11 +331,11 @@ double GetDifficultyChangeMaxFactor(int nTargetHeight, Consensus::Params const& 
     return params.BHDIP009DifficultyChangeMaxFactor;
 }
 
-bool AddLocalVdfRequest(uint256 const& challenge, int nIters) {
+bool AddLocalVdfRequest(uint256 const& challenge, uint64_t nIters) {
     AssertLockHeld(cs_main);
     auto it = g_vdf_requests.find(challenge);
     if (it == std::cend(g_vdf_requests)) {
-        g_vdf_requests.insert(std::make_pair(challenge, std::set<int>{nIters}));
+        g_vdf_requests.insert(std::make_pair(challenge, std::set<uint64_t>{nIters}));
         return true;
     }
     if (it->second.find(nIters) == std::cend(it->second)) {
@@ -345,7 +345,7 @@ bool AddLocalVdfRequest(uint256 const& challenge, int nIters) {
     return false;
 }
 
-std::set<int> QueryLocalVdfRequests(uint256 const& challenge) {
+std::set<uint64_t> QueryLocalVdfRequests(uint256 const& challenge) {
     AssertLockHeld(cs_main);
     auto it = g_vdf_requests.find(challenge);
     if (it == std::cend(g_vdf_requests)) {
@@ -371,7 +371,7 @@ bool AddLocalVdfProof(CVdfProof vdfProof) {
     return false;
 }
 
-bool FindLocalVdfProof(uint256 const& challenge, int nIters, CVdfProof* pvdfProof) {
+bool FindLocalVdfProof(uint256 const& challenge, uint64_t nIters, CVdfProof* pvdfProof) {
     AssertLockHeld(cs_main);
     auto it = g_vdf_proofs.find(challenge);
     if (it == std::cend(g_vdf_proofs)) {

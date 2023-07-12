@@ -3297,17 +3297,21 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-    if (strCommand == NetMsgType::VDFREQ) {
+    if (strCommand == NetMsgType::VDFREQ || strCommand == NetMsgType::VDFREQ64) {
         // parse the packet
         uint256 challenge;
-        int nReqIters;
+        uint64_t nReqIters;
+        int nReqIters32;
         vRecv >> challenge;
-        vRecv >> nReqIters;
-
-        // TODO check the request and ensure it is valid
-        if (nReqIters < 1) {
-            // request iters is invalid
-            return true;
+        if (strCommand == NetMsgType::VDFREQ64) {
+            vRecv >> nReqIters;
+        } else {
+            vRecv >> nReqIters32;
+            if (nReqIters32 < 1) {
+                // overflow, cannot continue
+                return true;
+            }
+            nReqIters = nReqIters32;
         }
 
         CNodeState *state = State(pfrom->GetId());

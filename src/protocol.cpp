@@ -42,6 +42,7 @@ const char *CMPCTBLOCK="cmpctblock";
 const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
 const char *VDFREQ="vdfreq";
+const char *VDFREQ64="vdfreq64";
 const char *VDF="vdf";
 } // namespace NetMsgType
 
@@ -76,6 +77,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::GETBLOCKTXN,
     NetMsgType::BLOCKTXN,
     NetMsgType::VDFREQ,
+    NetMsgType::VDFREQ64,
     NetMsgType::VDF,
 };
 const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));

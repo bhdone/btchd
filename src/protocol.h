@@ -244,6 +244,7 @@ extern const char *BLOCKTXN;
  * @Since protocol version 80027
  */
 extern const char *VDFREQ;
+extern const char *VDFREQ64;
 /**
  * Send vdf proof to other node
  * Sent it when a local timelord obtained a proof of request vdf
