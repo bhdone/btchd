@@ -3319,7 +3319,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // TODO double sent
         }
 
-        connman->ForEachNode([&challenge, &nReqIters, connman, &msgMaker, fromNodeId = pfrom->GetId()](CNode *pnode) {
+        connman->ForEachNode([&challenge, nReqIters, connman, &msgMaker, fromNodeId = pfrom->GetId()](CNode *pnode) {
             if (fromNodeId == pnode->GetId()) {
                 return;
             }
