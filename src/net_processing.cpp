@@ -3327,7 +3327,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
             CNodeState *state = State(pnode->GetId());
             if (state->add_vdf_request(challenge, nReqIters)) {
-                connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VDFREQ, challenge, nReqIters));
+                connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VDFREQ64, challenge, nReqIters));
             }
         });
 

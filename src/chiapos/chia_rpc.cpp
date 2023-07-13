@@ -154,7 +154,7 @@ static UniValue submitVdfRequest(JSONRPCRequest const& request) {
             int version = pnode->GetSendVersion();
             if (version >= VDF_P2P_VERSION) {
                 CNetMsgMaker maker(version);
-                g_connman->PushMessage(pnode, maker.Make(NetMsgType::VDFREQ, challenge, nIters));
+                g_connman->PushMessage(pnode, maker.Make(NetMsgType::VDFREQ64, challenge, nIters));
             }
         }
     );
