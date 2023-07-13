@@ -74,6 +74,10 @@ public:
     void SetNull();
 
     bool IsNull() const;
+
+    bool Equals(CVdfProof const& rhs) const {
+        return challenge == rhs.challenge && vchY == rhs.vchY && vchProof == rhs.vchProof && nWitnessType == rhs.nWitnessType && nVdfIters == rhs.nVdfIters;
+    }
 };
 
 class CBlockFields {

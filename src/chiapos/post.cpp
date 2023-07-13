@@ -362,7 +362,7 @@ bool AddLocalVdfProof(CVdfProof vdfProof) {
         return true;
     }
     auto it_vdfProof = std::find_if(std::cbegin(it->second), std::cend(it->second), [&vdfProof](CVdfProof const& vdfProofItem) {
-        return vdfProof.nVdfIters == vdfProofItem.nVdfIters && vdfProofItem.vchProof == vdfProof.vchProof && vdfProof.nWitnessType == vdfProofItem.nWitnessType;
+        return vdfProof.Equals(vdfProofItem);
     });
     if (it_vdfProof == std::cend(it->second)) {
         it->second.push_back(std::move(vdfProof));

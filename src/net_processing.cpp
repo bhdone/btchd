@@ -389,7 +389,7 @@ struct CNodeState {
             m_vdf_proofs.insert(std::make_pair(vdfProof.challenge, std::vector<chiapos::CVdfProof>{vdfProof}));
         } else {
             auto it2 = std::find_if(std::cbegin(it->second), std::cend(it->second), [&vdfProof](chiapos::CVdfProof const& vdf) {
-                return vdf.nVdfIters == vdfProof.nVdfIters && vdf.vchProof == vdfProof.vchProof;
+                return vdfProof.Equals(vdf);
             });
             if (it2 != std::cend(it->second)) {
                 return false;
