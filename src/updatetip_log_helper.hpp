@@ -46,6 +46,10 @@ public:
         AddLogEntry(name, chiapos::MakeNumberStr(value));
     }
 
+    void AddLogEntryBool(std::string const& name, bool value) {
+        m_logVec.push_back(tinyformat::format("%s=%s", name, value ? "true" : "false"));
+    }
+
     void AddLogEntry(std::string strEntry) {
         m_logVec.push_back(std::move(strEntry));
     }
@@ -81,7 +85,9 @@ private:
             // vdf related
             AddLogEntry("vdf-iters", m_pindex->chiaposFields.vdfProof.nVdfIters);
             AddLogEntry("vdf-time", chiapos::FormatTime(m_pindex->chiaposFields.vdfProof.nVdfDuration));
-            AddLogEntry("vdf-iters-req", CalculateReqIters(params));
+            auto vdf_req = CalculateReqIters(params);
+            AddLogEntry("vdf-iters-req", vdf_req);
+            AddLogEntryBool("vdf-req-match", m_pindex->chiaposFields.vdfProof.nVdfIters == vdf_req);
             std::string strVdfSpeed = chiapos::FormatNumberStr(std::to_string(m_pindex->chiaposFields.GetTotalIters() / m_pindex->chiaposFields.GetTotalDuration()));
             AddLogEntry(tinyformat::format("vdf=%s(%s ips)", chiapos::MakeNumberStr(m_pindex->chiaposFields.GetTotalIters()), strVdfSpeed));
             // filter bits

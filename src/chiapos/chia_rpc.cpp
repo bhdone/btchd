@@ -527,12 +527,24 @@ static UniValue generateBurstBlocks(JSONRPCRequest const& request) {
 
 static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
     RPCHelpMan("queryupdatetiphistory", "Query update tip logs",
-               {{"count", RPCArg::Type::NUM, RPCArg::Optional::NO, "how many logs want to be generated"}},
+               {
+                   {"count", RPCArg::Type::NUM, RPCArg::Optional::NO, "how many logs want to be generated"},
+                   {"vdf_match_req", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "only show those vdf match the requires"},
+               },
                RPCResult{"\"succ\" (result) The update tips history"},
                RPCExamples{HelpExampleCli("queryupdatetiphistory", "")})
             .Check(request);
 
     int nCount = atoi(request.params[0].get_str());
+    bool fOnlyVdfMatches {false};
+    if (request.params.size() > 1) {
+        int val;
+        if (!ParseInt32(request.params[1].get_str(), &val)) {
+            throw std::runtime_error("cannot parse integer from parameter[1]");
+        }
+        fOnlyVdfMatches = val != 0;
+    }
+
     auto params = Params().GetConsensus();
 
     LOCK(cs_main);
@@ -542,6 +554,12 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
 
     for (int i = 0; i < nCount; ++i) {
         UniValue entryVal = helper.PrintJson();
+        if (fOnlyVdfMatches && entryVal["vdf-req-match"].get_str() == "false") {
+            if (!helper.MoveToPrevIndex()) {
+                break;
+            }
+            continue;
+        }
         // query the block
         CBlockIndex const* pindex = helper.GetBlockIndex();
         if (IsBlockPruned(pindex)) {
