@@ -17,6 +17,10 @@
 #include <subsidy_utils.h>
 #include <key_io.h>
 
+#include <univalue.h>
+
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
+
 bool IsFinalTx(CTransaction const& tx, int nBlockHeight, int64_t nBlockTime) {
     if (tx.nLockTime == 0)
         return true;
@@ -252,6 +256,11 @@ bool Consensus::CheckTxInputs(CTransaction const& tx, CValidationState& state, C
                     return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-invaliduniform-type");
                 } else if (nSpendHeight >= params.BHDIP009Height) {
                     // The withdraw on BHDIP009 is special, it might contains 2 vout
+                    if (LogAcceptCategory(BCLog::POC)) {
+                        UniValue txEntry(UniValue::VOBJ);
+                        TxToJSON(tx, uint256(), txEntry);
+                        LogPrint(BCLog::POC, "\n%s\n", txEntry.write(2));
+                    }
                     if (tx.vout.size() <= 0 || tx.vout.size() > 2) {
                         // Invalid number of vout entries
                         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-invaliduniform-type-withdraw-chia-point", "to withdraw a chia point the number of vout entries is wrong");

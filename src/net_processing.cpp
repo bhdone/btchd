@@ -2564,6 +2564,8 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         vRecv >> ptx;
         const CTransaction& tx = *ptx;
 
+        LogPrint(BCLog::POC, "%s: tx %s is received from node %d\n", __func__, tx.GetHash().GetHex(), pfrom->GetId());
+
         CInv inv(MSG_TX, tx.GetHash());
         pfrom->AddInventoryKnown(inv);
 

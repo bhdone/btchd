@@ -663,32 +663,48 @@ static CDatacarrierPayloadRef ExtractDatacarrier(const CTransaction& tx, int nHe
         return payload;
     } else if (type == DATACARRIER_TYPE_BINDCHIAFARMER) {
         // Bind chia farmer transaction
-        if (tx.nVersion != CTransaction::UNIFORM_VERSION || tx.vout.size() < 2 || tx.vout.size() > 3 || tx.vout[0].scriptPubKey.IsUnspendable())
+        if (tx.nVersion != CTransaction::UNIFORM_VERSION || tx.vout.size() < 2 || tx.vout.size() > 3 || tx.vout[0].scriptPubKey.IsUnspendable()) {
+            LogPrintf("%s: check-1 tx.nVersion=%d, tx.vout.size()=%d\n", __func__, tx.nVersion, tx.vout.size());
             return nullptr;
-        if (scriptPubKey.size() != PROTOCOL_BINDCHIAFARMER_SCRIPTSIZE || tx.vout[0].nValue != PROTOCOL_BINDPLOTTER_LOCKAMOUNT)
+        }
+        if (scriptPubKey.size() != PROTOCOL_BINDCHIAFARMER_SCRIPTSIZE || tx.vout[0].nValue != PROTOCOL_BINDPLOTTER_LOCKAMOUNT) {
+            LogPrintf("%s: check-2 scriptPubKey.size()=%d, tx.vout[0].nValue=%ld\n", __func__, scriptPubKey.size(), tx.vout[0].nValue);
             return nullptr;
+        }
         // Check destination
         CTxDestination dest;
-        if (!ExtractDestination(tx.vout[0].scriptPubKey, dest))
+        if (!ExtractDestination(tx.vout[0].scriptPubKey, dest)) {
+            LogPrintf("%s: check-3\n", __func__);
             return nullptr;
+        }
         const ScriptHash *scriptID = boost::get<ScriptHash>(&dest);
-        if (scriptID == nullptr)
+        if (scriptID == nullptr) {
+            LogPrintf("%s: check-4\n", __func__);
             return nullptr;
+        }
 
         // Check last active height
-        if (!scriptPubKey.GetOp(pc, opcode, vData) || opcode != sizeof(uint32_t))
+        if (!scriptPubKey.GetOp(pc, opcode, vData) || opcode != sizeof(uint32_t)) {
+            LogPrintf("%s: check-5\n", __func__);
             return nullptr;
+        }
         uint32_t lastActiveHeight = UIntFromVectorByte(vData);
         if (pLastActiveHeight) *pLastActiveHeight = (int) lastActiveHeight;
-        if (nHeight != 0 && (nHeight > (int)lastActiveHeight || nHeight + PROTOCOL_BINDPLOTTER_MAXALIVE < (int)lastActiveHeight))
+        if (nHeight != 0 && (nHeight > (int)lastActiveHeight || nHeight + PROTOCOL_BINDPLOTTER_MAXALIVE < (int)lastActiveHeight)) {
+            LogPrintf("%s: check-6, nHeight=%d, lastActiveHeight=%d\n", __func__, nHeight, lastActiveHeight);
             return nullptr;
+        }
 
         // Verify signature
         std::vector<unsigned char> vchFarmerPk, vchSignature;
-        if (!scriptPubKey.GetOp(pc, opcode, vchFarmerPk) || opcode != chiapos::PK_LEN)
+        if (!scriptPubKey.GetOp(pc, opcode, vchFarmerPk) || opcode != chiapos::PK_LEN) {
+            LogPrintf("%s: check-7\n", __func__);
             return nullptr;
-        if (!scriptPubKey.GetOp(pc, opcode, vchSignature) || opcode != OP_PUSHDATA1)
+        }
+        if (!scriptPubKey.GetOp(pc, opcode, vchSignature) || opcode != OP_PUSHDATA1) {
+            LogPrintf("%s: check-8\n", __func__);
             return nullptr;
+        }
         chiapos::Bytes vchData(32);
         CSHA256().
             Write(scriptID->begin(), CScriptID::WIDTH).
@@ -697,6 +713,7 @@ static CDatacarrierPayloadRef ExtractDatacarrier(const CTransaction& tx, int nHe
 
         if (!chiapos::VerifySignature(chiapos::MakeArray<chiapos::PK_LEN>(vchFarmerPk),
                                       chiapos::MakeArray<chiapos::SIG_LEN>(vchSignature), vchData)) {
+            LogPrintf("%s: check-9\n", __func__);
             if (pReject) *pReject = true;
             return nullptr;
         }
