@@ -390,6 +390,7 @@ bool FindLocalVdfProof(uint256 const& challenge, uint64_t nIters, CVdfProof* pvd
 }
 
 std::vector<CVdfProof> QueryLocalVdfProof(uint256 const& challenge) {
+    AssertLockHeld(cs_main);
     auto it = g_vdf_proofs.find(challenge);
     if (it == std::cend(g_vdf_proofs)) {
         return {};
