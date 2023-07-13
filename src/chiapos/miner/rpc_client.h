@@ -175,7 +175,7 @@ public:
 
     MiningRequirement QueryMiningRequirement(std::string const& address, chiapos::PubKey const& farmer_pk);
 
-    bool SubmitVdfRequest(uint256 const& challenge, int iters);
+    bool SubmitVdfRequest(uint256 const& challenge, uint64_t iters);
 
 private:
     void BuildRPCJson(UniValue& params, std::string const& val);

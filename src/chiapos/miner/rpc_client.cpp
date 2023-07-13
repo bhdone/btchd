@@ -225,7 +225,7 @@ RPCClient::MiningRequirement RPCClient::QueryMiningRequirement(std::string const
     return mining_requirement;
 }
 
-bool RPCClient::SubmitVdfRequest(uint256 const& challenge, int iters) {
+bool RPCClient::SubmitVdfRequest(uint256 const& challenge, uint64_t iters) {
     auto res = SendMethod(m_no_proxy, "submitvdfrequest", challenge.GetHex(), iters);
     return res.result.get_bool();
 }
