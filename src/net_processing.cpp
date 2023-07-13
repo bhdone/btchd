@@ -3343,9 +3343,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (chiapos::FindLocalVdfProof(challenge, nReqIters, &vdfProof)) {
             // The proof does already exist, we send the proof back
             CNodeState *state = State(pfrom->GetId());
-            if (state->add_vdf_proof(vdfProof)) {
-                connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::VDF, vdfProof));
+            if (!state->add_vdf_proof(vdfProof)) {
+                // the node already has the vdf proof, but send it anyway
             }
+            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::VDF, vdfProof));
         }
     }
 
