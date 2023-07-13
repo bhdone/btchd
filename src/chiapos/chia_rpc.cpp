@@ -208,7 +208,7 @@ static UniValue submitVdfProof(JSONRPCRequest const& request) {
         }
     });
 
-    return false;
+    return true;
 }
 
 CVdfProof ParseVdfProof(UniValue const& val) {
