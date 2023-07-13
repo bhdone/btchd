@@ -3325,9 +3325,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (fromNodeId == pnode->GetId()) {
                 return;
             }
-            CNodeState *state = State(pnode->GetId());
-            if (state->add_vdf_request(challenge, nReqIters)) {
-                connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VDFREQ64, challenge, nReqIters));
+            if (pnode->GetRecvVersion() >= VDF_P2P_VERSION) {
+                CNodeState *state = State(pnode->GetId());
+                if (state->add_vdf_request(challenge, nReqIters)) {
+                    connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VDFREQ64, challenge, nReqIters));
+                }
             }
         });
 
@@ -3368,9 +3370,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (fromNodeId == pnode->GetId()) {
                 return;
             }
-            CNodeState *state = State(pnode->GetId());
-            if (state->add_vdf_proof(vdfProof)) {
-                connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VDF, vdfProof));
+            if (pnode->GetRecvVersion() >= VDF_P2P_VERSION) {
+                CNodeState *state = State(pnode->GetId());
+                if (state->add_vdf_proof(vdfProof)) {
+                    connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VDF, vdfProof));
+                }
             }
         });
 
