@@ -151,7 +151,7 @@ static UniValue submitVdfRequest(JSONRPCRequest const& request) {
     // send the request to P2P network
     g_connman->ForEachNode(
         [&challenge, nIters](CNode* pnode) {
-            int version = pnode->GetSendVersion();
+            int version = pnode->GetRecvVersion();
             if (version >= VDF_P2P_VERSION) {
                 CNetMsgMaker maker(version);
                 g_connman->PushMessage(pnode, maker.Make(NetMsgType::VDFREQ64, challenge, nIters));
@@ -201,7 +201,7 @@ static UniValue submitVdfProof(JSONRPCRequest const& request) {
 
     // dispatch the message to P2P network
     g_connman->ForEachNode([&vdfProof](CNode *pnode) {
-        int version = pnode->GetSendVersion();
+        int version = pnode->GetRecvVersion();
         if (version >= VDF_P2P_VERSION) {
             CNetMsgMaker msgMaker(version);
             g_connman->PushMessage(pnode, msgMaker.Make(NetMsgType::VDF, vdfProof));
