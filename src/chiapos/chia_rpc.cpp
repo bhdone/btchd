@@ -195,7 +195,7 @@ static UniValue submitVdfProof(JSONRPCRequest const& request) {
 
     // save the proof
     if (!AddLocalVdfProof(vdfProof)) {
-        LogPrintf("%s: warning - proof (challenge=%s, iters=%ld) does exist in local\n", __func__, vdfProof.challenge.GetHex(), vdfProof.nVdfIters);
+        LogPrint(BCLog::POC, "%s: warning - proof (challenge=%s, iters=%ld) does exist in local\n", __func__, vdfProof.challenge.GetHex(), vdfProof.nVdfIters);
     }
 
     // dispatch the message to P2P network
