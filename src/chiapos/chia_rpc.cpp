@@ -195,7 +195,7 @@ static UniValue submitVdfProof(JSONRPCRequest const& request) {
 
     // save the proof
     if (!AddLocalVdfProof(vdfProof)) {
-        throw std::runtime_error(tinyformat::format("%s: the vdf proof (challenge=%s, proof=%s) already exists, cannot submit it to P2P network", __func__, vdfProof.challenge.GetHex(), BytesToHex(vdfProof.vchProof)));
+        LogPrintf("%s: warning - proof (challenge=%s, iters=%ld) does exist in local\n", __func__, vdfProof.challenge.GetHex(), vdfProof.nVdfIters);
     }
 
     // dispatch the message to P2P network
