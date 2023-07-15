@@ -2186,8 +2186,21 @@ bool CheckChiaPledgeTx(CTransaction const& tx, CCoinsViewCache const& view, CVal
         }
     }
     if (tx.IsUniform()) {
-        auto payload = ExtractTransactionDatacarrier(tx, nHeight, {DATACARRIER_TYPE_POINT, DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1, DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3, DATACARRIER_TYPE_CHIA_POINT_RETARGET});
+        bool fReject { false };
+        int nLastActiveHeight { 0 };
+        bool fBindTx;
+        auto payload = ExtractTransactionDatacarrier(tx, nHeight, {DATACARRIER_TYPE_POINT, DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_BINDCHIAFARMER, DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1, DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3, DATACARRIER_TYPE_CHIA_POINT_RETARGET}, fReject, nLastActiveHeight, fBindTx);
         if (payload == nullptr) {
+            if (fBindTx) {
+                // failed because it is a bind-tx, might be the signature or the last active height out of range
+                if (fReject) {
+                    return state.Invalid(ValidationInvalidReason::TX_INVALID_BIND, false, REJECT_INVALID, "tx-invalid-bind-tx-sig", "the signature of bind-tx is invalid");
+                }
+                if (nHeight > 0 && (nHeight < nLastActiveHeight - PROTOCOL_BINDPLOTTER_MAXALIVE || nHeight > nLastActiveHeight)) {
+                    return state.Invalid(ValidationInvalidReason::TX_INVALID_BIND, false, REJECT_INVALID, "tx-invalid-bind-tx-out-maxalive", "the bind-tx is expired");
+                }
+                return state.Invalid(ValidationInvalidReason::TX_INVALID_BIND, false, REJECT_INVALID, "tx-invalid-bind-tx", "the bind-tx is invalid cause unknown reason");
+            }
             // This tx might be a withdrawal, we now check the previous coin
             if (!prevCoin.IsChiaPointRelated()) {
                 // Not the coin we interest
@@ -2215,11 +2228,13 @@ bool CheckChiaPledgeTx(CTransaction const& tx, CCoinsViewCache const& view, CVal
             }
         } else {
             auto payloadType = payload->type;
-            if (payloadType == DATACARRIER_TYPE_POINT) {
+            if (payloadType == DATACARRIER_TYPE_POINT || payloadType == DATACARRIER_TYPE_BINDPLOTTER) {
                 // burst POINT tx
                 return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-invalid-burst-point", "burst point after chia chain");
+            } else if (payloadType == DATACARRIER_TYPE_BINDCHIAFARMER) {
+                // TODO check the bind-tx
             } else if (DatacarrierTypeIsChiaPoint(payloadType)) {
-                // Do nothing?
+                // TODO check point-tx
             } else if (payloadType == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
                 // check the distance
                 int nDistance = nHeight - prevCoin.nHeight;

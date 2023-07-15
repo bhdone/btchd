@@ -600,7 +600,7 @@ uint32_t UIntFromVectorByte(std::vector<unsigned char> const& vchData)
     return ((uint32_t)vchData[0] << 0) | ((uint32_t)vchData[1] << 8) | ((uint32_t)vchData[2] << 16) | ((uint32_t)vchData[3] << 24);
 }
 
-static CDatacarrierPayloadRef ExtractDatacarrier(const CTransaction& tx, int nHeight, const DatacarrierTypes &filters, bool *pReject, int *pLastActiveHeight) {
+static CDatacarrierPayloadRef ExtractDatacarrier(const CTransaction& tx, int nHeight, const DatacarrierTypes &filters, bool *pReject, int *pLastActiveHeight, bool *pIsBindTx) {
     // OP_RETURN 0x04 <Protocol> <...>
     const CScript &scriptPubKey = tx.vout.back().scriptPubKey;
     if (scriptPubKey.size() < 6 || scriptPubKey[0] != OP_RETURN || scriptPubKey[1] != 0x04)
@@ -616,7 +616,14 @@ static CDatacarrierPayloadRef ExtractDatacarrier(const CTransaction& tx, int nHe
     if (!filters.empty() && !filters.count((DatacarrierType) type))
         return nullptr;
 
+    if (pIsBindTx) {
+        *pIsBindTx = false;
+    }
+
     if (type == DATACARRIER_TYPE_BINDPLOTTER) {
+        if (pIsBindTx) {
+            *pIsBindTx = true;
+        }
         // Bind plotter transaction
         if (tx.nVersion != CTransaction::UNIFORM_VERSION || tx.vout.size() < 2 || tx.vout.size() > 3 || tx.vout[0].scriptPubKey.IsUnspendable())
             return nullptr;
@@ -662,6 +669,9 @@ static CDatacarrierPayloadRef ExtractDatacarrier(const CTransaction& tx, int nHe
         payload->SetId(CPlotterBindData(nPlotterId));
         return payload;
     } else if (type == DATACARRIER_TYPE_BINDCHIAFARMER) {
+        if (pIsBindTx) {
+            *pIsBindTx = true;
+        }
         // Bind chia farmer transaction
         if (tx.nVersion != CTransaction::UNIFORM_VERSION || tx.vout.size() < 2 || tx.vout.size() > 3 || tx.vout[0].scriptPubKey.IsUnspendable()) {
             LogPrintf("%s: check-1 tx.nVersion=%d, tx.vout.size()=%d\n", __func__, tx.nVersion, tx.vout.size());
@@ -780,9 +790,13 @@ static CDatacarrierPayloadRef ExtractDatacarrier(const CTransaction& tx, int nHe
 }
 
 CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight, const DatacarrierTypes &filters) {
-    return ExtractDatacarrier(tx, nHeight, filters, nullptr, nullptr);
+    return ExtractDatacarrier(tx, nHeight, filters, nullptr, nullptr, nullptr);
 }
 
 CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight, const DatacarrierTypes &filters, bool& fReject, int& lastActiveHeight) {
-    return ExtractDatacarrier(tx, nHeight, filters, &fReject, &lastActiveHeight);
+    return ExtractDatacarrier(tx, nHeight, filters, &fReject, &lastActiveHeight, nullptr);
+}
+
+CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight, const DatacarrierTypes &filters, bool& fReject, int& lastActiveHeight, bool& isBindTx) {
+    return ExtractDatacarrier(tx, nHeight, filters, &fReject, &lastActiveHeight, &isBindTx);
 }
