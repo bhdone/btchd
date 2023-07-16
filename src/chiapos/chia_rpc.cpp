@@ -548,8 +548,9 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
     LOCK(cs_main);
     auto pindex = ::ChainActive().Tip();
     UpdateTipLogHelper helper(pindex, Params());
-    UniValue res(UniValue::VARR);
+    UniValue tips(UniValue::VARR);
 
+    int nTotal { 0 };
     for (int i = 0; i < nCount; ++i) {
         UniValue entryVal = helper.PrintJson();
         if (fOnlyVdfMatches && entryVal["vdf-req-match"].get_str() == "false") {
@@ -558,6 +559,7 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
             }
             continue;
         }
+        ++nTotal;
         // query the block
         CBlockIndex const* pindex = helper.GetBlockIndex();
         if (IsBlockPruned(pindex)) {
@@ -628,12 +630,16 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
                 entryVal.pushKV("txs", txVal);
             }
         }
-        res.push_back(entryVal);
+        tips.push_back(entryVal);
         // next
         if (!helper.MoveToPrevIndex()) {
             break;
         }
     }
+
+    UniValue res(UniValue::VOBJ);
+    res.pushKV("tips", tips);
+    res.pushKV("total", nTotal);
 
     return res;
 }
