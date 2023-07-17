@@ -2196,7 +2196,7 @@ bool CheckChiaPledgeTx(CTransaction const& tx, CCoinsViewCache const& view, CVal
                 if (fReject) {
                     return state.Invalid(ValidationInvalidReason::TX_INVALID_BIND, false, REJECT_INVALID, "tx-invalid-bind-tx-sig", "the signature of bind-tx is invalid");
                 }
-                if (nHeight > 0 && (nHeight < nLastActiveHeight - PROTOCOL_BINDPLOTTER_MAXALIVE || nHeight > nLastActiveHeight)) {
+                if (nLastActiveHeight > 0 && nHeight > 0 && (nHeight < nLastActiveHeight - PROTOCOL_BINDPLOTTER_MAXALIVE || nHeight > nLastActiveHeight)) {
                     return state.Invalid(ValidationInvalidReason::TX_INVALID_BIND, false, REJECT_INVALID, "tx-invalid-bind-tx-out-maxalive", "the bind-tx is expired");
                 }
                 return state.Invalid(ValidationInvalidReason::TX_INVALID_BIND, false, REJECT_INVALID, "tx-invalid-bind-tx", "the bind-tx is invalid cause unknown reason");
