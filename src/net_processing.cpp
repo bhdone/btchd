@@ -3348,6 +3348,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::VDF, vdfProof));
         }
+        return true;
     }
 
     if (strCommand == NetMsgType::VDF) {
@@ -3383,6 +3384,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (!chiapos::AddLocalVdfProof(vdfProof)) {
             // TODO the vdf proof already exists
         }
+        return true;
     }
 
     // Ignore unknown commands for extensibility
