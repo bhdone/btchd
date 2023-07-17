@@ -3300,6 +3300,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     }
 
     if (strCommand == NetMsgType::VDFREQ || strCommand == NetMsgType::VDFREQ64) {
+        LOCK(cs_main);
+        auto pindex = ::ChainActive().Tip();
+        int nTargetHeight = pindex->nHeight + 1;
+        auto const& params = Params().GetConsensus();
+
         // parse the packet
         uint256 challenge;
         uint64_t nReqIters;
@@ -3314,6 +3319,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 return true;
             }
             nReqIters = nReqIters32;
+        }
+        int nBaseIters = chiapos::GetBaseIters(nTargetHeight, params);
+        if (nReqIters < nBaseIters) {
+            // invalid iters required, ignore
+            return true;
         }
 
         CNodeState *state = State(pfrom->GetId());
@@ -3333,7 +3343,6 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
         });
 
-        LOCK(cs_main);
         if (!chiapos::AddLocalVdfRequest(challenge, nReqIters)) {
             // TODO the request already exists
         }

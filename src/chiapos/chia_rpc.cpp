@@ -101,13 +101,16 @@ static UniValue queryChallenge(JSONRPCRequest const& request) {
     res.pushKV("target_duration", params.BHDIP008TargetSpacing);
     res.pushKV("filter_bits",
                nTargetHeight < params.BHDIP009PlotIdBitsOfFilterEnableOnHeight ? 0 : params.BHDIP009PlotIdBitsOfFilter);
-    res.pushKV("base_iters", GetBaseIters(nTargetHeight, params));
+    int nBaseIters = GetBaseIters(nTargetHeight, params);
+    res.pushKV("base_iters", nBaseIters);
 
     // vdf requests
     UniValue vdf_reqs(UniValue::VARR);
     auto iters_vec = QueryLocalVdfRequests(challenge);
     for (auto iters : iters_vec) {
-        vdf_reqs.push_back(iters);
+        if (iters >= nBaseIters) {
+            vdf_reqs.push_back(iters);
+        }
     }
     res.pushKV("vdf_reqs", vdf_reqs);
 
