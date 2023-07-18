@@ -157,7 +157,7 @@ public:
 
     void SubmitProof(ProofPack const& proof_pack);
 
-    chiapos::Bytes BindPlotter(std::string const& address, chiapos::SecreKey const& farmerSk);
+    chiapos::Bytes BindPlotter(std::string const& address, chiapos::SecreKey const& farmerSk, int spend_height);
 
     std::vector<BindRecord> ListBindTxs(std::string const& address, int count = 10, int skip = 0,
                                         bool include_watchonly = false, bool include_invalid = false);

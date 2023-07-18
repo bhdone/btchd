@@ -4570,6 +4570,7 @@ static UniValue bindchiaplotter(const JSONRPCRequest &request)
             {
                 {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The BitcoinHD1 address to send to.\n"},
                 {"farmer_sk", RPCArg::Type::STR, RPCArg::Optional::NO, "The farmer's private-key.\n"},
+                {"spend_height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Customize the spend height.\n"},
                 {"allow_high_fee", RPCArg::Type::BOOL, /* default */ "false", "Allow this bind high transaction fee."},
                 {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG,
                     "A comment used to store what the transaction is for.\n"
@@ -4623,10 +4624,18 @@ static UniValue bindchiaplotter(const JSONRPCRequest &request)
     chiapos::CKey farmerSk(chiapos::MakeArray<chiapos::SK_LEN>(vchFarmerSk));
 
     int nChainHeight{0};
-    {
+    if (!request.params[2].isNull() && !request.params[2].get_str().empty()) {
+        if (!ParseInt32(request.params[2].get_str(), &nChainHeight)) {
+            throw std::runtime_error("failed to parse spend_height!");
+        }
+    }
+    if (nChainHeight == 0) {
         auto locked_chain = pwallet->chain().lock();
         assert(locked_chain);
         nChainHeight = locked_chain->getHeight().get_value_or(0);
+    }
+    if (nChainHeight == 0) {
+        throw std::runtime_error("cannot get chain height, the bind-tx cannot be built");
     }
 
     bindScript = GetBindChiaPlotterScriptForDestination(
@@ -4635,27 +4644,27 @@ static UniValue bindchiaplotter(const JSONRPCRequest &request)
 
     // High fee
     bool fAllowHighFee = false;
-    if (!request.params[2].isNull()) {
-        fAllowHighFee = request.params[2].get_bool();
+    if (!request.params[3].isNull()) {
+        fAllowHighFee = request.params[3].get_bool();
     }
 
     // Wallet comments
     mapValue_t mapValue;
-    if (!request.params[3].isNull() && !request.params[3].get_str().empty())
-        mapValue["comment"] = request.params[3].get_str();
     if (!request.params[4].isNull() && !request.params[4].get_str().empty())
-        mapValue["to"] = request.params[4].get_str();
+        mapValue["comment"] = request.params[4].get_str();
+    if (!request.params[5].isNull() && !request.params[5].get_str().empty())
+        mapValue["to"] = request.params[5].get_str();
 
     // Coin control
     CCoinControl coin_control;
-    if (!request.params[5].isNull()) { // Discard on fixed fee
-        coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
-    }
-    if (!request.params[6].isNull()) {
-        coin_control.m_confirm_target = ParseConfirmTarget(request.params[6], pwallet->chain().estimateMaxBlocks());
+    if (!request.params[6].isNull()) { // Discard on fixed fee
+        coin_control.m_signal_bip125_rbf = request.params[6].get_bool();
     }
     if (!request.params[7].isNull()) {
-        if (!FeeModeFromString(request.params[7].get_str(), coin_control.m_fee_mode)) {
+        coin_control.m_confirm_target = ParseConfirmTarget(request.params[7], pwallet->chain().estimateMaxBlocks());
+    }
+    if (!request.params[8].isNull()) {
+        if (!FeeModeFromString(request.params[8].get_str(), coin_control.m_fee_mode)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }

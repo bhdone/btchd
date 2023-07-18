@@ -122,8 +122,8 @@ void RPCClient::SubmitProof(ProofPack const& proof_pack) {
                proof_pack.pos.challenge, proof_pack.pos, proof_pack.farmer_sk, proof_pack.vdf, proof_pack.reward_dest);
 }
 
-chiapos::Bytes RPCClient::BindPlotter(std::string const& address, chiapos::SecreKey const& farmerSk) {
-    auto res = SendMethod(m_no_proxy, "bindchiaplotter", address, farmerSk);
+chiapos::Bytes RPCClient::BindPlotter(std::string const& address, chiapos::SecreKey const& farmerSk, int spend_height) {
+    auto res = SendMethod(m_no_proxy, "bindchiaplotter", address, farmerSk, std::to_string(spend_height));
     return chiapos::BytesFromHex(res.result.get_str());
 }
 

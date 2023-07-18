@@ -125,6 +125,7 @@ struct Arguments {
     bool check;        // parameter to check status with commands `bind`, `deposit`
     int amount;        // set the amount to deposit
     int index;         // the index for seed
+    int height;        // custom height for bind-tx
     DepositTerm term;  // The term those BHD1 should be locked on chain
     chiapos::Bytes tx_id;
     std::string address;
@@ -217,8 +218,8 @@ int HandleCommand_Bind() {
         }
         return 0;
     }
-    chiapos::Bytes tx_id =
-            pclient->BindPlotter(miner::g_config.GetRewardDest(), miner::GetSelectedKeyFromSeeds().GetSecreKey());
+    chiapos::Bytes tx_id = pclient->BindPlotter(miner::g_config.GetRewardDest(),
+                                                miner::GetSelectedKeyFromSeeds().GetSecreKey(), miner::g_args.height);
     PLOG_INFO << "tx id: " << chiapos::BytesToHex(tx_id);
     return 0;
 }
@@ -491,6 +492,7 @@ int main(int argc, char** argv) {
             ("index", "The index of the seed from seeds array parsed from config.json",
              cxxopts::value<int>()->default_value("0"))                                                 // --index
             ("address", "The address for retarget or related commands", cxxopts::value<std::string>())  // --address
+            ("height", "The height to custom bind-tx or anything else", cxxopts::value<int>()->default_value("0")) // --height
             ("dcf-bits", "Difficulty constant factor bits",
              cxxopts::value<int>()->default_value(
                      std::to_string(chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS)))  // --dcf-bits
@@ -562,6 +564,10 @@ int main(int argc, char** argv) {
 
     if (result.count("address") > 0) {
         miner::g_args.address = result["address"].as<std::string>();
+    }
+
+    if (result.count("height") > 0) {
+        miner::g_args.height = result["height"].as<int>();
     }
 
     try {
