@@ -445,6 +445,5 @@ CScript GetTextScript(const std::string& text);
 /** Parse a datacarrier transaction. */
 CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight = 0, const DatacarrierTypes &filters = {});
 CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight, const DatacarrierTypes &filters, bool& fReject, int& lastActiveHeight);
-CDatacarrierPayloadRef ExtractTransactionDatacarrier(const CTransaction& tx, int nHeight, const DatacarrierTypes &filters, bool& fReject, int& lastActiveHeight, bool& isBindTx);
 
 #endif // BITCOIN_SCRIPT_STANDARD_H
