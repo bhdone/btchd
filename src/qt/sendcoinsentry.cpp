@@ -20,10 +20,14 @@
 
 #include <QApplication>
 #include <QClipboard>
+#include <QMenu>
 
 #include <QStringListModel>
 
 #include <array>
+
+#include <key_io.h>
+
 #include "sendcoinsentry.h"
 
 static int const hour_blocks = 3600 / 180;
@@ -68,6 +72,18 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, PlatformStyle 
     ui->pointsList->setModel(pointsListModel);
     ui->pointsList->header()->setVisible(true);
     ui->pointsList->header()->setStretchLastSection(true);
+
+    QAction *copyAddrAction = new QAction(tr("Copy address"));
+    connect(copyAddrAction, &QAction::triggered, this, std::bind(&SendCoinsEntry::copyAddrActionTriggered, this));
+
+    QAction *copyTxHashAction = new QAction(tr("Copy tx hash"));
+    connect(copyTxHashAction, &QAction::triggered, copyTxHashAction, std::bind(&SendCoinsEntry::copyTxHashActionTriggered, this));
+
+    retargetContextMenu = new QMenu(tr("Retarget context menu"), this);
+    retargetContextMenu->addAction(copyAddrAction);
+    retargetContextMenu->addAction(copyTxHashAction);
+    ui->pointsList->setContextMenuPolicy(Qt::ContextMenuPolicy::CustomContextMenu);
+    connect(ui->pointsList, SIGNAL(customContextMenuRequested(QPoint const&)), this, SLOT(customRetargetContextMenu(QPoint const&)));
 
     ui->addressBookButton->setIcon(platformStyle->SingleColorIcon(":/icons/address-book"));
     ui->pasteButton->setIcon(platformStyle->SingleColorIcon(":/icons/editpaste"));
@@ -406,6 +422,37 @@ void SendCoinsEntry::updateDisplayUnit()
         ui->payAmount->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         ui->payAmount_is->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
         ui->payAmount_s->setDisplayUnit(model->getOptionsModel()->getDisplayUnit());
+    }
+}
+
+void SendCoinsEntry::customRetargetContextMenu(QPoint const& pt)
+{
+    retargetContextMenu->popup(ui->pointsList->mapToGlobal(pt));
+}
+
+void SendCoinsEntry::copyAddrActionTriggered()
+{
+    auto indexes = ui->pointsList->selectionModel()->selectedIndexes();
+    if (indexes.size() > 0) {
+        // only get the first item
+        auto pledgetx = pointsListModel->pledgeFromIndex(indexes.at(0));
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        QString addr = QString::fromStdString(EncodeDestination(pledgetx.toDest));
+        clipboard->setText(addr);
+        QMessageBox::information(this, tr("Copied"), tr("Address %1 is copied to system clipboard").arg(addr));
+    }
+}
+
+void SendCoinsEntry::copyTxHashActionTriggered()
+{
+    auto indexes = ui->pointsList->selectionModel()->selectedIndexes();
+    if (indexes.size() > 0) {
+        // only get the first item
+        auto pledgetx = pointsListModel->pledgeFromIndex(indexes.at(0));
+        QClipboard *clipboard = QGuiApplication::clipboard();
+        QString txhash = QString::fromStdString(pledgetx.txid.GetHex());
+        clipboard->setText(txhash);
+        QMessageBox::information(this, tr("Copied"), tr("Tx hash %1 is copied to system clipboard").arg(txhash));
     }
 }
 

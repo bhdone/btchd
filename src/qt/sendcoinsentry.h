@@ -17,6 +17,8 @@
 class WalletModel;
 class PlatformStyle;
 
+class QMenu;
+
 namespace Ui {
     class SendCoinsEntry;
 }
@@ -71,6 +73,10 @@ private Q_SLOTS:
     void on_refreshPointsButton_clicked();
     void updateDisplayUnit();
 
+    void customRetargetContextMenu(QPoint const&);
+    void copyAddrActionTriggered();
+    void copyTxHashActionTriggered();
+
 private:
     const PayOperateMethod payOperateMethod;
     SendCoinsRecipient recipient;
@@ -78,6 +84,7 @@ private:
     WalletModel *model;
     const PlatformStyle *platformStyle;
     PointItemModel *pointsListModel;
+    QMenu *retargetContextMenu;
 
     bool updateLabel(const QString &address);
 };
