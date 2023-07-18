@@ -125,7 +125,7 @@ static UniValue queryChallenge(JSONRPCRequest const& request) {
         vdf_proof.pushKV("witness_type", vdfProof.nWitnessType);
         vdf_proof.pushKV("iters", vdfProof.nVdfIters);
         vdf_proof.pushKV("duration", vdfProof.nVdfDuration);
-        LogPrint(BCLog::NET, "%s (VDF proof): challenge=%s, iters=%d, duration=%d (secs)\n", __func__, vdfProof.challenge.GetHex(), vdfProof.nVdfIters, vdfProof.nVdfDuration);
+        LogPrint(BCLog::NET, "%s (VDF proof): challenge=%s, iters=%ld, duration=%d (secs)\n", __func__, vdfProof.challenge.GetHex(), vdfProof.nVdfIters, vdfProof.nVdfDuration);
         vdf_proofs.push_back(std::move(vdf_proof));
     }
     res.pushKV("vdf_proofs", vdf_proofs);

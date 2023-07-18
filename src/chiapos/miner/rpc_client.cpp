@@ -99,7 +99,7 @@ RPCClient::Challenge RPCClient::QueryChallenge() {
                 local_vdf_proof.y = chiapos::MakeVDFForm(chiapos::BytesFromHex(vdf_proof["y"].get_str()));
                 local_vdf_proof.proof = chiapos::BytesFromHex(vdf_proof["proof"].get_str());
                 local_vdf_proof.witness_type = vdf_proof["witness_type"].get_int();
-                local_vdf_proof.iters = vdf_proof["iters"].get_int();
+                local_vdf_proof.iters = vdf_proof["iters"].get_int64();
                 local_vdf_proof.duration = vdf_proof["duration"].get_int();
                 ch.vdf_proofs.push_back(std::move(local_vdf_proof));
             }
