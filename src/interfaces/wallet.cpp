@@ -445,6 +445,7 @@ public:
         result.point_sent_balance = bal.m_mine_point_sent;
         result.point_received_balance = bal.m_mine_point_received;
         result.retarget_received_balance = bal.m_mine_retarget_received;
+        result.pledge_actual_received_balance = bal.m_mine_pledge_actual_received;
         if (result.have_watch_only) {
             result.frozen_watch_only_balance = bal.m_watchonly_frozen;
             result.point_sent_watch_only_balance = bal.m_watchonly_point_sent;

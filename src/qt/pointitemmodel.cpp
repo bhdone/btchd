@@ -10,7 +10,21 @@
 
 #include <chiapos/kernel/utils.h>
 
-PointItemModel::PointItemModel(CWallet* pwallet) : m_pwallet(pwallet) {
+QString MakeAmountStr(CAmount pledgeAmount, int pledgeOnHeight, PledgeTerm const& term, PledgeTerm const& fallbackTerm, int chainHeight) {
+    return QStringLiteral("%1 (%2)").arg(pledgeAmount / COIN).arg(CalcActualAmount(pledgeAmount, pledgeOnHeight, term, fallbackTerm, chainHeight) / COIN);
+}
+
+QString MakeExpiresStr(int pledgeHeight, int lockHeight, int chainHeight) {
+    int expireOnHeight = pledgeHeight + lockHeight;
+    if (expireOnHeight >= chainHeight) {
+        // unexpired
+        return QStringLiteral("%1").arg(expireOnHeight);
+    } else {
+        return QStringLiteral("%1 (expired)").arg(expireOnHeight);
+    }
+}
+
+PointItemModel::PointItemModel(CWallet* pwallet, int chainHeight, Consensus::Params const& params) : m_pwallet(pwallet), m_chainHeight(chainHeight), m_params(params) {
     reload();
 }
 
@@ -22,8 +36,17 @@ QVariant PointItemModel::data(QModelIndex const& index, int role) const {
     auto const& pledge = m_pledges[index.row()];
     auto itTx = m_pwallet->mapWallet.find(pledge.txid);
     // term
-    auto nTermIdx = pledge.payloadType - DATACARRIER_TYPE_CHIA_POINT;
-    auto const& term = params.BHDIP009PledgeTerms[nTermIdx];
+    int termIdx;
+    int pledgeHeight;
+    if (DatacarrierTypeIsChiaPoint(pledge.payloadType)) {
+        termIdx = pledge.payloadType - DATACARRIER_TYPE_CHIA_POINT;
+        pledgeHeight = pledge.nBlockHeight;
+    } else if (pledge.payloadType == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+        termIdx = pledge.pointType - DATACARRIER_TYPE_CHIA_POINT;
+        pledgeHeight = pledge.nPointHeight;
+    }
+    auto const& term = params.BHDIP009PledgeTerms[termIdx];
+    CAmount pledgeAmount = itTx->second.tx->vout[0].nValue;
     if (role == Qt::DisplayRole) {
         switch (index.column()) {
             case 0:
@@ -31,9 +54,9 @@ QVariant PointItemModel::data(QModelIndex const& index, int role) const {
             case 1:
                 return QString::fromStdString(EncodeDestination(pledge.toDest));
             case 2:
-                return pledge.nBlockHeight + term.nLockHeight;
+                return MakeExpiresStr(pledge.nBlockHeight, term.nLockHeight, m_chainHeight);
             case 3:
-                return QString::fromStdString(chiapos::MakeNumberStr(itTx->second.tx->vout[0].nValue / COIN));
+                return MakeAmountStr(pledgeAmount, pledge.nBlockHeight, term, params.BHDIP009PledgeTerms[0], m_chainHeight);
             case 4:
                 return PointTypeToTerm(pledge);
             case 5:
@@ -61,7 +84,7 @@ QVariant PointItemModel::headerData(int section, Qt::Orientation orientation, in
             case 2:
                 return tr("Expires");
             case 3:
-                return tr("Amount");
+                return tr("Amount (Actual)");
             case 4:
                 return tr("Term");
             case 5:

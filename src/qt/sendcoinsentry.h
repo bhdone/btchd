@@ -33,7 +33,7 @@ class SendCoinsEntry : public QStackedWidget
     Q_OBJECT
 
 public:
-    explicit SendCoinsEntry(PayOperateMethod payOperateMethod, const PlatformStyle *platformStyle, QWidget *parent = nullptr);
+    explicit SendCoinsEntry(PayOperateMethod payOperateMethod, const PlatformStyle *platformStyle, int chainHeight, QWidget *parent = nullptr);
     ~SendCoinsEntry();
 
     void setModel(WalletModel *model);

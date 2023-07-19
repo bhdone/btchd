@@ -7,11 +7,13 @@
 
 #include <wallet/txpledge.h>
 
+#include <consensus/params.h>
+
 class CWallet;
 
 class PointItemModel : public QAbstractItemModel {
 public:
-    explicit PointItemModel(CWallet* pwallet);
+    PointItemModel(CWallet* pwallet, int chainHeight, Consensus::Params const& params);
 
     int columnCount(QModelIndex const& parent = QModelIndex()) const override;
 
@@ -33,6 +35,8 @@ private:
     QString PointTypeToTerm(TxPledge const& pledge) const;
 
     CWallet* m_pwallet;
+    int m_chainHeight;
+    Consensus::Params const& m_params;
     std::vector<TxPledge> m_pledges;
 };
 

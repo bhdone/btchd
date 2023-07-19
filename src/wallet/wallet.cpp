@@ -32,6 +32,8 @@
 #include <wallet/coincontrol.h>
 #include <wallet/fees.h>
 
+#include "txpledge.h"
+
 #include <algorithm>
 #include <assert.h>
 #include <future>
@@ -2558,10 +2560,54 @@ CAmount CWalletTx::GetRetargetReceiveCredit(interfaces::Chain::Lock& locked_chai
         CAmount nAmount = 0;
         auto itType = mapValue.find("type");
         auto itTo = mapValue.find("to");
+        CWalletTx const* pwtx = pwallet->GetWalletTx(tx->GetHash());
+        bool trusted = pwtx->IsTrusted(locked_chain);
         if (itType != mapValue.end() && itTo != mapValue.end() && itType->second == "retarget" &&
-            !pwallet->IsSpent(locked_chain, GetHash(), 0) && (::IsMine(*pwallet, DecodeDestination(itTo->second))&filter))
+            !pwallet->IsSpent(locked_chain, GetHash(), 0) && (::IsMine(*pwallet, DecodeDestination(itTo->second))&filter) && trusted)
         {
             nAmount = tx->vout[0].nValue;
+        }
+        amount.Set(filter, nAmount);
+    }
+    return amount.m_value[filter];
+}
+
+CAmount CWalletTx::GetPledgeReceiveActualCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache, const isminefilter& filter) const
+{
+    if (pwallet == nullptr || IsCoinBase())
+        return 0;
+
+    AssertLockHeld(pwallet->cs_wallet);
+
+    auto& amount = m_amounts[PLEDGE_ACTUAL_CREDIT];
+    if (!fUseCache || !amount.m_cached[filter]) {
+        CAmount nAmount = 0;
+        auto itType = mapValue.find("type");
+        auto itTo = mapValue.find("to");
+        CWalletTx const* pwtx = pwallet->GetWalletTx(tx->GetHash());
+        bool trusted = pwtx->IsTrusted(locked_chain);
+        if (itType != mapValue.end() && itTo != mapValue.end() && (itType->second == "retarget" || itType->second == "pledge") &&
+            !pwallet->IsSpent(locked_chain, GetHash(), 0) && (::IsMine(*pwallet, DecodeDestination(itTo->second))&filter) && trusted)
+        {
+            int chainHeight = locked_chain.getHeight().get_value_or(0);
+            CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(*tx, chainHeight, DatacarrierTypes{DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1, DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3, DATACARRIER_TYPE_CHIA_POINT_RETARGET});
+            if (payload == nullptr) {
+                LogPrintf("%s: payload cannot be extracted from tx %s\n", __func__, tx->GetHash().GetHex());
+                return 0;
+            }
+            nAmount = tx->vout[0].nValue;
+            auto const& params = Params().GetConsensus();
+            int termIdx;
+            int pledgeHeight;
+            if (DatacarrierTypeIsChiaPoint(payload->type)) {
+                termIdx = payload->type - DATACARRIER_TYPE_CHIA_POINT;
+                pledgeHeight = locked_chain.getBlockHeight(pwtx->GetBlockHash()).get_value_or(0);
+            } else if (payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+                auto payloadRetarget = PointRetargetPayload::As(payload);
+                termIdx = payloadRetarget->GetPointType() - DATACARRIER_TYPE_CHIA_POINT;
+                pledgeHeight = payloadRetarget->GetPointHeight();
+            }
+            nAmount = CalcActualAmount(nAmount, pledgeHeight, params.BHDIP009PledgeTerms[termIdx], params.BHDIP009PledgeTerms[0], chainHeight);
         }
         amount.Set(filter, nAmount);
     }
@@ -2729,6 +2775,7 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
             ret.m_mine_point_received += wtx.GetPointReceiveCredit(*locked_chain, /* fUseCache */ true, ISMINE_SPENDABLE);
             ret.m_watchonly_point_received += wtx.GetPointReceiveCredit(*locked_chain, /* fUseCache */ true, ISMINE_WATCH_ONLY);
             ret.m_mine_retarget_received += wtx.GetRetargetReceiveCredit(*locked_chain, /* fUseCache */ true, ISMINE_SPENDABLE);
+            ret.m_mine_pledge_actual_received += wtx.GetPledgeReceiveActualCredit(*locked_chain, true, ISMINE_SPENDABLE);
             ret.m_watchonly_retarget_received += wtx.GetRetargetReceiveCredit(*locked_chain, /* fUseCache */ true, ISMINE_WATCH_ONLY);
         }
     }

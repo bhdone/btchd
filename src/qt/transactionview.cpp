@@ -100,6 +100,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
         TransactionFilterProxy::TYPE(TransactionRecord::SelfPoint));
     typeWidget->addItem(tr("Point received"), TransactionFilterProxy::TYPE(TransactionRecord::PointReceived) |
         TransactionFilterProxy::TYPE(TransactionRecord::SelfPoint));
+    typeWidget->addItem(tr("Retarget received"), TransactionFilterProxy::TYPE(TransactionRecord::RetargetPoint));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other) |
         TransactionFilterProxy::TYPE(TransactionRecord::UnbindPlotter) |
         TransactionFilterProxy::TYPE(TransactionRecord::WithdrawPoint));

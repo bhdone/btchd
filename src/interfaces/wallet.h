@@ -378,6 +378,7 @@ struct WalletBalances
     CAmount point_sent_balance = 0;
     CAmount point_received_balance = 0;
     CAmount retarget_received_balance = 0;
+    CAmount pledge_actual_received_balance = 0;
 
     CAmount frozen_watch_only_balance = 0;
     CAmount point_sent_watch_only_balance = 0;

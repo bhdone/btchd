@@ -50,7 +50,7 @@ int getIndexForPlotterDataValidHeight(int height) {
     return bindActiveHeights.size() - 1;
 }
 
-SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, PlatformStyle const* _platformStyle, QWidget* parent)
+SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, PlatformStyle const* _platformStyle, int chainHeight, QWidget* parent)
         : QStackedWidget(parent),
           payOperateMethod(payOperateMethod),
           ui(new Ui::SendCoinsEntry),
@@ -68,7 +68,7 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, PlatformStyle 
     ui->pointsList->setVisible(false);
     ui->refreshPointsButton->setVisible(false);
 
-    pointsListModel = new PointItemModel(GetWallets()[0].get());
+    pointsListModel = new PointItemModel(GetWallets()[0].get(), chainHeight, Params().GetConsensus());
     ui->pointsList->setModel(pointsListModel);
     ui->pointsList->header()->setVisible(true);
     ui->pointsList->header()->setStretchLastSection(true);

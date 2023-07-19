@@ -6,6 +6,8 @@
 #include <script/standard.h>
 #include <wallet/ismine.h>
 
+#include <consensus/pledge_term.h>
+
 class CWallet;
 
 struct TxPledge {
@@ -27,5 +29,7 @@ struct TxPledge {
 using TxPledgeMap = std::multimap<int64_t, TxPledge>;
 
 TxPledgeMap RetrievePledgeMap(CWallet* pwallet, bool fIncludeInvalid, isminefilter filter);
+
+CAmount CalcActualAmount(CAmount pledgeAmount, int pledgeOnHeight, PledgeTerm const& term, PledgeTerm const& fallbackTerm, int chainHeight);
 
 #endif

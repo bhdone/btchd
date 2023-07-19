@@ -539,6 +539,28 @@
               </property>
              </widget>
             </item>
+            <item row="9" column="0">
+             <widget class="QLabel" name="labelRetargetReceivedText">
+              <property name="text">
+               <string>Pledge Actual Received:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="1">
+             <widget class="QLabel" name="labelPledgeActualReceived">
+              <property name="font">
+               <font>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>0.000 000 00 BHD1</string>
+              </property>
+              <property name="textInteractionFlags">
+               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>

@@ -443,7 +443,7 @@ public:
     std::multimap<int64_t, CWalletTx*>::const_iterator m_it_wtxOrdered;
 
     // memory only
-    enum AmountType { DEBIT, CREDIT, IMMATURE_CREDIT, AVAILABLE_CREDIT, FREEZE_CREDIT, POINT_SEND_CREDIT, POINT_RECEIVE_CREDIT, RETARGET_RECEIVE_CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
+    enum AmountType { DEBIT, CREDIT, IMMATURE_CREDIT, AVAILABLE_CREDIT, FREEZE_CREDIT, POINT_SEND_CREDIT, POINT_RECEIVE_CREDIT, RETARGET_RECEIVE_CREDIT, PLEDGE_ACTUAL_CREDIT, AMOUNTTYPE_ENUM_ELEMENTS };
     CAmount GetCachableAmount(AmountType type, const isminefilter& filter, bool recalculate = false) const;
     mutable CachableAmount m_amounts[AMOUNTTYPE_ENUM_ELEMENTS];
     mutable bool fChangeCached;
@@ -599,6 +599,7 @@ public:
     CAmount GetPointSendCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
     CAmount GetPointReceiveCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
     CAmount GetRetargetReceiveCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
+    CAmount GetPledgeReceiveActualCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
 
     // Get the marginal bytes if spending the specified output from this transaction
     int GetSpendSize(unsigned int out, bool use_max_sig = false) const
@@ -1168,13 +1169,14 @@ public:
     void ReacceptWalletTransactions(interfaces::Chain::Lock& locked_chain) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void ResendWalletTransactions();
     struct Balance {
-        CAmount m_mine_trusted{0};           //!< Trusted, at depth=GetBalance.min_depth or more
-        CAmount m_mine_untrusted_pending{0}; //!< Untrusted, but in mempool (pending)
-        CAmount m_mine_immature{0};          //!< Immature coinbases in the main chain
-        CAmount m_mine_frozen{0};            //!< Freeze by bind plotter or point
-        CAmount m_mine_point_sent{0};        //!< Point sent
-        CAmount m_mine_point_received{0};    //!< Point received
-        CAmount m_mine_retarget_received{0}; //!< Retarget received
+        CAmount m_mine_trusted{0};                //!< Trusted, at depth=GetBalance.min_depth or more
+        CAmount m_mine_untrusted_pending{0};      //!< Untrusted, but in mempool (pending)
+        CAmount m_mine_immature{0};               //!< Immature coinbases in the main chain
+        CAmount m_mine_frozen{0};                 //!< Freeze by bind plotter or point
+        CAmount m_mine_point_sent{0};             //!< Point sent
+        CAmount m_mine_point_received{0};         //!< Point received
+        CAmount m_mine_retarget_received{0};      //!< Retarget received
+        CAmount m_mine_pledge_actual_received{0}; //!< Pledge actual received
         CAmount m_watchonly_trusted{0};
         CAmount m_watchonly_untrusted_pending{0};
         CAmount m_watchonly_immature{0};

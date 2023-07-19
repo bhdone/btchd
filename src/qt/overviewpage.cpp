@@ -183,6 +183,7 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
         ui->labelFrozen->setText(BitcoinUnits::formatWithUnit(unit, balances.frozen_balance, false, BitcoinUnits::separatorAlways));
         ui->labelPointReceived->setText(BitcoinUnits::formatWithUnit(unit, balances.point_received_balance, false, BitcoinUnits::separatorAlways));
         ui->labelRetargetReceived->setText(BitcoinUnits::formatWithUnit(unit, balances.retarget_received_balance, false, BitcoinUnits::separatorAlways));
+        ui->labelPledgeActualReceived->setText(BitcoinUnits::formatWithUnit(unit, balances.pledge_actual_received_balance, false, BitcoinUnits::separatorAlways));
         ui->labelWatchFrozen->setText(BitcoinUnits::formatWithUnit(unit, balances.frozen_watch_only_balance, false, BitcoinUnits::separatorAlways));
         ui->labelWatchPointReceived->setText(BitcoinUnits::formatWithUnit(unit, balances.point_received_watch_only_balance, false, BitcoinUnits::separatorAlways));
         ui->labelWatchRetargetReceived->setText(BitcoinUnits::formatWithUnit(unit, balances.retarget_received_watch_only_balance, false, BitcoinUnits::separatorAlways));
@@ -196,6 +197,7 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
     bool showFrozen = balances.frozen_balance != 0;
     bool showPointReceived = balances.point_received_balance != 0;
     bool showWatchOnlyPointReceived = balances.point_received_watch_only_balance != 0;
+    bool showPledgeActualReceived = balances.pledge_actual_received_balance != 0;
     bool showRetargetReceived = balances.retarget_received_balance != 0;
     bool showWatchOnlyRetargetReceived = balances.retarget_received_watch_only_balance != 0;
 
@@ -212,6 +214,7 @@ void OverviewPage::setBalance(const interfaces::WalletBalances& balances)
     ui->labelWatchPointReceived->setVisible(!walletModel->privateKeysDisabled() && showWatchOnlyPointReceived); // show watch-only point received balance
     ui->labelRetargetReceived->setVisible(showRetargetReceived || showWatchOnlyPointReceived);
     ui->labelRetargetReceivedText->setVisible(showRetargetReceived || showWatchOnlyPointReceived);
+    ui->labelPledgeActualReceived->setVisible(showPledgeActualReceived);
     ui->labelWatchRetargetReceived->setVisible(!walletModel->privateKeysDisabled() && showWatchOnlyRetargetReceived); // show watch-only point received balance
 }
 

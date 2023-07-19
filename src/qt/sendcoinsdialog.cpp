@@ -774,7 +774,11 @@ void SendCoinsDialog::accept()
 
 SendCoinsEntry *SendCoinsDialog::addEntry()
 {
-    SendCoinsEntry *entry = new SendCoinsEntry(getPayOperateMethod(), platformStyle, this);
+    int chainHeight {0};
+    if (model != nullptr) {
+        chainHeight = model->wallet().chain().lock()->getHeight().get_value_or(0);
+    }
+    SendCoinsEntry *entry = new SendCoinsEntry(getPayOperateMethod(), platformStyle, chainHeight, this);
     entry->setModel(model);
     ui->entries->addWidget(entry);
     connect(entry, &SendCoinsEntry::removeEntry, this, &SendCoinsDialog::removeEntry);

@@ -25,6 +25,8 @@ QString TransactionRecord::typeToString(Type type) {
         return QString("Send to other");
     case Type::RecvWithAddress:
         return QString("Recv with address");
+    case Type::RecvFromOther:
+        return QString("Recv from other");
     case Type::SendToSelf:
         return QString("Send to self");
     case Type::BindPlotter:
