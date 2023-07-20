@@ -134,8 +134,9 @@ Result CreateBindPlotterTransaction(CWallet* wallet, CTxDestination const& dest,
     // Check
     bool fReject = false;
     int lastActiveHeight = 0;
+    bool fIsBindTx { false };
     DatacarrierType datacarrierType = fChiapos ? DATACARRIER_TYPE_BINDCHIAFARMER : DATACARRIER_TYPE_BINDPLOTTER;
-    CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(*tx, nSpendHeight, DatacarrierTypes{datacarrierType}, fReject, lastActiveHeight);
+    CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(*tx, nSpendHeight, DatacarrierTypes{datacarrierType}, fReject, lastActiveHeight, fIsBindTx);
     if (!payload) {
         if (fReject)
             errors.push_back("Not for current address");

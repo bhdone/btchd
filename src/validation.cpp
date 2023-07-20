@@ -2186,8 +2186,15 @@ bool CheckChiaPledgeTx(CTransaction const& tx, CCoinsViewCache const& view, CVal
         }
     }
     if (tx.IsUniform()) {
-        auto payload = ExtractTransactionDatacarrier(tx, nHeight, {DATACARRIER_TYPE_POINT, DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_BINDCHIAFARMER, DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1, DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3, DATACARRIER_TYPE_CHIA_POINT_RETARGET});
+        bool fReject { false };
+        int nLastActiveHeight { 0 };
+        bool fIsBindTx { false };
+        auto payload = ExtractTransactionDatacarrier(tx, nHeight, {DATACARRIER_TYPE_POINT, DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_BINDCHIAFARMER, DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1, DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3, DATACARRIER_TYPE_CHIA_POINT_RETARGET}, fReject, nLastActiveHeight, fIsBindTx);
         if (payload == nullptr) {
+            if (fIsBindTx) {
+                LogPrintf("%s: invalid bind-tx has been found, nLastActiveHeight=%d, fReject=%s, tx=%s\n", __func__, nLastActiveHeight, (fReject ? "true" : "false"), tx.GetHash().GetHex());
+                return false;
+            }
             // This tx might be a withdrawal, we now check the previous coin
             if (!prevCoin.IsChiaPointRelated()) {
                 // Not the coin we interest

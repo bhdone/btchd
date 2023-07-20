@@ -15,7 +15,9 @@
 #include <util/moneystr.h>
 #include <validation.h>
 #include <subsidy_utils.h>
+
 #include <key_io.h>
+#include <core_io.h>
 
 #include <univalue.h>
 
@@ -218,7 +220,8 @@ bool Consensus::CheckTxInputs(CTransaction const& tx, CValidationState& state, C
         // Bind & Point & Retarget
         bool fReject { false };
         int nLastActiveHeight { 0 };
-        CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(tx, nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_BINDCHIAFARMER, DATACARRIER_TYPE_POINT, DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1, DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3, DATACARRIER_TYPE_CHIA_POINT_RETARGET}, fReject, nLastActiveHeight);
+        bool fIsBindTx { false };
+        CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(tx, nSpendHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER, DATACARRIER_TYPE_BINDCHIAFARMER, DATACARRIER_TYPE_POINT, DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1, DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3, DATACARRIER_TYPE_CHIA_POINT_RETARGET}, fReject, nLastActiveHeight, fIsBindTx);
         // This is an uniform tx, now we find the previous coin and check it is bind or point
         if (payload == nullptr && (tx.vin.size() == 1 && (tx.vout.size() == 1 || (nSpendHeight >= params.BHDIP009Height && tx.vout.size() <= 2 && tx.vout.size() >= 1)))) {
             // Unbind & Withdraw
@@ -249,6 +252,12 @@ bool Consensus::CheckTxInputs(CTransaction const& tx, CValidationState& state, C
                 if (nSpendHeight >= params.BHDIP007Height) {
                     LogPrintf("%s: invalid tx found %s, reason - payload is nullptr, nLastActiveHeight=%d, nSpendHeight=%d, tx.vin.size()=%d, tx.vout.size()=%d\n",
                             __func__, tx.GetHash().ToString(), nLastActiveHeight, nSpendHeight, tx.vin.size(), tx.vout.size());
+                    {
+                        // Convert the tx to json
+                        UniValue txEntry(UniValue::VOBJ);
+                        TxToUniv(tx, uint256(), txEntry);
+                        LogPrintf("%s: dump tx - %s\n%s\n", __func__, tx.GetHash().GetHex(), txEntry.write(1));
+                    }
                     return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-invaliduniform-type");
                 }
             } else {

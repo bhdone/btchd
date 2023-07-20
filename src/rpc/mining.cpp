@@ -1399,7 +1399,8 @@ static UniValue verifybindplotterdata(const JSONRPCRequest& request)
     }
     bool fReject = false;
     int lastActiveHeight = 0;
-    CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(CTransaction(dummyTx), nHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER}, fReject, lastActiveHeight);
+    bool fIsBindTx { false };
+    CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(CTransaction(dummyTx), nHeight, DatacarrierTypes{DATACARRIER_TYPE_BINDPLOTTER}, fReject, lastActiveHeight, fIsBindTx);
     if (payload && (payload->type == DATACARRIER_TYPE_BINDPLOTTER || payload->type == DATACARRIER_TYPE_BINDCHIAFARMER)) {
         // Verify pass
         result.pushKV("result", "success");
