@@ -363,7 +363,8 @@ static UniValue submitProof(JSONRPCRequest const& request) {
             return false;
         }
         nDifficulty = AdjustDifficulty(GetChiaBlockDifficulty(pindexPrev, params), nTotalDuration,
-                                       params.BHDIP008TargetSpacing, GetDifficultyChangeMaxFactor(pindexPrev->nHeight + 1, params),
+                                       params.BHDIP008TargetSpacing, QueryDurationFix(pindexPrev->nHeight + 1, params.BHDIP009TargetDurationFixes),
+                                       GetDifficultyChangeMaxFactor(pindexPrev->nHeight + 1, params),
                                        params.BHDIP009StartDifficulty);
     }
 

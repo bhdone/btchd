@@ -322,6 +322,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewChiaBlock(const CBlockI
     pblock->chiaposFields.vdfProof = vdfProof;
     pblock->chiaposFields.nDifficulty =
         chiapos::AdjustDifficulty(nDifficultyPrev, pblock->chiaposFields.GetTotalDuration(), params.BHDIP008TargetSpacing,
+                                  chiapos::QueryDurationFix(nHeight, params.BHDIP009TargetDurationFixes),
                                   chiapos::GetDifficultyChangeMaxFactor(nHeight, params), params.BHDIP009StartDifficulty);
 
     LogPrint(BCLog::POC, "%s: difficulty=%ld, farmer-pk: %s, duration: %ld, iters: %ld\n", __func__, pblock->chiaposFields.nDifficulty,
