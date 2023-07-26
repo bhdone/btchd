@@ -751,6 +751,46 @@ static UniValue dumpBurstCheckpoints(JSONRPCRequest const& request) {
     return res;
 }
 
+NODISCARD static UniValue dumpPosProof(CPosProof const& posProof, int nHeight) {
+    UniValue res(UniValue::VOBJ);
+    res.pushKV("height", nHeight);
+    res.pushKV("challenge", posProof.challenge.GetHex());
+    res.pushKV("poolpk_puzzlehash", BytesToHex(posProof.vchPoolPkOrHash));
+    res.pushKV("localpk", BytesToHex(posProof.vchLocalPk));
+    res.pushKV("farmerpk", BytesToHex(posProof.vchFarmerPk));
+    res.pushKV("plot_type", posProof.nPlotType);
+    res.pushKV("plot_k", posProof.nPlotK);
+    res.pushKV("proof", BytesToHex(posProof.vchProof));
+    return res;
+}
+
+static UniValue dumpPosProofs(JSONRPCRequest const& request) {
+    RPCHelpMan("dumpposproof", "Dump pos proofs", {
+        {"count", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "how many blocks are wanted"}
+    }, RPCResult("\"result\", the pos list in json array"), RPCExamples(HelpExampleCli("dumpposproof", "n"))).Check(request);
+
+    LOCK(cs_main);
+    auto pindex = ::ChainActive().Tip();
+
+    auto const& params = Params().GetConsensus();
+    int nNumBlocks = pindex->nHeight - params.BHDIP009Height + 1;
+
+    if (request.params.size() == 1 && !ParseInt32("count", &nNumBlocks)) {
+        throw std::runtime_error("cannot parse parameter `count`");
+    }
+
+    UniValue res(UniValue::VARR);
+    for (int i = 0; i < nNumBlocks; ++i) {
+        UniValue proofVal = dumpPosProof(pindex->chiaposFields.posProof, pindex->nHeight);
+        res.push_back(std::move(proofVal));
+        pindex = pindex->pprev;
+        if (pindex == nullptr) {
+            break;
+        }
+    }
+    return res;
+}
+
 static CRPCCommand const commands[] = {
         {"chia", "checkchiapos", &checkChiapos, {}},
         {"chia", "querychallenge", &queryChallenge, {}},
@@ -765,6 +805,7 @@ static CRPCCommand const commands[] = {
         {"chia", "dumpburstcheckpoints", &dumpBurstCheckpoints, {}},
         {"chia", "submitvdfrequest", &submitVdfRequest, {"challenge", "iters"}},
         {"chia", "submitvdfproof", &submitVdfProof, {"challenge", "y", "proof", "witness_type", "iters", "duration"}},
+        {"chia", "dumpposproofs", &dumpPosProofs, {"count"}},
 };
 
 void RegisterChiaRPCCommands(CRPCTable& t) {
