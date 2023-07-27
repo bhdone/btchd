@@ -751,16 +751,29 @@ static UniValue dumpBurstCheckpoints(JSONRPCRequest const& request) {
     return res;
 }
 
-NODISCARD static UniValue dumpPosProof(CPosProof const& posProof, int nHeight) {
+NODISCARD static UniValue dumpPosProof(CPosProof const& posProof, CVdfProof const& vdfProof, int nHeight) {
     UniValue res(UniValue::VOBJ);
     res.pushKV("height", nHeight);
-    res.pushKV("challenge", posProof.challenge.GetHex());
-    res.pushKV("poolpk_puzzlehash", BytesToHex(posProof.vchPoolPkOrHash));
-    res.pushKV("localpk", BytesToHex(posProof.vchLocalPk));
-    res.pushKV("farmerpk", BytesToHex(posProof.vchFarmerPk));
-    res.pushKV("plot_type", posProof.nPlotType);
-    res.pushKV("plot_k", posProof.nPlotK);
-    res.pushKV("proof", BytesToHex(posProof.vchProof));
+
+    UniValue posVal(UniValue::VOBJ);
+    posVal.pushKV("challenge", posProof.challenge.GetHex());
+    posVal.pushKV("poolpk_puzzlehash", BytesToHex(posProof.vchPoolPkOrHash));
+    posVal.pushKV("localpk", BytesToHex(posProof.vchLocalPk));
+    posVal.pushKV("farmerpk", BytesToHex(posProof.vchFarmerPk));
+    posVal.pushKV("plot_type", posProof.nPlotType);
+    posVal.pushKV("plot_k", posProof.nPlotK);
+    posVal.pushKV("proof", BytesToHex(posProof.vchProof));
+    res.pushKV("pos", posVal);
+
+    UniValue vdfVal(UniValue::VOBJ);
+    vdfVal.pushKV("challenge", vdfProof.challenge.GetHex());
+    vdfVal.pushKV("y", BytesToHex(vdfProof.vchY));
+    vdfVal.pushKV("proof", BytesToHex(vdfProof.vchProof));
+    vdfVal.pushKV("witness_type", vdfProof.nWitnessType);
+    vdfVal.pushKV("iters", vdfProof.nVdfIters);
+    vdfVal.pushKV("duration", vdfProof.nVdfDuration);
+    res.pushKV("vdf", vdfVal);
+
     return res;
 }
 
@@ -781,7 +794,7 @@ static UniValue dumpPosProofs(JSONRPCRequest const& request) {
 
     UniValue res(UniValue::VARR);
     for (int i = 0; i < nNumBlocks; ++i) {
-        UniValue proofVal = dumpPosProof(pindex->chiaposFields.posProof, pindex->nHeight);
+        UniValue proofVal = dumpPosProof(pindex->chiaposFields.posProof, pindex->chiaposFields.vdfProof, pindex->nHeight);
         res.push_back(std::move(proofVal));
         pindex = pindex->pprev;
         if (pindex == nullptr) {
