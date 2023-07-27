@@ -60,6 +60,7 @@ enum class CommandType : int {
     BLOCK_SUBSIDY,
     SUPPLIED,
     MINING_REQ,
+    TIMING_TEST,
     MAX
 };
 
@@ -85,6 +86,8 @@ std::string ConvertCommandToString(CommandType type) {
             return "supplied";
         case CommandType::MINING_REQ:
             return "mining-req";
+        case CommandType::TIMING_TEST:
+            return "timing-test";
         case CommandType::MAX:
             return "(max)";
     }
@@ -133,6 +136,7 @@ struct Arguments {
     int difficulty_constant_factor_bits;  // dcf bits (chain parameter)
     std::string datadir;                  // The root path of the data directory
     std::string cookie_path;              // The file stores the connecting information of current btchd server
+    std::string posproofs_path;           // The pos proofs for testing timeing
 } g_args;
 
 miner::Config g_config;
@@ -443,6 +447,61 @@ int HandleCommand_SupplyTest() {
     return 0;
 }
 
+struct ProofRecord {
+    int height;
+    chiapos::CPosProof pos;
+    chiapos::CVdfProof vdf;
+};
+
+int HandleCommand_TimingTest() {
+    if (!fs::exists(miner::g_args.posproofs_path) || !fs::is_regular_file(miner::g_args.posproofs_path)) {
+        throw std::runtime_error("the data file storing pos proofs must exists");
+    }
+    std::ifstream is(miner::g_args.posproofs_path);
+    if (!is.is_open()) {
+        throw std::runtime_error("cannot open file to read");
+    }
+    auto file_size = fs::file_size(miner::g_args.posproofs_path);
+    std::shared_ptr<char> pstr(new char[file_size], [](char* p) { delete[] p; });
+    is.read(pstr.get(), file_size);
+    UniValue proofsVal;
+    proofsVal.read(pstr.get());
+    if (!proofsVal.isArray()) {
+        throw std::runtime_error("invalid type of the root value from json file, it must be an array");
+    }
+    std::vector<ProofRecord> proofs;
+    for (auto const& proofVal : proofsVal.getValues()) {
+        ProofRecord rec;
+        rec.height = proofVal["height"].get_int();
+        UniValue const& posVal = proofVal["pos"];
+        rec.pos.challenge = uint256S(posVal["challenge"].get_str());
+        rec.pos.vchPoolPkOrHash = chiapos::BytesFromHex(posVal["poolpk_puzzlehash"].get_str());
+        rec.pos.vchLocalPk = chiapos::BytesFromHex(posVal["localpk"].get_str());
+        rec.pos.vchFarmerPk = chiapos::BytesFromHex(posVal["farmerpk"].get_str());
+        rec.pos.nPlotType = posVal["plot_type"].get_int();
+        rec.pos.nPlotK = posVal["plot_k"].get_int();
+        rec.pos.vchProof = chiapos::BytesFromHex(posVal["proof"].get_str());
+        UniValue const& vdfVal = proofVal["vdf"];
+        rec.vdf.challenge = uint256S(vdfVal["challenge"].get_str());
+        rec.vdf.vchY = chiapos::BytesFromHex(vdfVal["y"].get_str());
+        rec.vdf.vchProof = chiapos::BytesFromHex(vdfVal["proof"].get_str());
+        rec.vdf.nWitnessType = vdfVal["witness_type"].get_int();
+        rec.vdf.nVdfIters = vdfVal["iters"].get_int();
+        rec.vdf.nVdfDuration = vdfVal["duration"].get_int();
+        proofs.push_back(std::move(rec));
+    }
+    int count{0};
+    uint64_t total_duration{0};
+    for (auto const& proof : proofs) {
+        total_duration += proof.vdf.nVdfDuration;
+        ++count;
+    }
+    int average_duration = total_duration / count;
+    PLOGI << tinyformat::format("average duration: %d seconds (%s)", average_duration,
+                                chiapos::FormatTime(average_duration));
+    return 0;
+}
+
 template <typename T>
 T MakeRandomInt() {
     int n = sizeof(T);
@@ -492,7 +551,8 @@ int main(int argc, char** argv) {
             ("index", "The index of the seed from seeds array parsed from config.json",
              cxxopts::value<int>()->default_value("0"))                                                 // --index
             ("address", "The address for retarget or related commands", cxxopts::value<std::string>())  // --address
-            ("height", "The height to custom bind-tx or anything else", cxxopts::value<int>()->default_value("0")) // --height
+            ("height", "The height to custom bind-tx or anything else",
+             cxxopts::value<int>()->default_value("0"))  // --height
             ("dcf-bits", "Difficulty constant factor bits",
              cxxopts::value<int>()->default_value(
                      std::to_string(chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS)))  // --dcf-bits
@@ -500,6 +560,7 @@ int main(int argc, char** argv) {
              cxxopts::value<std::string>())  // --datadir, -d
             ("cookie", "Full path to `.cookie` from btchd datadir",
              cxxopts::value<std::string>())  // --cookie
+            ("posproofs", "Path to the file contains PoS proofs", cxxopts::value<std::string>()) // --posproofs
             ("command", std::string("Command") + miner::GetCommandsList(),
              cxxopts::value<std::string>())  // --command
             ;
@@ -594,6 +655,10 @@ int main(int argc, char** argv) {
         }
     }
 
+    if (result.count("posproofs")) {
+        miner::g_args.posproofs_path = result["posproofs"].as<std::string>();
+    }
+
     miner::g_args.difficulty_constant_factor_bits = result["dcf-bits"].as<int>();
 
     PLOG_INFO << "network: " << (miner::g_config.Testnet() ? "testnet" : "main");
@@ -618,6 +683,8 @@ int main(int argc, char** argv) {
                 return HandleCommand_Retarget();
             case miner::CommandType::MINING_REQ:
                 return HandleCommand_MiningRequirement();
+            case miner::CommandType::TIMING_TEST:
+                return HandleCommand_TimingTest();
             case miner::CommandType::GEN_CONFIG:
             case miner::CommandType::UNKNOWN:
             case miner::CommandType::MAX:
