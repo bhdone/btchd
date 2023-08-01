@@ -362,10 +362,15 @@ static UniValue submitProof(JSONRPCRequest const& request) {
                       hashPrevBlock.GetHex());
             return false;
         }
+        double targetMulFactor = 1.0;
+        int nTargetHeight = pindexPrev->nHeight + 1;
+        if (nTargetHeight >= params.BHDIP009TargetSpacingMulFactorEnableAtHeight) {
+            targetMulFactor = params.BHDIP009TargetSpacingMulFactor;
+        }
         nDifficulty = AdjustDifficulty(GetChiaBlockDifficulty(pindexPrev, params), nTotalDuration,
-                                       params.BHDIP008TargetSpacing, QueryDurationFix(pindexPrev->nHeight + 1, params.BHDIP009TargetDurationFixes),
-                                       GetDifficultyChangeMaxFactor(pindexPrev->nHeight + 1, params),
-                                       params.BHDIP009StartDifficulty);
+                                       params.BHDIP008TargetSpacing, QueryDurationFix(nTargetHeight, params.BHDIP009TargetDurationFixes),
+                                       GetDifficultyChangeMaxFactor(nTargetHeight, params),
+                                       params.BHDIP009StartDifficulty, targetMulFactor);
     }
 
     // We should put it to the chain immediately

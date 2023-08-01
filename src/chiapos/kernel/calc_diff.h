@@ -35,7 +35,8 @@ Int expected_plot_size(uint8_t k) {
 }
 
 uint64_t AdjustDifficulty(uint64_t prev_block_difficulty, uint64_t curr_block_duration, uint64_t target_duration,
-                          int duration_fix, double max_factor, uint64_t network_min_difficulty);
+                          int duration_fix, double max_factor, uint64_t network_min_difficulty,
+                          double target_mul_factor);
 
 int QueryDurationFix(int curr_height, std::map<int, int> const& fixes);
 

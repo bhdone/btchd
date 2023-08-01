@@ -460,8 +460,9 @@ public:
     BlockGeneratingSimulator(uint64_t const& init_diff, uint64_t ips) : init_diff_(init_diff), ips_(ips) {}
 
     uint64_t AdjustDifficulty(uint64_t curr_diff, chiapos::CPosProof const& pos, uint64_t duration,
-                              uint64_t target_duration, double diff_change_max_factor) {
-        return chiapos::AdjustDifficulty(curr_diff, duration, target_duration, 0, diff_change_max_factor, init_diff_);
+                              uint64_t target_duration, double diff_change_max_factor, double targetMulFactor) {
+        return chiapos::AdjustDifficulty(curr_diff, duration, target_duration, 0, diff_change_max_factor, init_diff_,
+                                         targetMulFactor);
     }
 
     uint64_t CalculateIterations(chiapos::CPosProof const& pos, int bits_filter, uint64_t diff,
@@ -526,7 +527,6 @@ int HandleCommand_TimingTest() {
     int vdf_speed{200000};
     auto params = miner::GetChainParams().GetConsensus();
     // modify the base parameters
-    params.BHDIP008TargetSpacing = 60 * 1.3;
     params.BHDIP009BaseIters = 0;
     LOGI << tinyformat::format("base-iters=%s, DCFB=%d, target spacing=%d",
                                chiapos::FormatNumberStr(std::to_string(params.BHDIP009BaseIters)),
@@ -537,8 +537,9 @@ int HandleCommand_TimingTest() {
     uint64_t min_diff{std::numeric_limits<uint64_t>::max()}, max_diff{0};
     for (auto const& proof : proofs) {
         // calculate
-        uint64_t new_diff = sim.AdjustDifficulty(curr_diff, proof.pos, duration, params.BHDIP008TargetSpacing,
-                                                 params.BHDIP009DifficultyChangeMaxFactor);
+        uint64_t new_diff =
+                sim.AdjustDifficulty(curr_diff, proof.pos, duration, params.BHDIP008TargetSpacing,
+                                     params.BHDIP009DifficultyChangeMaxFactor, params.BHDIP009TargetSpacingMulFactor);
         if (new_diff > max_diff) {
             max_diff = new_diff;
         }

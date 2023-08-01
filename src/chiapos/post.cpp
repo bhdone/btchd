@@ -187,9 +187,13 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
                              "the value of previous difficulty is zero");
     }
+    double targetMulFactor = 1.0;
+    if (nTargetHeight >= params.BHDIP009TargetSpacingMulFactorEnableAtHeight) {
+        targetMulFactor = params.BHDIP009TargetSpacingMulFactor;
+    }
     uint64_t nDifficulty = AdjustDifficulty(nDifficultyPrev, fields.GetTotalDuration(), params.BHDIP008TargetSpacing,
                                             QueryDurationFix(nTargetHeight, params.BHDIP009TargetDurationFixes),
-                                            GetDifficultyChangeMaxFactor(nTargetHeight, params), params.BHDIP009StartDifficulty);
+                                            GetDifficultyChangeMaxFactor(nTargetHeight, params), params.BHDIP009StartDifficulty, targetMulFactor);
     if (nDifficulty == 0) {
         return state.Invalid(ValidationInvalidReason::BLOCK_INVALID_HEADER, false, REJECT_INVALID, SZ_BAD_WHAT,
                              "the value of current difficulty is zero");
