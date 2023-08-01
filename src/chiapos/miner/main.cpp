@@ -22,6 +22,8 @@
 #include <functional>
 #include <string>
 #include <thread>
+#include "chiapos/block_fields.h"
+#include "chiapos/kernel/pos.h"
 
 #ifdef _WIN32
 #include <shlobj.h>
@@ -453,6 +455,33 @@ struct ProofRecord {
     chiapos::CVdfProof vdf;
 };
 
+class BlockGeneratingSimulator {
+public:
+    BlockGeneratingSimulator(uint64_t const& init_diff, uint64_t ips) : init_diff_(init_diff), ips_(ips) {}
+
+    uint64_t AdjustDifficulty(uint64_t curr_diff, chiapos::CPosProof const& pos, uint64_t duration,
+                              uint64_t target_duration, double diff_change_max_factor) {
+        return chiapos::AdjustDifficulty(curr_diff, duration, target_duration, 0, diff_change_max_factor, init_diff_);
+    }
+
+    uint64_t CalculateIterations(chiapos::CPosProof const& pos, int bits_filter, uint64_t diff,
+                                 uint8_t diff_factor_bits, int base_iters) {
+        auto mixed_quality_str = chiapos::MakeMixedQualityString(
+                chiapos::MakeArray<chiapos::PK_LEN>(pos.vchLocalPk),
+                chiapos::MakeArray<chiapos::PK_LEN>(pos.vchFarmerPk),
+                chiapos::MakePubKeyOrHash(static_cast<chiapos::PlotPubKeyType>(pos.nPlotType), pos.vchPoolPkOrHash),
+                pos.nPlotK, pos.challenge, pos.vchProof);
+        return chiapos::CalculateIterationsQuality(mixed_quality_str, diff, bits_filter, diff_factor_bits, pos.nPlotK,
+                                                   base_iters);
+    }
+
+    int CalculateDurationByIterations(uint64_t iters) const { return iters / ips_; }
+
+private:
+    uint64_t init_diff_;
+    uint64_t ips_;
+};
+
 int HandleCommand_TimingTest() {
     if (!fs::exists(miner::g_args.posproofs_path) || !fs::is_regular_file(miner::g_args.posproofs_path)) {
         throw std::runtime_error("the data file storing pos proofs must exists");
@@ -490,15 +519,54 @@ int HandleCommand_TimingTest() {
         rec.vdf.nVdfDuration = vdfVal["duration"].get_int();
         proofs.push_back(std::move(rec));
     }
+    PLOGI << tinyformat::format("%s: total %d blocks", __func__, proofs.size());
     int count{0};
     uint64_t total_duration{0};
+    int duration{60 * 3};
+    int vdf_speed{200000};
+    auto params = miner::GetChainParams().GetConsensus();
+    // modify the base parameters
+    params.BHDIP008TargetSpacing = 60 * 1.3;
+    params.BHDIP009BaseIters = 0;
+    LOGI << tinyformat::format("base-iters=%s, DCFB=%d, target spacing=%d",
+                               chiapos::FormatNumberStr(std::to_string(params.BHDIP009BaseIters)),
+                               params.BHDIP009DifficultyConstantFactorBits, params.BHDIP008TargetSpacing);
+    uint64_t curr_diff{params.BHDIP009StartDifficulty};
+    BlockGeneratingSimulator sim(params.BHDIP009StartDifficulty, vdf_speed);
+    int max_time{0}, min_time{999999};
+    uint64_t min_diff{std::numeric_limits<uint64_t>::max()}, max_diff{0};
     for (auto const& proof : proofs) {
-        total_duration += proof.vdf.nVdfDuration;
+        // calculate
+        uint64_t new_diff = sim.AdjustDifficulty(curr_diff, proof.pos, duration, params.BHDIP008TargetSpacing,
+                                                 params.BHDIP009DifficultyChangeMaxFactor);
+        if (new_diff > max_diff) {
+            max_diff = new_diff;
+        }
+        if (new_diff < min_diff) {
+            min_diff = new_diff;
+        }
+        uint64_t iters = sim.CalculateIterations(proof.pos, params.BHDIP009PlotIdBitsOfFilter, new_diff,
+                                                 params.BHDIP009DifficultyConstantFactorBits, params.BHDIP009BaseIters);
+        duration = std::max(sim.CalculateDurationByIterations(iters), 1);
+        int curr_time = duration;
+        if (curr_time > max_time) {
+            max_time = curr_time;
+        }
+        if (curr_time < min_time) {
+            min_time = curr_time;
+        }
+        total_duration += duration;
+        curr_diff = new_diff;
         ++count;
+        LOGD << tinyformat::format("iters=%ld(%s), height=%d, diff=%ld, challenge=%s, proof=%s", iters,
+                                   chiapos::FormatTime(duration), proof.height, curr_diff, proof.pos.challenge.GetHex(),
+                                   chiapos::BytesToHex(proof.pos.vchProof));
     }
     int average_duration = total_duration / count;
-    PLOGI << tinyformat::format("average duration: %d seconds (%s)", average_duration,
-                                chiapos::FormatTime(average_duration));
+    PLOGI << tinyformat::format(
+            "average duration: %d seconds (%s), max time: %s, min time %s, max diff: %ld, min diff: %ld",
+            average_duration, chiapos::FormatTime(average_duration), chiapos::FormatTime(max_time),
+            chiapos::FormatTime(min_time), max_diff, min_diff);
     return 0;
 }
 
@@ -559,8 +627,8 @@ int main(int argc, char** argv) {
             ("d,datadir", "The root path of the data directory",
              cxxopts::value<std::string>())  // --datadir, -d
             ("cookie", "Full path to `.cookie` from btchd datadir",
-             cxxopts::value<std::string>())  // --cookie
-            ("posproofs", "Path to the file contains PoS proofs", cxxopts::value<std::string>()) // --posproofs
+             cxxopts::value<std::string>())                                                       // --cookie
+            ("posproofs", "Path to the file contains PoS proofs", cxxopts::value<std::string>())  // --posproofs
             ("command", std::string("Command") + miner::GetCommandsList(),
              cxxopts::value<std::string>())  // --command
             ;
