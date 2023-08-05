@@ -723,6 +723,7 @@ public:
         consensus.BHDIP009BaseItersVec.push_back(std::make_pair(203950, 0));
         consensus.BHDIP009BaseItersVec.push_back(std::make_pair(204520, AVERAGE_VDF_SPEED * 60 * 2));
         consensus.BHDIP009BaseItersVec.push_back(std::make_pair(207300, 0));
+        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(209958, AVERAGE_VDF_SPEED * 3));
         consensus.BHDIP009TargetDurationFixes.insert(std::make_pair(204520, -30));
         consensus.BHDIP009TargetDurationFixes.insert(std::make_pair(209500, 0));
         consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(32) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
