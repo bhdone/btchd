@@ -164,8 +164,12 @@ public:
         consensus.BHDIP009CalculateDistributedAmountEveryHeights = nHeightsOfADay * 30; // every 30 days the distributed amount will be changed
         consensus.BHDIP009PledgeRetargetMinHeights = (SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing) * 7; // minimal number to retarget a pledge is 7 days
         consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
+
+        // Change the number of height to apply the duration fix.
+        const int BLOCK_DURATION_FIX_ON_HEIGHT = 99999999;
+        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(BLOCK_DURATION_FIX_ON_HEIGHT, AVERAGE_VDF_SPEED * 3));
         consensus.BHDIP009TargetSpacingMulFactor = 0.433333;
-        consensus.BHDIP009TargetSpacingMulFactorEnableAtHeight = 99999999;
+        consensus.BHDIP009TargetSpacingMulFactorEnableAtHeight = BLOCK_DURATION_FIX_ON_HEIGHT;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
