@@ -220,6 +220,17 @@ static UniValue getrawtransaction(const JSONRPCRequest& request)
     UniValue result(UniValue::VOBJ);
     if (blockindex) result.pushKV("in_active_chain", in_active_chain);
     TxToJSON(*tx, hash_block, result);
+    // patch, show the bind-tx validation
+    if (tx->IsUniform()) {
+        CDatacarrierPayloadRef payload = ExtractTransactionDatacarrier(*tx, 0, {DATACARRIER_TYPE_BINDCHIAFARMER});
+        if (payload) {
+            auto bindPayload = BindPlotterPayload::As(payload);
+            CAccountID accountID = ExtractAccountID(tx->vout[0].scriptPubKey);
+            LOCK(cs_main);
+            auto const& view = ::ChainstateActive().CoinsTip();
+            result.pushKV("bindtx-validity", view.HaveActiveBindPlotter(accountID, bindPayload->GetId()));
+        }
+    }
     return result;
 }
 
