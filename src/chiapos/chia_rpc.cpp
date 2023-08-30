@@ -415,8 +415,7 @@ static UniValue queryNetspace(JSONRPCRequest const& request) {
 static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
     RPCHelpMan("queryminingrequirement", "Query the pledge requirement for the miner",
                {
-                       {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The miner address"},
-                       {"farmer-pk", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The farmer public-key"},
+                   {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The miner address"},
                },
                RPCResult("\"{json}\" the requirement for the miner"),
                RPCExamples(HelpExampleCli("queryminerpledgeinfo", "xxxxxx xxxxxx")))
@@ -430,9 +429,9 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
     }
 
     std::string address = request.params[0].get_str();
-    Bytes vchFarmerPk = ParseHexV(request.params[1], "farmer-pk");
-
     CAccountID accountID = ExtractAccountID(DecodeDestination(address));
+
+    std::vector<uint8_t> vchFarmerPk(chiapos::PK_LEN, '\0');
     CChiaFarmerPk farmerPk(vchFarmerPk);
     CPlotterBindData bindData(farmerPk);
 
@@ -449,18 +448,53 @@ static UniValue queryMiningRequirement(JSONRPCRequest const& request) {
     CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params) +
                              GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
 
-    UniValue res(UniValue::VOBJ);
-    res.pushKV("address", address);
-    res.pushKV("farmer-pk", chiapos::BytesToHex(vchFarmerPk));
-    res.pushKV("require", nReq);
-    res.pushKV("mined", nMinedCount);
-    res.pushKV("count", nTotalCount);
-    res.pushKV("burned", nBurned);
-    res.pushKV("accumulate", nAccumulate);
-    res.pushKV("supplied", nTotalSupplied);
-    res.pushKV("height", nTargetHeight);
-    res.pushKV("calc-height", nHeightForCalculatingTotalSupply);
+    UniValue summary(UniValue::VOBJ);
+    summary.pushKV("address", address);
+    summary.pushKV("require", nReq);
+    summary.pushKV("mined", nMinedCount);
+    summary.pushKV("count", nTotalCount);
+    summary.pushKV("burned", nBurned);
+    summary.pushKV("accumulate", nAccumulate);
+    summary.pushKV("supplied", nTotalSupplied);
+    summary.pushKV("height", nTargetHeight);
+    summary.pushKV("calc-height", nHeightForCalculatingTotalSupply);
 
+    // Retrieve all public-key which are binding with this account
+    UniValue pklist(UniValue::VARR);
+    auto fpks = view.GetAccountBindPlotters(accountID, CPlotterBindData::Type::CHIA);
+    for (auto const& fpk : fpks) {
+        pklist.push_back(fpk.GetChiaFarmerPk().ToString());
+    }
+
+    // List mined blocks which are related to this account
+    UniValue blks(UniValue::VARR);
+    auto pcurrIndex = pindex;
+    int count{0}, mined{0};
+    while (pcurrIndex && pcurrIndex->nHeight >= params.BHDIP009Height && count < params.nCapacityEvalWindow) {
+        // check fpk from the block
+        for (auto const& fpk : fpks) {
+            if (fpk.GetChiaFarmerPk().ToBytes() == pcurrIndex->chiaposFields.posProof.vchFarmerPk) {
+                // Now we export the block to UniValue and push it to array
+                UniValue blkVal(UniValue::VOBJ);
+                auto dest = CTxDestination(static_cast<ScriptHash>(pcurrIndex->generatorAccountID));
+                std::string accountIDStr = EncodeDestination(dest);
+                blkVal.pushKV("height", pcurrIndex->nHeight);
+                blkVal.pushKV("hash", pcurrIndex->GetBlockHash().GetHex());
+                blkVal.pushKV("fpk", chiapos::BytesToHex(pcurrIndex->chiaposFields.posProof.vchFarmerPk));
+                blkVal.pushKV("accountID", accountIDStr);
+                blks.push_back(blkVal);
+                break;
+            }
+        }
+        // next
+        pcurrIndex = pcurrIndex->pprev;
+        ++count;
+    }
+
+    UniValue res(UniValue::VOBJ);
+    res.pushKV("summary", summary);
+    res.pushKV("fpks", pklist);
+    res.pushKV("mined", blks);
     return res;
 }
 
