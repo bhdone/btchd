@@ -113,7 +113,7 @@ SendCoinsEntry::SendCoinsEntry(PayOperateMethod payOperateMethod, PlatformStyle 
     connect(ui->refreshPointsButton, &QPushButton::clicked, this, &SendCoinsEntry::on_refreshPointsButton_clicked);
 
     // Pay method
-    if (payOperateMethod == PayOperateMethod::Point) {
+    if (payOperateMethod == PayOperateMethod::Point || payOperateMethod == PayOperateMethod::ChiaPoint || payOperateMethod == PayOperateMethod::ChiaPoint || payOperateMethod == PayOperateMethod::ChiaPointT1 || payOperateMethod == PayOperateMethod::ChiaPointT2 || payOperateMethod == PayOperateMethod::ChiaPointT3) {
         ui->payToLabel->setText(tr("Point &To:"));
     } else if (payOperateMethod == PayOperateMethod::BindPlotter || payOperateMethod == PayOperateMethod::ChiaBindFarmerPk) {
         ui->payToLabel->setText(tr("Bind &To:"));
