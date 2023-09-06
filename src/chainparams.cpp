@@ -26,6 +26,7 @@
 
 const uint32_t SECONDS_OF_A_DAY = 60 * 60 * 24;
 const int AVERAGE_VDF_SPEED = 200 * 1000; // 200k ips we assume
+const int AVERAGE_VDF_SPEED_TESTNET = 70 * 1000; // 70k ips we assume
 
 static CBlock CreateGenesisBlock(char const* pszTimestamp, CScript const& genesisOutputScript, uint32_t nTime,
                                  uint64_t nNonce, uint64_t nBaseTarget, int32_t nVersion,
@@ -712,24 +713,23 @@ public:
         consensus.BHDIP009OldPledgesDisableOnHeight = consensus.BHDIP009Height + nHeightsOfADay * 14;
         consensus.BHDIP009FundAddresses = {"2N7mAbSHzAeCiY2WJzREPJYKTEJbKo7tYke"};
         consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
-        consensus.BHDIP009StartBlockIters = AVERAGE_VDF_SPEED * consensus.BHDIP008TargetSpacing;
+        consensus.BHDIP009StartBlockIters = AVERAGE_VDF_SPEED_TESTNET * consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009DifficultyConstantFactorBits = chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS;
         consensus.BHDIP009DifficultyEvalWindow = 100;
         consensus.BHDIP009PlotIdBitsOfFilter = 0;
         consensus.BHDIP009PlotIdBitsOfFilterEnableOnHeight = consensus.BHDIP009Height + 0;
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K_TEST_NET;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
-        consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED * 60 * 2;
-        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200210, AVERAGE_VDF_SPEED * 60 * 2));
-        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200240, AVERAGE_VDF_SPEED * 60 * 1.5));
-        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200755, AVERAGE_VDF_SPEED * 0.5));
-        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200850, AVERAGE_VDF_SPEED * 60 * 2));
-        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(203950, 0));
-        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(204520, AVERAGE_VDF_SPEED * 60 * 2));
-        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(207300, 0));
-        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(209958, AVERAGE_VDF_SPEED * 3));
-        consensus.BHDIP009TargetDurationFixes.insert(std::make_pair(204520, -30));
-        consensus.BHDIP009TargetDurationFixes.insert(std::make_pair(209500, 0));
+        consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED_TESTNET * 3;
+        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200210, AVERAGE_VDF_SPEED * 60 * 2));
+        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200240, AVERAGE_VDF_SPEED * 60 * 1.5));
+        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200755, AVERAGE_VDF_SPEED * 0.5));
+        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200850, AVERAGE_VDF_SPEED * 60 * 2));
+        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(203950, 0));
+        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(204520, AVERAGE_VDF_SPEED * 60 * 2));
+        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(207300, 0));
+        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(209958, AVERAGE_VDF_SPEED * 3));
+        // consensus.BHDIP009TargetDurationFixes.insert(std::make_pair(200000, 0));
         consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(32) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 1, 8};
         consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 2, 20};
