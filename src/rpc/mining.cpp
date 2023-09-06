@@ -1877,9 +1877,9 @@ static UniValue getplottermininginfo(const JSONRPCRequest& request)
     return result;
 }
 
-static UniValue ListPoint(CCoinsViewCursorRef pcursor) {
+static void ListPoint(CCoinsViewCursorRef pcursor, UniValue& outVal) {
     assert(pcursor != nullptr);
-    UniValue ret(UniValue::VARR);
+    // UniValue ret(UniValue::VARR);
     for (; pcursor->Valid(); pcursor->Next()) {
         COutPoint key;
         Coin coin;
@@ -1896,12 +1896,10 @@ static UniValue ListPoint(CCoinsViewCursorRef pcursor) {
             item.pushKV("blockhash", ::ChainActive()[(int)coin.nHeight]->GetBlockHash().GetHex());
             item.pushKV("blocktime", ::ChainActive()[(int)coin.nHeight]->GetBlockTime());
             item.pushKV("blockheight", (int)coin.nHeight);
-            ret.push_back(item);
+            outVal.push_back(item);
         } else
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
     }
-
-    return ret;
 }
 
 static UniValue listpledgeloanofaddress(const JSONRPCRequest& request)
@@ -1943,7 +1941,16 @@ static UniValue listpledgeloanofaddress(const JSONRPCRequest& request)
     if (!::ChainstateActive().FlushStateToDisk(Params(), state, FlushStateMode::ALWAYS)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Unable to flush state to disk (%s)\n", FormatStateMessage(state)));
     }
-    return ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::Burst));
+
+    UniValue res(UniValue::VARR);
+    ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::Burst), res);
+    ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::Chia), res);
+    ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::ChiaT1), res);
+    ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::ChiaT2), res);
+    ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::ChiaT3), res);
+    ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::ChiaRT), res);
+
+    return res;
 }
 
 static UniValue listpledgedebitofaddress(const JSONRPCRequest& request)
@@ -1985,7 +1992,16 @@ static UniValue listpledgedebitofaddress(const JSONRPCRequest& request)
     if (!::ChainstateActive().FlushStateToDisk(Params(), state, FlushStateMode::ALWAYS)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Unable to flush state to disk (%s)\n", FormatStateMessage(state)));
     }
-    return ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::Burst));
+    UniValue res(UniValue::VARR);
+
+    ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::Burst), res);
+    ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::Chia), res);
+    ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::ChiaT1), res);
+    ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::ChiaT2), res);
+    ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::ChiaT3), res);
+    ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::ChiaRT), res);
+
+    return res;
 }
 
 static UniValue getbalanceofheight(const JSONRPCRequest& request)
