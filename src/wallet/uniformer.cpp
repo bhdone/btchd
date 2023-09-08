@@ -99,7 +99,7 @@ Result CreateBindPlotterTransaction(CWallet* wallet, CTxDestination const& dest,
 
     // Check already actived bind
     if (wallet->chain().haveActiveBindPlotter(accountID, bindData)) {
-        errors.push_back(strprintf("The plotter %ull already binded to %s and actived.", bindData.ToString(), EncodeDestination(dest)));
+        errors.push_back(strprintf("The plotter %s already binded to %s and actived.", bindData.ToString(), EncodeDestination(dest)));
         return Result::INVALID_REQUEST;
     }
 
