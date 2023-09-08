@@ -843,6 +843,114 @@ static UniValue dumpPosProofs(JSONRPCRequest const& request) {
     return res;
 }
 
+struct PledgeTx {
+    uint256 blockHash;
+    int nHeight;
+    uint256 txHash;
+    CAccountID sender;
+    CAccountID receiver;
+    CAmount nAmount;
+    DatacarrierType pledgeType;
+    DatacarrierType pointType;
+    int nPointHeight;
+    bool fAvailable;
+};
+
+using PledgeTxSet = std::map<uint256, PledgeTx>;
+
+bool IsPledgeTx(PledgeTxSet const& txs, uint256 const& txHash) {
+    return txs.find(txHash) != std::cend(txs);
+}
+
+void MarkPledgeToUnavailable(PledgeTxSet& txs, uint256 const& txHashToMark, uint256 const& txHashCurr) {
+    auto it = txs.find(txHashToMark);
+    if (it == std::cend(txs)) {
+        // cannot find the prevous tx, throw error
+        throw std::runtime_error(tinyformat::format("previous tx(%s) cannot be found from retarget tx(%s)", txHashToMark.GetHex(), txHashCurr.GetHex()));
+    }
+    it->second.fAvailable = false;
+}
+
+bool GetPledgeTx(PledgeTxSet const& txs, uint256 const& txHash, PledgeTx& outPledgeTx) {
+    auto it = txs.find(txHash);
+    if (it == std::cend(txs)) {
+        return false;
+    }
+    outPledgeTx = it->second;
+    return true;
+}
+
+static void StripPledgeTx(PledgeTxSet& pledgeTxs, CBlock const& block, int nHeight) {
+    for (auto const& tx : block.vtx) {
+        if (tx->IsCoinBase() || !tx->IsUniform()) {
+            continue;
+        }
+        // TODO check if the type of the tx is a withdraw then mark it to unavailable
+        auto ppayload = ExtractTransactionDatacarrier(*tx, nHeight, {DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1, DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3, DATACARRIER_TYPE_CHIA_POINT_RETARGET});
+        if (ppayload == nullptr) {
+            if (IsPledgeTx(pledgeTxs, tx->vin[0].prevout.hash)) {
+                MarkPledgeToUnavailable(pledgeTxs, tx->vin[0].prevout.hash, tx->GetHash());
+            }
+        } else {
+            assert(tx->vout.size() >= 2);
+            PledgeTx pledgeTx;
+            pledgeTx.nHeight = nHeight;
+            pledgeTx.txHash = tx->GetHash();
+            // account IDs
+            pledgeTx.sender = ExtractAccountID(tx->vout[0].scriptPubKey);
+            pledgeTx.pledgeType = ppayload->type;
+            pledgeTx.fAvailable = true;
+            if (ppayload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+                // TODO find the previous tx and mark it to unavailable
+                auto retargetPayload = PointRetargetPayload::As(ppayload);
+                pledgeTx.pointType = retargetPayload->GetPointType();
+                pledgeTx.nPointHeight = retargetPayload->nPointHeight;
+                auto txHash = tx->vin[0].prevout.hash;
+                PledgeTx originalPledgeTx;
+                if (!GetPledgeTx(pledgeTxs, txHash, originalPledgeTx)) {
+                    throw std::runtime_error(tinyformat::format("cannot find original pledge-tx(%s)", txHash.GetHex()));
+                }
+                pledgeTx.nAmount = originalPledgeTx.nAmount;
+                MarkPledgeToUnavailable(pledgeTxs, txHash, tx->GetHash());
+            } else {
+                // point
+                auto pointPayload = PointPayload::As(ppayload);
+                pledgeTx.receiver = pointPayload->GetReceiverID();
+                pledgeTx.nAmount = tx->vout[0].nValue;
+                pledgeTx.pointType = pledgeTx.pledgeType;
+            }
+            // save
+            pledgeTxs[pledgeTx.txHash] = std::move(pledgeTx);
+        }
+    }
+}
+
+static UniValue queryChainPledgeInfo(JSONRPCRequest const& request) {
+    auto params = ::Params().GetConsensus();
+    LOCK(cs_main);
+
+    PledgeTxSet pledgeTxs;
+    for (int nHeight = params.BHDIP009Height; nHeight < ::ChainActive().Height(); ++nHeight) {
+        auto pindex = ::ChainActive()[nHeight];
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindex, params)) {
+            throw std::runtime_error(tinyformat::format("cannot read block(%s) from disk", pindex->GetBlockHash().GetHex()));
+        }
+        StripPledgeTx(pledgeTxs, block, nHeight);
+    }
+
+    CAmount nTotalPledge{0};
+    for (auto const& pledgeTx : pledgeTxs) {
+        if (pledgeTx.second.fAvailable) {
+            nTotalPledge += pledgeTx.second.nAmount;
+        }
+    }
+
+    UniValue res(UniValue::VOBJ);
+    res.pushKV("pledge", nTotalPledge / COIN);
+    return res;
+}
+
 static CRPCCommand const commands[] = {
         {"chia", "checkchiapos", &checkChiapos, {}},
         {"chia", "querychallenge", &queryChallenge, {}},
@@ -858,6 +966,7 @@ static CRPCCommand const commands[] = {
         {"chia", "submitvdfrequest", &submitVdfRequest, {"challenge", "iters"}},
         {"chia", "submitvdfproof", &submitVdfProof, {"challenge", "y", "proof", "witness_type", "iters", "duration"}},
         {"chia", "dumpposproofs", &dumpPosProofs, {"count"}},
+        {"chia", "querychainpledgeinfo", &queryChainPledgeInfo, {}},
 };
 
 void RegisterChiaRPCCommands(CRPCTable& t) {
