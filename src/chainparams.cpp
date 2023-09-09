@@ -721,15 +721,6 @@ public:
         consensus.BHDIP009PlotSizeMin = chiapos::MIN_K_TEST_NET;
         consensus.BHDIP009PlotSizeMax = chiapos::MAX_K;
         consensus.BHDIP009BaseIters = AVERAGE_VDF_SPEED_TESTNET * 3;
-        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200210, AVERAGE_VDF_SPEED * 60 * 2));
-        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200240, AVERAGE_VDF_SPEED * 60 * 1.5));
-        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200755, AVERAGE_VDF_SPEED * 0.5));
-        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(200850, AVERAGE_VDF_SPEED * 60 * 2));
-        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(203950, 0));
-        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(204520, AVERAGE_VDF_SPEED * 60 * 2));
-        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(207300, 0));
-        // consensus.BHDIP009BaseItersVec.push_back(std::make_pair(209958, AVERAGE_VDF_SPEED * 3));
-        // consensus.BHDIP009TargetDurationFixes.insert(std::make_pair(200000, 0));
         consensus.BHDIP009StartDifficulty = (arith_uint256(consensus.BHDIP009StartBlockIters) * chiapos::expected_plot_size<arith_uint256>(32) / chiapos::Pow2(consensus.BHDIP009DifficultyConstantFactorBits)).GetLow64();
         consensus.BHDIP009PledgeTerms[0] = {nHeightsOfADay * 1, 8};
         consensus.BHDIP009PledgeTerms[1] = {nHeightsOfADay * 2, 20};
@@ -739,11 +730,8 @@ public:
         consensus.BHDIP009CalculateDistributedAmountEveryHeights = 20; // every 1 hour the distributed amount will be changed
         consensus.BHDIP009PledgeRetargetMinHeights = 10; // minimal number to retarget a pledge is 10 blocks in testnet3
         consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
-        consensus.BHDIP009DifficultyChangeMaxFactors.push_back(std::make_pair(200710, 1.5));
-        consensus.BHDIP009DifficultyChangeMaxFactors.push_back(std::make_pair(200755, 5));
-        consensus.BHDIP009DifficultyChangeMaxFactors.push_back(std::make_pair(200850, 3));
         consensus.BHDIP009TargetSpacingMulFactor = 0.433333;
-        consensus.BHDIP009TargetSpacingMulFactorEnableAtHeight = 207300;
+        consensus.BHDIP009TargetSpacingMulFactorEnableAtHeight = 200000;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
