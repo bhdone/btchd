@@ -849,14 +849,40 @@ struct PledgeTx {
     uint256 txHash;
     CAccountID sender;
     CAccountID receiver;
-    CAmount nAmount;
+    CAmount nReceivedAmount;
+    CAmount nActualAmount;
     DatacarrierType pledgeType;
     DatacarrierType pointType;
     int nPointHeight;
+    int nExpiresOnHeight;
     bool fAvailable;
+    bool fInTerm;
 };
 
 using PledgeTxSet = std::map<uint256, PledgeTx>;
+
+std::string GetStrFromAccountID(CAccountID const& accountID) {
+    CTxDestination dest((ScriptHash)accountID);
+    return EncodeDestination(dest);
+}
+
+UniValue ConvertPledgeTxToUniValue(PledgeTx const& pledgeTx) {
+    UniValue resVal(UniValue::VOBJ);
+    resVal.pushKV("blockHash", pledgeTx.blockHash.GetHex());
+    resVal.pushKV("height", pledgeTx.nHeight);
+    resVal.pushKV("txHash", pledgeTx.txHash.GetHex());
+    resVal.pushKV("sender", GetStrFromAccountID(pledgeTx.sender));
+    resVal.pushKV("receiver", GetStrFromAccountID(pledgeTx.receiver));
+    resVal.pushKV("receivedAmount", pledgeTx.nReceivedAmount / COIN);
+    resVal.pushKV("actualAmount", pledgeTx.nActualAmount / COIN);
+    resVal.pushKV("type", DatacarrierTypeToString(pledgeTx.pledgeType));
+    resVal.pushKV("pointType", DatacarrierTypeToString(pledgeTx.pointType));
+    resVal.pushKV("pointHeight", pledgeTx.nPointHeight);
+    resVal.pushKV("expiresOnHeight", pledgeTx.nExpiresOnHeight);
+    resVal.pushKV("available", pledgeTx.fAvailable);
+    resVal.pushKV("inTerm", pledgeTx.fInTerm);
+    return resVal;
+}
 
 bool IsPledgeTx(PledgeTxSet const& txs, uint256 const& txHash) {
     return txs.find(txHash) != std::cend(txs);
@@ -880,7 +906,7 @@ bool GetPledgeTx(PledgeTxSet const& txs, uint256 const& txHash, PledgeTx& outPle
     return true;
 }
 
-static void StripPledgeTx(PledgeTxSet& pledgeTxs, CBlock const& block, int nHeight) {
+static void StripPledgeTx(PledgeTxSet& pledgeTxs, CBlock const& block, int nHeight, Consensus::Params const& params) {
     for (auto const& tx : block.vtx) {
         if (tx->IsCoinBase() || !tx->IsUniform()) {
             continue;
@@ -894,6 +920,7 @@ static void StripPledgeTx(PledgeTxSet& pledgeTxs, CBlock const& block, int nHeig
         } else {
             assert(tx->vout.size() >= 2);
             PledgeTx pledgeTx;
+            pledgeTx.blockHash = block.GetHash();
             pledgeTx.nHeight = nHeight;
             pledgeTx.txHash = tx->GetHash();
             // account IDs
@@ -910,15 +937,27 @@ static void StripPledgeTx(PledgeTxSet& pledgeTxs, CBlock const& block, int nHeig
                 if (!GetPledgeTx(pledgeTxs, txHash, originalPledgeTx)) {
                     throw std::runtime_error(tinyformat::format("cannot find original pledge-tx(%s)", txHash.GetHex()));
                 }
-                pledgeTx.nAmount = originalPledgeTx.nAmount;
+                pledgeTx.nReceivedAmount = originalPledgeTx.nReceivedAmount;
                 MarkPledgeToUnavailable(pledgeTxs, txHash, tx->GetHash());
             } else {
                 // point
                 auto pointPayload = PointPayload::As(ppayload);
                 pledgeTx.receiver = pointPayload->GetReceiverID();
-                pledgeTx.nAmount = tx->vout[0].nValue;
+                pledgeTx.nReceivedAmount = tx->vout[0].nValue;
                 pledgeTx.pointType = pledgeTx.pledgeType;
+                pledgeTx.nPointHeight = nHeight;
             }
+            // check if it's state is in-term
+            int nTermIndex = pledgeTx.pointType - DATACARRIER_TYPE_CHIA_POINT;
+            auto const& term = params.BHDIP009PledgeTerms[nTermIndex];
+            int nExpiresOnHeight = pledgeTx.nPointHeight + term.nLockHeight;
+            pledgeTx.fInTerm = nHeight < nExpiresOnHeight;
+            if (pledgeTx.fInTerm) {
+                pledgeTx.nActualAmount = term.nWeightPercent * pledgeTx.nReceivedAmount / 100;
+            } else {
+                pledgeTx.nActualAmount = params.BHDIP009PledgeTerms[0].nWeightPercent * pledgeTx.nReceivedAmount / 100;
+            }
+            pledgeTx.nExpiresOnHeight = nExpiresOnHeight;
             // save
             pledgeTxs[pledgeTx.txHash] = std::move(pledgeTx);
         }
@@ -936,19 +975,44 @@ static UniValue queryChainPledgeInfo(JSONRPCRequest const& request) {
         if (!ReadBlockFromDisk(block, pindex, params)) {
             throw std::runtime_error(tinyformat::format("cannot read block(%s) from disk", pindex->GetBlockHash().GetHex()));
         }
-        StripPledgeTx(pledgeTxs, block, nHeight);
+        StripPledgeTx(pledgeTxs, block, nHeight, params);
     }
 
-    CAmount nTotalPledge{0};
+    std::map<CAccountID, CAmount> accountIDAmount;
+
+    UniValue txsVal(UniValue::VARR);
+    CAmount nTotalPledge{0}, nActualPledge{0};
     for (auto const& pledgeTx : pledgeTxs) {
+        txsVal.push_back(ConvertPledgeTxToUniValue(pledgeTx.second));
         if (pledgeTx.second.fAvailable) {
-            nTotalPledge += pledgeTx.second.nAmount;
+            nTotalPledge += pledgeTx.second.nReceivedAmount;
+            nActualPledge += pledgeTx.second.nActualAmount;
+            CAccountID receiver = pledgeTx.second.receiver;
+            auto it = accountIDAmount.find(receiver);
+            if (it == std::cend(accountIDAmount)) {
+                // new
+                accountIDAmount.insert(std::make_pair(receiver, pledgeTx.second.nActualAmount));
+            } else {
+                accountIDAmount[receiver] += pledgeTx.second.nActualAmount;
+            }
         }
     }
 
-    UniValue res(UniValue::VOBJ);
-    res.pushKV("pledge", nTotalPledge / COIN);
-    return res;
+    UniValue receiverVal(UniValue::VOBJ);
+    for (auto const& receiverAmount: accountIDAmount) {
+        receiverVal.pushKV(GetStrFromAccountID(receiverAmount.first), receiverAmount.second / COIN);
+    }
+
+    UniValue resVal(UniValue::VOBJ);
+    resVal.pushKV("txs", txsVal);
+    resVal.pushKV("receiver", receiverVal);
+
+    UniValue pledgeVal(UniValue::VOBJ);
+    pledgeVal.pushKV("total", nTotalPledge / COIN);
+    pledgeVal.pushKV("actual", nActualPledge / COIN);
+
+    resVal.pushKV("summary", pledgeVal);
+    return resVal;
 }
 
 static CRPCCommand const commands[] = {
