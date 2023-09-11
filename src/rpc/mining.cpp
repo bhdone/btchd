@@ -1501,7 +1501,7 @@ static UniValue getpledgeofaddress(const std::string &address, CPlotterBindData 
     //! This balance belong to your
     result.pushKV("balance", ValueFromAmount(balance));
     //! This balance spendable
-    result.pushKV("spendableBalance", ValueFromAmount(balance - balanceBindPlotter - balancePointSend));
+    result.pushKV("spendableBalance", ValueFromAmount(balance));
     //! This balance locked in bind plotter and point
     result.pushKV("lockedBalance", ValueFromAmount(balanceBindPlotter + balancePointSend));
     //! This balance locked in point sent
@@ -1509,7 +1509,7 @@ static UniValue getpledgeofaddress(const std::string &address, CPlotterBindData 
     //! This balance recevied from point received. YOUR CANNOT SPENT IT.
     result.pushKV("borrowBalance", ValueFromAmount(balancePointReceive));
     //! This balance include point sent and avaliable balance. For mining require balance
-    result.pushKV("availableMiningBalance", ValueFromAmount(balance - balancePointSend + balancePointReceive));
+    result.pushKV("availableMiningBalance", ValueFromAmount(balancePointReceive));
 
     const CAmount miningRatio = poc::GetMiningRatio(nChainHeight + 1, params);
 
