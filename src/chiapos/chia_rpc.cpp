@@ -8,6 +8,7 @@
 #include <util/strencodings.h>
 #include <validation.h>
 #include <subsidy_utils.h>
+#include <core_io.h>
 
 #include <cstdint>
 #include <stdexcept>
@@ -618,10 +619,10 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
                         CAccountID generatorAccountID = ExtractAccountID(tx->vout[0].scriptPubKey);
                         UniValue minerVal(UniValue::VOBJ);
                         minerVal.pushKV("address", EncodeDestination(CTxDestination((ScriptHash)generatorAccountID)));
-                        minerVal.pushKV("reward", static_cast<double>(tx->vout[0].nValue) / COIN);
+                        minerVal.pushKV("reward", ValueFromAmount(tx->vout[0].nValue));
                         // accumulate
                         CAmount nAccumulate = GetBlockAccumulateSubsidy(pindex, params);
-                        minerVal.pushKV("accumulate", static_cast<double>(nAccumulate) / COIN);
+                        minerVal.pushKV("accumulate", ValueFromAmount(nAccumulate));
                         // save to entry
                         txVal.push_back(minerVal);
                     } else {
@@ -652,14 +653,14 @@ static UniValue queryUpdateTipHistory(JSONRPCRequest const& request) {
                                 auto p = PointPayload::As(payload);
                                 payloadVal.pushKV("action", "point");
                                 payloadVal.pushKV("type", DatacarrierTypeToString(payload->type));
-                                payloadVal.pushKV("amount", static_cast<double>(tx->vout[0].nValue) / COIN);
+                                payloadVal.pushKV("amount", ValueFromAmount(tx->vout[0].nValue));
                                 payloadVal.pushKV(
                                         "address",
                                         EncodeDestination(CTxDestination(static_cast<ScriptHash>(p->GetReceiverID()))));
                             } else if (payload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
                                 auto p = PointRetargetPayload::As(payload);
                                 payloadVal.pushKV("action", "retarget");
-                                payloadVal.pushKV("amount", static_cast<double>(tx->vout[0].nValue) / COIN);
+                                payloadVal.pushKV("amount", ValueFromAmount(tx->vout[0].nValue));
                                 payloadVal.pushKV(
                                         "address",
                                         EncodeDestination(CTxDestination(static_cast<ScriptHash>(p->GetReceiverID()))));
@@ -720,9 +721,9 @@ static UniValue querySupply(JSONRPCRequest const& request) {
     UniValue calcValue(UniValue::VOBJ);
     calcValue.pushKV("request_height", nRequestedHeight);
     calcValue.pushKV("calc_height", nHeightForCalculatingTotalSupply);
-    calcValue.pushKV("total_supplied", static_cast<double>(nTotalSupplied) / COIN);
-    calcValue.pushKV("burned", static_cast<double>(nBurned) / COIN);
-    calcValue.pushKV("actual_supplied", static_cast<double>(nActualAmount) / COIN);
+    calcValue.pushKV("total_supplied", ValueFromAmount(nTotalSupplied));
+    calcValue.pushKV("burned", ValueFromAmount(nBurned));
+    calcValue.pushKV("actual_supplied", ValueFromAmount(nActualAmount));
 
     CAmount nLastBurned = view.GetAccountBalance(false, GetBurnToAccountID(), nullptr, nullptr, nullptr,
                                                  &params.BHDIP009PledgeTerms, nLastHeight);
@@ -732,9 +733,9 @@ static UniValue querySupply(JSONRPCRequest const& request) {
 
     UniValue lastValue(UniValue::VOBJ);
     lastValue.pushKV("last_height", nLastHeight);
-    lastValue.pushKV("total_supplied", static_cast<double>(nLastTotalSupplied) / COIN);
-    lastValue.pushKV("burned", static_cast<double>(nLastBurned) / COIN);
-    lastValue.pushKV("actual_supplied", static_cast<double>(nLastActualAmount) / COIN);
+    lastValue.pushKV("total_supplied", ValueFromAmount(nLastTotalSupplied));
+    lastValue.pushKV("burned", ValueFromAmount(nLastBurned));
+    lastValue.pushKV("actual_supplied", ValueFromAmount(nLastActualAmount));
 
     UniValue resValue(UniValue::VOBJ);
     resValue.pushKV("dist_height", params.BHDIP009CalculateDistributedAmountEveryHeights);
@@ -873,8 +874,8 @@ UniValue ConvertPledgeTxToUniValue(PledgeTx const& pledgeTx) {
     resVal.pushKV("txHash", pledgeTx.txHash.GetHex());
     resVal.pushKV("sender", GetStrFromAccountID(pledgeTx.sender));
     resVal.pushKV("receiver", GetStrFromAccountID(pledgeTx.receiver));
-    resVal.pushKV("receivedAmount", static_cast<double>(pledgeTx.nReceivedAmount) / COIN);
-    resVal.pushKV("actualAmount", static_cast<double>(pledgeTx.nActualAmount) / COIN);
+    resVal.pushKV("receivedAmount", ValueFromAmount(pledgeTx.nReceivedAmount));
+    resVal.pushKV("actualAmount", ValueFromAmount(pledgeTx.nActualAmount));
     resVal.pushKV("type", DatacarrierTypeToString(pledgeTx.pledgeType));
     resVal.pushKV("pointType", DatacarrierTypeToString(pledgeTx.pointType));
     resVal.pushKV("pointHeight", pledgeTx.nPointHeight);
@@ -1018,16 +1019,16 @@ static UniValue queryChainPledgeInfo(JSONRPCRequest const& request) {
     UniValue receiverVal(UniValue::VOBJ);
     for (auto const& receiverAmount: accountIDAmount) {
         UniValue amountsVal(UniValue::VOBJ);
-        amountsVal.pushKV("received", static_cast<double>(receiverAmount.second.received) / COIN);
-        amountsVal.pushKV("actual", static_cast<double>(receiverAmount.second.actual) / COIN);
+        amountsVal.pushKV("received", ValueFromAmount(receiverAmount.second.received));
+        amountsVal.pushKV("actual", ValueFromAmount(receiverAmount.second.actual));
         receiverVal.pushKV(GetStrFromAccountID(receiverAmount.first), amountsVal);
     }
 
     UniValue resVal(UniValue::VOBJ);
 
     UniValue summaryVal(UniValue::VOBJ);
-    summaryVal.pushKV("total", static_cast<double>(nTotalPledge) / COIN);
-    summaryVal.pushKV("actual", static_cast<double>(nActualPledge) / COIN);
+    summaryVal.pushKV("total", ValueFromAmount(nTotalPledge));
+    summaryVal.pushKV("actual", ValueFromAmount(nActualPledge));
 
     resVal.pushKV("summary", summaryVal);
     resVal.pushKV("receiver", receiverVal);
