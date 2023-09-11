@@ -873,8 +873,8 @@ UniValue ConvertPledgeTxToUniValue(PledgeTx const& pledgeTx) {
     resVal.pushKV("txHash", pledgeTx.txHash.GetHex());
     resVal.pushKV("sender", GetStrFromAccountID(pledgeTx.sender));
     resVal.pushKV("receiver", GetStrFromAccountID(pledgeTx.receiver));
-    resVal.pushKV("receivedAmount", pledgeTx.nReceivedAmount / COIN);
-    resVal.pushKV("actualAmount", pledgeTx.nActualAmount / COIN);
+    resVal.pushKV("receivedAmount", static_cast<double>(pledgeTx.nReceivedAmount) / COIN);
+    resVal.pushKV("actualAmount", static_cast<double>(pledgeTx.nActualAmount) / COIN);
     resVal.pushKV("type", DatacarrierTypeToString(pledgeTx.pledgeType));
     resVal.pushKV("pointType", DatacarrierTypeToString(pledgeTx.pointType));
     resVal.pushKV("pointHeight", pledgeTx.nPointHeight);
@@ -912,7 +912,7 @@ static void StripPledgeTx(PledgeTxSet& pledgeTxs, CBlock const& block, int nHeig
             continue;
         }
         // TODO check if the type of the tx is a withdraw then mark it to unavailable
-        auto ppayload = ExtractTransactionDatacarrier(*tx, nHeight, {DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1, DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3, DATACARRIER_TYPE_CHIA_POINT_RETARGET});
+        auto ppayload = ExtractTransactionDatacarrier(*tx, nHeight, {DATACARRIER_TYPE_BINDCHIAFARMER, DATACARRIER_TYPE_CHIA_POINT, DATACARRIER_TYPE_CHIA_POINT_TERM_1, DATACARRIER_TYPE_CHIA_POINT_TERM_2, DATACARRIER_TYPE_CHIA_POINT_TERM_3, DATACARRIER_TYPE_CHIA_POINT_RETARGET});
         if (ppayload == nullptr) {
             if (IsPledgeTx(pledgeTxs, tx->vin[0].prevout.hash)) {
                 MarkPledgeToUnavailable(pledgeTxs, tx->vin[0].prevout.hash, tx->GetHash());
@@ -927,42 +927,57 @@ static void StripPledgeTx(PledgeTxSet& pledgeTxs, CBlock const& block, int nHeig
             pledgeTx.sender = ExtractAccountID(tx->vout[0].scriptPubKey);
             pledgeTx.pledgeType = ppayload->type;
             pledgeTx.fAvailable = true;
-            if (ppayload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
-                // TODO find the previous tx and mark it to unavailable
-                auto retargetPayload = PointRetargetPayload::As(ppayload);
-                pledgeTx.pointType = retargetPayload->GetPointType();
-                pledgeTx.nPointHeight = retargetPayload->nPointHeight;
-                auto txHash = tx->vin[0].prevout.hash;
-                PledgeTx originalPledgeTx;
-                if (!GetPledgeTx(pledgeTxs, txHash, originalPledgeTx)) {
-                    throw std::runtime_error(tinyformat::format("cannot find original pledge-tx(%s)", txHash.GetHex()));
-                }
-                pledgeTx.nReceivedAmount = originalPledgeTx.nReceivedAmount;
-                MarkPledgeToUnavailable(pledgeTxs, txHash, tx->GetHash());
-            } else {
-                // point
-                auto pointPayload = PointPayload::As(ppayload);
-                pledgeTx.receiver = pointPayload->GetReceiverID();
+            if (ppayload->type == DATACARRIER_TYPE_BINDCHIAFARMER) {
+                pledgeTx.receiver = pledgeTx.sender;
                 pledgeTx.nReceivedAmount = tx->vout[0].nValue;
-                pledgeTx.pointType = pledgeTx.pledgeType;
-                pledgeTx.nPointHeight = nHeight;
-            }
-            // check if it's state is in-term
-            int nTermIndex = pledgeTx.pointType - DATACARRIER_TYPE_CHIA_POINT;
-            auto const& term = params.BHDIP009PledgeTerms[nTermIndex];
-            int nExpiresOnHeight = pledgeTx.nPointHeight + term.nLockHeight;
-            pledgeTx.fInTerm = nHeight < nExpiresOnHeight;
-            if (pledgeTx.fInTerm) {
-                pledgeTx.nActualAmount = term.nWeightPercent * pledgeTx.nReceivedAmount / 100;
+                pledgeTx.nActualAmount = 0;
+                pledgeTx.pointType = DATACARRIER_TYPE_BINDCHIAFARMER;
+                pledgeTx.nPointHeight = 0;
+                pledgeTx.nExpiresOnHeight = 99999999;
+                pledgeTx.fInTerm = false;
             } else {
-                pledgeTx.nActualAmount = params.BHDIP009PledgeTerms[0].nWeightPercent * pledgeTx.nReceivedAmount / 100;
+                if (ppayload->type == DATACARRIER_TYPE_CHIA_POINT_RETARGET) {
+                    // TODO find the previous tx and mark it to unavailable
+                    auto retargetPayload = PointRetargetPayload::As(ppayload);
+                    pledgeTx.pointType = retargetPayload->GetPointType();
+                    pledgeTx.nPointHeight = retargetPayload->nPointHeight;
+                    auto txHash = tx->vin[0].prevout.hash;
+                    PledgeTx originalPledgeTx;
+                    if (!GetPledgeTx(pledgeTxs, txHash, originalPledgeTx)) {
+                        throw std::runtime_error(tinyformat::format("cannot find original pledge-tx(%s)", txHash.GetHex()));
+                    }
+                    pledgeTx.nReceivedAmount = originalPledgeTx.nReceivedAmount;
+                    MarkPledgeToUnavailable(pledgeTxs, txHash, tx->GetHash());
+                } else {
+                    // point
+                    auto pointPayload = PointPayload::As(ppayload);
+                    pledgeTx.receiver = pointPayload->GetReceiverID();
+                    pledgeTx.nReceivedAmount = tx->vout[0].nValue;
+                    pledgeTx.pointType = pledgeTx.pledgeType;
+                    pledgeTx.nPointHeight = nHeight;
+                }
+                // check if it's state is in-term
+                int nTermIndex = pledgeTx.pointType - DATACARRIER_TYPE_CHIA_POINT;
+                auto const& term = params.BHDIP009PledgeTerms[nTermIndex];
+                int nExpiresOnHeight = pledgeTx.nPointHeight + term.nLockHeight;
+                pledgeTx.fInTerm = nHeight < nExpiresOnHeight;
+                if (pledgeTx.fInTerm) {
+                    pledgeTx.nActualAmount = term.nWeightPercent * pledgeTx.nReceivedAmount / 100;
+                } else {
+                    pledgeTx.nActualAmount = params.BHDIP009PledgeTerms[0].nWeightPercent * pledgeTx.nReceivedAmount / 100;
+                }
+                pledgeTx.nExpiresOnHeight = nExpiresOnHeight;
             }
-            pledgeTx.nExpiresOnHeight = nExpiresOnHeight;
             // save
             pledgeTxs[pledgeTx.txHash] = std::move(pledgeTx);
         }
     }
 }
+
+struct Amounts {
+    CAmount received;
+    CAmount actual;
+};
 
 static UniValue queryChainPledgeInfo(JSONRPCRequest const& request) {
     auto params = ::Params().GetConsensus();
@@ -978,7 +993,7 @@ static UniValue queryChainPledgeInfo(JSONRPCRequest const& request) {
         StripPledgeTx(pledgeTxs, block, nHeight, params);
     }
 
-    std::map<CAccountID, CAmount> accountIDAmount;
+    std::map<CAccountID, Amounts> accountIDAmount;
 
     UniValue txsVal(UniValue::VARR);
     CAmount nTotalPledge{0}, nActualPledge{0};
@@ -991,27 +1006,32 @@ static UniValue queryChainPledgeInfo(JSONRPCRequest const& request) {
             auto it = accountIDAmount.find(receiver);
             if (it == std::cend(accountIDAmount)) {
                 // new
-                accountIDAmount.insert(std::make_pair(receiver, pledgeTx.second.nActualAmount));
+                accountIDAmount.insert(std::make_pair(receiver, Amounts{ pledgeTx.second.nReceivedAmount, pledgeTx.second.nActualAmount }));
             } else {
-                accountIDAmount[receiver] += pledgeTx.second.nActualAmount;
+                auto& amounts = accountIDAmount[receiver];
+                amounts.received += pledgeTx.second.nReceivedAmount;
+                amounts.actual += pledgeTx.second.nActualAmount;
             }
         }
     }
 
     UniValue receiverVal(UniValue::VOBJ);
     for (auto const& receiverAmount: accountIDAmount) {
-        receiverVal.pushKV(GetStrFromAccountID(receiverAmount.first), receiverAmount.second / COIN);
+        UniValue amountsVal(UniValue::VOBJ);
+        amountsVal.pushKV("received", static_cast<double>(receiverAmount.second.received) / COIN);
+        amountsVal.pushKV("actual", static_cast<double>(receiverAmount.second.actual) / COIN);
+        receiverVal.pushKV(GetStrFromAccountID(receiverAmount.first), amountsVal);
     }
 
     UniValue resVal(UniValue::VOBJ);
-    resVal.pushKV("txs", txsVal);
+
+    UniValue summaryVal(UniValue::VOBJ);
+    summaryVal.pushKV("total", static_cast<double>(nTotalPledge) / COIN);
+    summaryVal.pushKV("actual", static_cast<double>(nActualPledge) / COIN);
+
+    resVal.pushKV("summary", summaryVal);
     resVal.pushKV("receiver", receiverVal);
-
-    UniValue pledgeVal(UniValue::VOBJ);
-    pledgeVal.pushKV("total", nTotalPledge / COIN);
-    pledgeVal.pushKV("actual", nActualPledge / COIN);
-
-    resVal.pushKV("summary", pledgeVal);
+    resVal.pushKV("txs", txsVal);
     return resVal;
 }
 
