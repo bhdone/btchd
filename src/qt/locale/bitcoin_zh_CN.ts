@@ -2589,6 +2589,30 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>指向到</translation>
     </message>
     <message>
+        <source>(chia) Bind farmer</source>
+        <translation>绑定农民公钥</translation>
+    </message>
+    <message>
+        <source>(chia) Point to</source>
+        <translation>质押（活期）</translation>
+    </message>
+    <message>
+        <source>(chia) Point to (term1)</source>
+        <translation>质押（1期）</translation>
+    </message>
+    <message>
+        <source>(chia) Point to (term2)</source>
+        <translation>质押（2期）</translation>
+    </message>
+    <message>
+        <source>(chia) Point to (term3)</source>
+        <translation>质押（3期）</translation>
+    </message>
+    <message>
+        <source>(chia) Point retarget</source>
+        <translation>质押（转绑）</translation>
+    </message>
+    <message>
         <source>Bind to</source>
         <translation>绑定到</translation>
     </message>
