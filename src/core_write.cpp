@@ -227,6 +227,7 @@ void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry,
 
         UniValue out(UniValue::VOBJ);
 
+        out.pushKV("value64", txout.nValue);
         out.pushKV("value", ValueFromAmount(txout.nValue));
         out.pushKV("n", (int64_t)i);
 
