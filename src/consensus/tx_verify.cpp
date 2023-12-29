@@ -171,6 +171,13 @@ bool Consensus::CheckTxInputs(CTransaction const& tx, CValidationState& state, C
         Coin const& previous_coin = inputs.AccessCoin(prevout); // The coin is the previous output
         assert(!previous_coin.IsSpent());
 
+        if (nSpendHeight >= params.BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight) {
+            // need to check the height of the txin, only the txin after the BHDIP009 fork-height is allowed
+            if (previous_coin.nHeight < params.BHDIP009Height) {
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-spend-txin-before-hard-fork", "spend before hard-fork is not allowed");
+            }
+        }
+
         if (previous_coin.refOutAccountID == burnAccountID) {
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-spend-burn-address", "spend from burn address is not allowed");
         }

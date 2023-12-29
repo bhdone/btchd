@@ -172,6 +172,9 @@ public:
         consensus.BHDIP009TargetSpacingMulFactor = 0.433333;
         consensus.BHDIP009TargetSpacingMulFactorEnableAtHeight = BLOCK_DURATION_FIX_ON_HEIGHT;
 
+        // The height to disable txouts before hard-fork
+        consensus.BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight = 99999999;
+
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
@@ -732,6 +735,9 @@ public:
         consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
         consensus.BHDIP009TargetSpacingMulFactor = 0.433333;
         consensus.BHDIP009TargetSpacingMulFactorEnableAtHeight = 200000;
+
+        // The height to disable txouts before hard-fork
+        consensus.BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight = 218000;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;

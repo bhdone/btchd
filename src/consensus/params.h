@@ -130,6 +130,7 @@ struct Params {
     std::vector<std::pair<int, double>> BHDIP009DifficultyChangeMaxFactors;
     double BHDIP009TargetSpacingMulFactor;
     int BHDIP009TargetSpacingMulFactorEnableAtHeight;
+    int BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight;
 
     std::array<PledgeTerm, 4> BHDIP009PledgeTerms;
 
