@@ -75,6 +75,13 @@ Result CreateUnfreezeTransaction(CWallet* wallet,
                                  CAmount& txfee,
                                  CMutableTransaction& mtx);
 
+//! Create burn txout transaction
+Result CreateTxToBurnUnspendTxOut(CWallet* wallet,
+                                  COutPoint const& outpoint,
+                                  std::vector<std::string>& errors,
+                                  CAmount& txfee,
+                                  CMutableTransaction& mtx);
+
 //! Sign the new transaction,
 //! @return false if the tx couldn't be found or if it was
 //! impossible to create the signature(s)

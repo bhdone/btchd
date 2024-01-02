@@ -5446,6 +5446,52 @@ static UniValue listpledges(const JSONRPCRequest& request)
     return ret;
 }
 
+UniValue burntxout(JSONRPCRequest const& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    pwallet->BlockUntilSyncedToCurrentChain();
+    auto const& params = Params().GetConsensus();
+
+    // txout: txid, n
+    if (request.params.size() != 2) {
+        throw std::runtime_error("invalid number of parameters, the number should be 2 with (txid, n)");
+    }
+    uint256 txid = ParseHashV(request.params[0], "txid");
+    uint32_t n = request.params[1].get_int();
+    COutPoint outpoint(txid, n);
+
+    // Make transaction to burn the txout
+    CMutableTransaction mtx;
+    std::vector<std::string> errors;
+    CAmount txfee { 0 };
+    auto result = uniformer::CreateTxToBurnUnspendTxOut(pwallet, outpoint, errors, txfee, mtx);
+    if (result != uniformer::Result::OK) {
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Create transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
+    }
+
+    // Sign transaction
+    if (!uniformer::SignTransaction(pwallet, mtx)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Sign transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
+    }
+    uint256 ret_txid = mtx.GetHash();
+
+    // Commit transaction
+    errors.clear();
+    mapValue_t mapValue;
+    result = uniformer::CommitTransaction(pwallet, std::move(mtx), std::move(mapValue), errors);
+    if (result != uniformer::Result::OK) {
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Commit transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
+    }
+
+    return ret_txid.GetHex();
+}
+
 UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue importprivkey(const JSONRPCRequest& request);
@@ -5530,6 +5576,7 @@ static const CRPCCommand commands[] =
     {"wallet",              "retargetpledge",                   &retargetpledge, {"txid", "address"} },
     { "wallet",             "withdrawpledge",                   &withdrawpledge,                {"txid","comment","comment_to","replaceable","conf_target","estimate_mode"} },
     { "wallet",             "listpledges",                      &listpledges,                   {"count","skip","include_watchonly","include_invalid"} },
+    { "wallet",             "burntxout",                        &burntxout,                     {"txid","n"} },
 };
 // clang-format on
 

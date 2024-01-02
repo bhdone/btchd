@@ -364,6 +364,63 @@ Result CreateUnfreezeTransaction(CWallet* wallet, COutPoint const& outpoint, CCo
     return Result::OK;
 }
 
+
+Result CreateTxToBurnUnspendTxOut(CWallet* wallet, COutPoint const& outpoint, std::vector<std::string>& errors, CAmount& txfee, CMutableTransaction& mtx)
+{
+    auto locked_chain = wallet->chain().lock();
+    LOCK(wallet->cs_wallet);
+    CWalletTx const* wtx = wallet->GetWalletTx(outpoint.hash);
+    if (wtx == nullptr) {
+        errors.push_back("tx cannot be found");
+        return Result::INVALID_REQUEST;
+    }
+    CAmount value = wtx->tx->vout[outpoint.n].nValue;
+
+    // ensure the txout is before BHDIP009
+    auto const& params = Params().GetConsensus();
+    uint256 block_hash = wtx->GetBlockHash();
+    auto block_height_opt = locked_chain->getBlockHeight(block_hash);
+    if (!block_height_opt.has_value()) {
+        errors.push_back("the block which contains the tx cannot be found");
+        return Result::INVALID_REQUEST;
+    }
+    int tx_height = block_height_opt.get_value_or(0);
+    if (tx_height >= params.BHDIP009Height) {
+        errors.push_back("the height of the tx is later than the hard-fork BHD009");
+        return Result::INVALID_REQUEST;
+    }
+
+    // Check UTXO
+    Coin const& coin = wallet->chain().accessCoin(outpoint);
+    if (coin.IsSpent()) {
+        errors.push_back("Can't unfreeze cause the coin is spent");
+        return Result::INVALID_REQUEST;
+    }
+
+    int spend_height = locked_chain->getHeight().get_value_or(0);
+    if (spend_height == 0) {
+        errors.push_back("the height of the chain cannot be retrieved");
+        return Result::INVALID_REQUEST;
+    }
+
+    // adjust the txfee to 0.01
+    txfee = COIN * 0.01;
+
+    // txout to burn
+    CMutableTransaction txNew;
+    txNew.nLockTime = spend_height;
+    txNew.nVersion = CTransaction::UNIFORM_VERSION;
+    txNew.vin = { CTxIn(outpoint, CScript(), CTxIn::SEQUENCE_FINAL - 1) };
+
+    // burn destination
+    auto burn_dest = GetBurnToDestination();
+    auto burn_script = GetScriptForDestination(burn_dest);
+    txNew.vout.push_back(CTxOut(value - txfee, burn_script));
+
+    mtx = std::move(txNew);
+    return Result::OK;
+}
+
 bool SignTransaction(CWallet* wallet, CMutableTransaction& mtx) {
     auto locked_chain = wallet->chain().lock();
     LOCK(wallet->cs_wallet);
