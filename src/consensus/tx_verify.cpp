@@ -20,6 +20,7 @@
 #include <core_io.h>
 
 #include <univalue.h>
+#include "script/standard.h"
 
 void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 
@@ -164,6 +165,7 @@ bool Consensus::CheckTxInputs(CTransaction const& tx, CValidationState& state, C
         return state.Invalid(ValidationInvalidReason::TX_MISSING_INPUTS, false, REJECT_INVALID, "bad-txns-inputs-missingorspent", strprintf("%s: inputs missing/spent", __func__));
     }
 
+    bool fLimitTxOutToBurn { false };
     CAmount nValueIn = 0;
     CAccountID burnAccountID = GetBurnToAccountID();
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
@@ -174,7 +176,7 @@ bool Consensus::CheckTxInputs(CTransaction const& tx, CValidationState& state, C
         if (nSpendHeight >= params.BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight) {
             // need to check the height of the txin, only the txin after the BHDIP009 fork-height is allowed
             if (previous_coin.nHeight < params.BHDIP009Height) {
-                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-spend-txin-before-hard-fork", "spend before hard-fork is not allowed");
+                fLimitTxOutToBurn = true;
             }
         }
 
@@ -191,6 +193,14 @@ bool Consensus::CheckTxInputs(CTransaction const& tx, CValidationState& state, C
         nValueIn += previous_coin.out.nValue;
         if (!MoneyRange(previous_coin.out.nValue) || !MoneyRange(nValueIn)) {
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-inputvalues-outofrange");
+        }
+    }
+
+    if (fLimitTxOutToBurn) {
+        for (auto const& txout : tx.vout) {
+            if (ExtractAccountID(txout.scriptPubKey) != burnAccountID) {
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-spend-txin-before-hard-fork", "spend except burn before hard-fork is not allowed");
+            }
         }
     }
 
