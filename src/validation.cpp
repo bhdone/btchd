@@ -189,7 +189,7 @@ std::unique_ptr<CBlockTreeDB> pblocktree;
 // See definition for documentation
 static void FindFilesToPruneManual(std::set<int>& setFilesToPrune, int nManualPruneHeight);
 static void FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPruneAfterHeight);
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks = nullptr);
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, int nSpendHeight, Consensus::Params const& params, std::vector<CScriptCheck> *pvChecks = nullptr);
 static FILE* OpenUndoFile(const FlatFilePos &pos, bool fReadOnly = false);
 static FlatFileSeq BlockFileSeq();
 static FlatFileSeq UndoFileSeq();
@@ -400,7 +400,7 @@ static void UpdateMempoolForReorg(DisconnectedBlockTransactions& disconnectpool,
 // Used to avoid mempool polluting consensus critical paths if CCoinsViewMempool
 // were somehow broken and returning the wrong scriptPubKeys
 static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, CValidationState& state, const CCoinsViewCache& view, const CTxMemPool& pool,
-                 unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+                 unsigned int flags, bool cacheSigStore, PrecomputedTransactionData& txdata, int nSpendHeight, Consensus::Params const& params) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
     AssertLockHeld(cs_main);
 
     // pool.cs should be locked already, but go ahead and re-take the lock here
@@ -430,7 +430,7 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, CValidationSt
         }
     }
 
-    return CheckInputs(tx, state, view, flags, cacheSigStore, true, txdata);
+    return CheckInputs(tx, state, view, flags, cacheSigStore, true, txdata, nSpendHeight, params);
 }
 
 bool CheckChiaPledgeTx(CTransaction const& tx, CCoinsViewCache const& view, CValidationState& state, Consensus::Params const& params, int nHeight);
@@ -933,15 +933,18 @@ bool MemPoolAccept::PolicyScriptChecks(ATMPArgs& args, Workspace& ws, Precompute
 
     constexpr unsigned int scriptVerifyFlags = STANDARD_SCRIPT_VERIFY_FLAGS;
 
+    int nSpendHeight = ::ChainActive().Height();
+    auto const& params = Params().GetConsensus();
+
     // Check against previous transactions
     // This is done last to help prevent CPU exhaustion denial-of-service attacks.
-    if (!CheckInputs(tx, state, m_view, scriptVerifyFlags, true, false, txdata)) {
+    if (!CheckInputs(tx, state, m_view, scriptVerifyFlags, true, false, txdata, nSpendHeight, params)) {
         // SCRIPT_VERIFY_CLEANSTACK requires SCRIPT_VERIFY_WITNESS, so we
         // need to turn both off, and compare against just turning off CLEANSTACK
         // to see if the failure is specifically due to witness validation.
         CValidationState stateDummy; // Want reported failures to be from first CheckInputs
-        if (!tx.HasWitness() && CheckInputs(tx, stateDummy, m_view, scriptVerifyFlags & ~(SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_CLEANSTACK), true, false, txdata) &&
-                !CheckInputs(tx, stateDummy, m_view, scriptVerifyFlags & ~SCRIPT_VERIFY_CLEANSTACK, true, false, txdata)) {
+        if (!tx.HasWitness() && CheckInputs(tx, stateDummy, m_view, scriptVerifyFlags & ~(SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_CLEANSTACK), true, false, txdata, nSpendHeight, params) &&
+                !CheckInputs(tx, stateDummy, m_view, scriptVerifyFlags & ~SCRIPT_VERIFY_CLEANSTACK, true, false, txdata, nSpendHeight, params)) {
             // Only the witness is missing, so the transaction itself may be fine.
             state.Invalid(ValidationInvalidReason::TX_WITNESS_MUTATED, false,
                     state.GetRejectCode(), state.GetRejectReason(), state.GetDebugMessage());
@@ -961,6 +964,8 @@ bool MemPoolAccept::ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, Precomp
     CValidationState &state = args.m_state;
     const CChainParams& chainparams = args.m_chainparams;
 
+    int nSpendHeight = ::ChainActive().Height();
+
     // Check again against the current block tip's script verification
     // flags to cache our script execution flags. This is, of course,
     // useless if the next block has different script flags from the
@@ -977,7 +982,7 @@ bool MemPoolAccept::ConsensusScriptChecks(ATMPArgs& args, Workspace& ws, Precomp
     // invalid blocks (using TestBlockValidity), however allowing such
     // transactions into the mempool can be exploited as a DoS attack.
     unsigned int currentBlockScriptVerifyFlags = GetBlockScriptFlags(::ChainActive().Tip(), chainparams.GetConsensus());
-    if (!CheckInputsFromMempoolAndCache(tx, state, m_view, m_pool, currentBlockScriptVerifyFlags, true, txdata)) {
+    if (!CheckInputsFromMempoolAndCache(tx, state, m_view, m_pool, currentBlockScriptVerifyFlags, true, txdata, nSpendHeight, chainparams.GetConsensus())) {
         return error("%s: BUG! PLEASE REPORT THIS! CheckInputs failed against latest-block but not STANDARD flags %s, %s",
                 __func__, hash.ToString(), FormatStateMessage(state));
     }
@@ -1741,7 +1746,7 @@ void InitScriptExecutionCache() {
  *
  * Non-static (and re-declared) in src/test/txvalidationcache_tests.cpp
  */
-bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, unsigned int flags, bool cacheSigStore, bool cacheFullScriptStore, PrecomputedTransactionData& txdata, int nSpendHeight, Consensus::Params const& params, std::vector<CScriptCheck> *pvChecks) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     if (tx.IsCoinBase()) return true;
 
@@ -1768,6 +1773,15 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
         assert(!coin.IsSpent());
+
+        // do not verify the signature when tx is burning txout of unspend-before-bip009
+        if (nSpendHeight >= params.BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight && coin.nHeight < params.BHDIP009Height) {
+            CAccountID burn_to_accountid = GetBurnToAccountID();
+            if (ExtractAccountID(coin.out.scriptPubKey) == burn_to_accountid) {
+                // do not verify the signature
+                continue;
+            }
+        }
 
         // We very carefully only pass in things to CScriptCheck which
         // are clearly committed to by tx' witness hash. This provides
@@ -2426,7 +2440,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
         {
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (fScriptChecks && !CheckInputs(tx, state, mutableView, flags, fCacheResults, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : nullptr)) {
+            if (fScriptChecks && !CheckInputs(tx, state, mutableView, flags, fCacheResults, fCacheResults, txdata[i], pindex->nHeight, chainparams.GetConsensus(), nScriptCheckThreads ? &vChecks : nullptr)) {
                 if (state.GetReason() == ValidationInvalidReason::TX_NOT_STANDARD) {
                     // CheckInputs may return NOT_STANDARD for extra flags we passed,
                     // but we can't return that, as it's not defined for a block, so
