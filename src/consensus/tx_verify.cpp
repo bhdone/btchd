@@ -196,14 +196,6 @@ bool Consensus::CheckTxInputs(CTransaction const& tx, CValidationState& state, C
         }
     }
 
-    if (fLimitTxOutToBurn) {
-        for (auto const& txout : tx.vout) {
-            if (ExtractAccountID(txout.scriptPubKey) != burnAccountID) {
-                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-spend-txin-before-hard-fork", "spend except burn before hard-fork is not allowed");
-            }
-        }
-    }
-
     const CAmount nValueOut = tx.GetValueOut();
     if (nValueIn < nValueOut) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-in-belowout", strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(nValueOut)));
@@ -213,6 +205,18 @@ bool Consensus::CheckTxInputs(CTransaction const& tx, CValidationState& state, C
     CAmount txfee_aux = nValueIn - nValueOut;
     if (!MoneyRange(txfee_aux)) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "bad-txns-fee-outofrange");
+    }
+
+    if (fLimitTxOutToBurn) {
+        if (txfee_aux > static_cast<CAmount>(COIN * 0.01)) {
+            return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-spend-exceed-maxfee", "the fee is limited to 0.01 * COIN");
+        }
+        // the targets from the tx must be burn address
+        for (auto const& txout : tx.vout) {
+            if (ExtractAccountID(txout.scriptPubKey) != burnAccountID) {
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-spend-txin-before-hard-fork", "spend except burn before hard-fork is not allowed");
+            }
+        }
     }
 
     // Check uniform transaction. Inputs[i] == Outputs[j]
