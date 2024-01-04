@@ -5456,7 +5456,6 @@ UniValue burntxout(JSONRPCRequest const& request)
     }
 
     pwallet->BlockUntilSyncedToCurrentChain();
-    auto const& params = Params().GetConsensus();
 
     // txout: txid, n
     if (request.params.size() != 2) {
