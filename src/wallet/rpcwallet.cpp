@@ -5463,7 +5463,10 @@ UniValue burntxout(JSONRPCRequest const& request)
         throw std::runtime_error("invalid number of parameters, the number should be 2 with (txid, n)");
     }
     uint256 txid = ParseHashV(request.params[0], "txid");
-    uint32_t n = request.params[1].get_int();
+    int32_t n;
+    if (!ParseInt32(request.params[1].get_str(), &n)) {
+        throw std::runtime_error("cannot convert argument 2 into integer value");
+    }
     COutPoint outpoint(txid, n);
 
     // Make transaction to burn the txout
