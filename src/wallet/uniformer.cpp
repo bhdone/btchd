@@ -409,7 +409,7 @@ Result CreateTxToBurnUnspendTxOut(CWallet* wallet, COutPoint const& outpoint, st
     // txout to burn
     CMutableTransaction txNew;
     txNew.nLockTime = spend_height;
-    txNew.nVersion = CTransaction::UNIFORM_VERSION;
+    txNew.nVersion = CTransaction::CURRENT_VERSION;
     txNew.vin = { CTxIn(outpoint, CScript(), CTxIn::SEQUENCE_FINAL - 1) };
 
     // burn destination
