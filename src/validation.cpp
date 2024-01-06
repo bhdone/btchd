@@ -1769,6 +1769,8 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
         return true;
     }
 
+    bool fBurnTx { false };
+
     for (unsigned int i = 0; i < tx.vin.size(); i++) {
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
@@ -1776,11 +1778,10 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 
         // do not verify the signature when tx is burning txout of unspend-before-bip009
         if (nSpendHeight >= params.BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight && coin.nHeight < params.BHDIP009Height) {
-            CAccountID burn_to_accountid = GetBurnToAccountID();
-            if (ExtractAccountID(coin.out.scriptPubKey) == burn_to_accountid) {
-                // do not verify the signature
-                continue;
-            }
+            // this is a burn tx, we do not check the signature cause it cannot be verified
+            // also we need to ensure all the outputs are pointed to burn-account-id
+            fBurnTx = true;
+            continue;
         }
 
         // We very carefully only pass in things to CScriptCheck which
@@ -1819,6 +1820,17 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
             // depends on the details of how net_processing handles
             // such errors).
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, strprintf("mandatory-script-verify-flag-failed (%s)", ScriptErrorString(check.GetScriptError())));
+        }
+    }
+
+    if (fBurnTx) {
+        auto burnAccountID = GetBurnToAccountID();
+        // check all the outputs and ensure the account-id is pointed to burn-account-id only
+        for (auto const& txout : tx.vout) {
+            if (ExtractAccountID(txout.scriptPubKey) != burnAccountID) {
+                // failed, the output is not a burn-account-id
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "outputs-must-be-burn-account-id");
+            }
         }
     }
 
