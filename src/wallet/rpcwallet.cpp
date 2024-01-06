@@ -5468,6 +5468,8 @@ UniValue burntxout(JSONRPCRequest const& request)
     }
     COutPoint outpoint(txid, n);
 
+    // TODO: Check the tx and ensure it is ready to be burn without making signature
+
     // Make transaction to burn the txout
     CMutableTransaction mtx;
     std::vector<std::string> errors;
@@ -5477,10 +5479,7 @@ UniValue burntxout(JSONRPCRequest const& request)
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Create transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
     }
 
-    // Sign transaction
-    if (!uniformer::SignTransaction(pwallet, mtx)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Sign transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
-    }
+    // NOTE: We do not sign the transaction, and the tx should be passed
     uint256 ret_txid = mtx.GetHash();
 
     // Commit transaction
