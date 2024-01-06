@@ -5457,6 +5457,9 @@ UniValue burntxout(JSONRPCRequest const& request)
 
     pwallet->BlockUntilSyncedToCurrentChain();
 
+    LOCK(cs_main);
+    int nSpendHeight = ::ChainActive().Height();
+
     // txout: txid, n
     if (request.params.size() != 2) {
         throw std::runtime_error("invalid number of parameters, the number should be 2 with (txid, n)");
@@ -5470,11 +5473,21 @@ UniValue burntxout(JSONRPCRequest const& request)
 
     // TODO: Check the tx and ensure it is ready to be burn without making signature
 
+    // TODO: get the amount of the tx-input
+    CCoinsViewDB const& coinsView = ::ChainstateActive().CoinsDB();
+    Coin coin;
+    if (!coinsView.GetCoin(outpoint, coin)) {
+        throw std::runtime_error("cannot find the coin");
+    }
+    if (coin.IsSpent()) {
+        throw std::runtime_error("the coin has already been spent");
+    }
+
     // Make transaction to burn the txout
     CMutableTransaction mtx;
     std::vector<std::string> errors;
     CAmount txfee { 0 };
-    auto result = uniformer::CreateTxToBurnUnspendTxOut(pwallet, outpoint, errors, txfee, mtx);
+    auto result = uniformer::CreateTxToBurnUnspendTxOut(nSpendHeight, outpoint, errors, txfee, mtx, coin.out.nValue);
     if (result != uniformer::Result::OK) {
         throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Create transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
     }
