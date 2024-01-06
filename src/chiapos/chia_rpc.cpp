@@ -1036,6 +1036,71 @@ static UniValue queryChainPledgeInfo(JSONRPCRequest const& request) {
     return resVal;
 }
 
+bool CreateTxToBurnUnspendTxOut(int nSpendHeight, COutPoint const& outpoint, std::vector<std::string>& errors, CAmount& txfee, CMutableTransaction& mtx, CAmount value)
+{
+    mtx.nLockTime = nSpendHeight;
+    mtx.nVersion = CTransaction::CURRENT_VERSION;
+    mtx.vin = { CTxIn(outpoint, CScript(), CTxIn::SEQUENCE_FINAL) };
+
+    txfee = COIN * 0.01;
+    auto burn_dest = GetBurnToDestination();
+    auto burn_script = GetScriptForDestination(burn_dest);
+    mtx.vout.push_back(CTxOut(value - txfee, burn_script));
+
+    return true;
+}
+
+UniValue burntxout(JSONRPCRequest const& request)
+{
+    LOCK(cs_main);
+    int nSpendHeight = ::ChainActive().Height();
+
+    // txout: txid, n
+    if (request.params.size() != 2) {
+        throw std::runtime_error("invalid number of parameters, the number should be 2 with (txid, n)");
+    }
+    uint256 txid = ParseHashV(request.params[0], "txid");
+    int32_t n;
+    if (!ParseInt32(request.params[1].get_str(), &n)) {
+        throw std::runtime_error("cannot convert argument 2 into integer value");
+    }
+    COutPoint outpoint(txid, n);
+
+    // TODO: Check the tx and ensure it is ready to be burn without making signature
+
+    // TODO: get the amount of the tx-input
+    CCoinsViewDB const& coinsView = ::ChainstateActive().CoinsDB();
+    Coin coin;
+    if (!coinsView.GetCoin(outpoint, coin)) {
+        throw std::runtime_error("cannot find the coin");
+    }
+    if (coin.IsSpent()) {
+        throw std::runtime_error("the coin has already been spent");
+    }
+
+    // Make transaction to burn the txout
+    CMutableTransaction mtx;
+    std::vector<std::string> errors;
+    CAmount txfee { 0 };
+    auto result = CreateTxToBurnUnspendTxOut(nSpendHeight, outpoint, errors, txfee, mtx, coin.out.nValue);
+    if (!result) {
+        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Create transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
+    }
+
+    // NOTE: We do not sign the transaction, and the tx should be passed
+    uint256 ret_txid = mtx.GetHash();
+
+    std::string err_str;
+    auto ptx = std::make_shared<CTransaction>(mtx);
+    auto trans_err = BroadcastTransaction(ptx, err_str, txfee, true, false);
+    if (trans_err != TransactionError::OK) {
+        std::string err_str = TransactionErrorString(trans_err);
+        throw std::runtime_error(err_str);
+    }
+
+    return ret_txid.GetHex();
+}
+
 static CRPCCommand const commands[] = {
         {"chia", "checkchiapos", &checkChiapos, {}},
         {"chia", "querychallenge", &queryChallenge, {}},
@@ -1052,6 +1117,7 @@ static CRPCCommand const commands[] = {
         {"chia", "submitvdfproof", &submitVdfProof, {"challenge", "y", "proof", "witness_type", "iters", "duration"}},
         {"chia", "dumpposproofs", &dumpPosProofs, {"count"}},
         {"chia", "querychainpledgeinfo", &queryChainPledgeInfo, {}},
+        {"chia", "burntxout", &burntxout, {"txid","n"} },
 };
 
 void RegisterChiaRPCCommands(CRPCTable& t) {

@@ -365,20 +365,6 @@ Result CreateUnfreezeTransaction(CWallet* wallet, COutPoint const& outpoint, CCo
 }
 
 
-Result CreateTxToBurnUnspendTxOut(int nSpendHeight, COutPoint const& outpoint, std::vector<std::string>& errors, CAmount& txfee, CMutableTransaction& mtx, CAmount value)
-{
-    mtx.nLockTime = nSpendHeight;
-    mtx.nVersion = CTransaction::CURRENT_VERSION;
-    mtx.vin = { CTxIn(outpoint, CScript(), CTxIn::SEQUENCE_FINAL) };
-
-    txfee = COIN * 0.01;
-    auto burn_dest = GetBurnToDestination();
-    auto burn_script = GetScriptForDestination(burn_dest);
-    mtx.vout.push_back(CTxOut(value - txfee, burn_script));
-
-    return Result::OK;
-}
-
 bool SignTransaction(CWallet* wallet, CMutableTransaction& mtx) {
     auto locked_chain = wallet->chain().lock();
     LOCK(wallet->cs_wallet);

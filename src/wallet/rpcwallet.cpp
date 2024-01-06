@@ -5446,66 +5446,6 @@ static UniValue listpledges(const JSONRPCRequest& request)
     return ret;
 }
 
-UniValue burntxout(JSONRPCRequest const& request)
-{
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    CWallet* const pwallet = wallet.get();
-
-    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
-        return NullUniValue;
-    }
-
-    pwallet->BlockUntilSyncedToCurrentChain();
-
-    LOCK(cs_main);
-    int nSpendHeight = ::ChainActive().Height();
-
-    // txout: txid, n
-    if (request.params.size() != 2) {
-        throw std::runtime_error("invalid number of parameters, the number should be 2 with (txid, n)");
-    }
-    uint256 txid = ParseHashV(request.params[0], "txid");
-    int32_t n;
-    if (!ParseInt32(request.params[1].get_str(), &n)) {
-        throw std::runtime_error("cannot convert argument 2 into integer value");
-    }
-    COutPoint outpoint(txid, n);
-
-    // TODO: Check the tx and ensure it is ready to be burn without making signature
-
-    // TODO: get the amount of the tx-input
-    CCoinsViewDB const& coinsView = ::ChainstateActive().CoinsDB();
-    Coin coin;
-    if (!coinsView.GetCoin(outpoint, coin)) {
-        throw std::runtime_error("cannot find the coin");
-    }
-    if (coin.IsSpent()) {
-        throw std::runtime_error("the coin has already been spent");
-    }
-
-    // Make transaction to burn the txout
-    CMutableTransaction mtx;
-    std::vector<std::string> errors;
-    CAmount txfee { 0 };
-    auto result = uniformer::CreateTxToBurnUnspendTxOut(nSpendHeight, outpoint, errors, txfee, mtx, coin.out.nValue);
-    if (result != uniformer::Result::OK) {
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Create transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
-    }
-
-    // NOTE: We do not sign the transaction, and the tx should be passed
-    uint256 ret_txid = mtx.GetHash();
-
-    // Commit transaction
-    errors.clear();
-    mapValue_t mapValue;
-    result = uniformer::CommitTransaction(pwallet, std::move(mtx), std::move(mapValue), errors);
-    if (result != uniformer::Result::OK) {
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Commit transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
-    }
-
-    return ret_txid.GetHex();
-}
-
 UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue importprivkey(const JSONRPCRequest& request);
@@ -5590,7 +5530,6 @@ static const CRPCCommand commands[] =
     {"wallet",              "retargetpledge",                   &retargetpledge, {"txid", "address"} },
     { "wallet",             "withdrawpledge",                   &withdrawpledge,                {"txid","comment","comment_to","replaceable","conf_target","estimate_mode"} },
     { "wallet",             "listpledges",                      &listpledges,                   {"count","skip","include_watchonly","include_invalid"} },
-    { "wallet",             "burntxout",                        &burntxout,                     {"txid","n"} },
 };
 // clang-format on
 
