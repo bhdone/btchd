@@ -214,7 +214,7 @@ bool Consensus::CheckTxInputs(CTransaction const& tx, CValidationState& state, C
         // the targets from the tx must be burn address
         for (auto const& txout : tx.vout) {
             if (ExtractAccountID(txout.scriptPubKey) != burnAccountID) {
-                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-spend-txin-before-hard-fork", "spend except burn before hard-fork is not allowed");
+                return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-target-must-be-burn-account-id", "the target must be burn account-id");
             }
         }
     }
