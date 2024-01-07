@@ -1568,7 +1568,6 @@ UniValue listtransactions(const JSONRPCRequest& request)
     }
 
     // ret is newest to oldest
-
     if (nFrom > (int)ret.size())
         nFrom = ret.size();
     if ((nFrom + nCount) > (int)ret.size())

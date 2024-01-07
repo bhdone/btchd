@@ -1036,22 +1036,57 @@ static UniValue queryChainPledgeInfo(JSONRPCRequest const& request) {
     return resVal;
 }
 
-bool CreateTxToBurnUnspendTxOut(int nSpendHeight, COutPoint const& outpoint, std::vector<std::string>& errors, CAmount& txfee, CMutableTransaction& mtx, CAmount value)
+CTransaction create_burn_txouts_transaction(std::vector<COutPoint> const& outpoints, int nSpendHeight, CAmount& nOutValue)
 {
-    mtx.nLockTime = nSpendHeight;
-    mtx.nVersion = CTransaction::CURRENT_VERSION;
-    mtx.vin = { CTxIn(outpoint, CScript(), CTxIn::SEQUENCE_FINAL) };
+    CMutableTransaction mtx;
+    CCoinsViewDB const& coinsView = ::ChainstateActive().CoinsDB();
 
-    txfee = COIN * 0.01;
-    auto burn_dest = GetBurnToDestination();
-    auto burn_script = GetScriptForDestination(burn_dest);
-    mtx.vout.push_back(CTxOut(value - txfee, burn_script));
+    CAmount nTotalAmount { 0 };
+    for (auto const& outpoint : outpoints) {
+        Coin coin;
+        if (!coinsView.GetCoin(outpoint, coin)) {
+            throw std::runtime_error("cannot find the coin");
+        }
+        if (coin.IsSpent()) {
+            throw std::runtime_error("the coin is invalid to create a new tx");
+        }
+        mtx.vin.push_back(CTxIn{ outpoint, CScript(), CTxIn::SEQUENCE_FINAL });
+        nTotalAmount += coin.out.nValue;
+    }
 
-    return true;
+    // Make transaction to burn the txout
+    std::vector<std::string> errors;
+    CAmount nTxFee { static_cast<CAmount>(0.01 * COIN) };
+
+    auto destBurn = GetBurnToDestination();
+    auto scriptBurn = GetScriptForDestination(destBurn);
+    auto nBurnAmount = nTotalAmount - nTxFee;
+    mtx.vout.push_back(CTxOut(nBurnAmount, scriptBurn));
+
+    nOutValue = nBurnAmount;
+    return CTransaction(mtx);
+}
+
+std::tuple<uint256, CAmount> create_and_broadcast_burn_tx(int nSpendHeight, std::vector<COutPoint> const& outpoints, CAmount nMaxFee)
+{
+    std::string strErrorReason;
+    CAmount value;
+    auto tx = create_burn_txouts_transaction(outpoints, nSpendHeight, value);
+    auto ptx = std::make_shared<CTransaction>(tx);
+    auto txError = BroadcastTransaction(ptx, strErrorReason, nMaxFee, true, false);
+    if (txError != TransactionError::OK) {
+        std::stringstream strs;
+        std::string strBroadcastError = TransactionErrorString(txError);
+        strs << "err: " << strBroadcastError << ", reason: " << strErrorReason << ", txid: " << tx.GetHash().GetHex();
+        throw std::runtime_error(strs.str());
+    }
+    return std::make_tuple(ptx->GetHash(), value);
 }
 
 UniValue burntxout(JSONRPCRequest const& request)
 {
+    constexpr auto nMaxFee = static_cast<CAmount>(0.01 * COIN);
+
     LOCK(cs_main);
     int nSpendHeight = ::ChainActive().Height();
 
@@ -1059,46 +1094,104 @@ UniValue burntxout(JSONRPCRequest const& request)
     if (request.params.size() != 2) {
         throw std::runtime_error("invalid number of parameters, the number should be 2 with (txid, n)");
     }
+
+    std::string strFilePath = request.params[0].get_str();
+    if (fs::exists(strFilePath) && fs::is_regular_file(strFilePath)) {
+        int32_t nMaxTxIns { 0 };
+        if (!ParseInt32(request.params[1].get_str(), &nMaxTxIns)) {
+            throw std::runtime_error("cannot parse int from argument 2 (max number of txins)");
+        }
+        // txins should be loaded from json file
+        std::ifstream inf(strFilePath);
+        if (!inf.is_open()) {
+            throw std::runtime_error("cannot open file to read");
+        }
+        std::string strContent;
+        std::copy(std::istream_iterator<char>(inf), std::istream_iterator<char>(), std::back_inserter(strContent));
+        UniValue valTxOutsFromFile;
+        valTxOutsFromFile.read(strContent);
+        std::vector<UniValue> vWrongTxOuts;
+        std::map<uint256, CAmount> mSentTxWithAmount;
+        std::vector<COutPoint> outpoints;
+        // parsed txouts, now read each of the txouts and put them to transaction
+        for (auto const& valTxOutFromFile : valTxOutsFromFile.getValues()) {
+            if (!valTxOutFromFile.exists("txid")) {
+                vWrongTxOuts.push_back(valTxOutFromFile);
+                continue;
+            }
+            if (!valTxOutFromFile.exists("n")) {
+                vWrongTxOuts.push_back(valTxOutFromFile);
+                continue;
+            }
+            if (!valTxOutFromFile.exists("value")) {
+                vWrongTxOuts.push_back(valTxOutFromFile);
+                continue;
+            }
+            uint256 txid;
+            try {
+                txid = ParseHashV(valTxOutFromFile["txid"], "txid");
+            } catch (std::exception const&) {
+                vWrongTxOuts.push_back(valTxOutFromFile);
+                continue;
+            }
+            int32_t n;
+            if (!ParseInt32(valTxOutFromFile["n"].get_str(), &n)) {
+                vWrongTxOuts.push_back(valTxOutFromFile);
+                continue;
+            }
+            CAmount nValueFromTxOut;
+            if (!ParseInt64(valTxOutFromFile["value"].get_str(), &nValueFromTxOut)) {
+                vWrongTxOuts.push_back(valTxOutFromFile);
+                continue;
+            }
+            if (nValueFromTxOut > 0) {
+                outpoints.emplace_back(txid, n);
+                if (outpoints.size() >= nMaxTxIns) {
+                    // create transaction and broadcast it to P2P network
+                    uint256 txid;
+                    CAmount nTotalBurn;
+                    std::tie(txid, nTotalBurn) = create_and_broadcast_burn_tx(nSpendHeight, outpoints, nMaxFee);
+                    mSentTxWithAmount.insert(std::make_pair(txid, nTotalBurn));
+                    outpoints.clear();
+                }
+            }
+        }
+        if (!outpoints.empty()) {
+            uint256 txid;
+            CAmount nTotalBurn;
+            std::tie(txid, nTotalBurn) = create_and_broadcast_burn_tx(nSpendHeight, outpoints, nMaxFee);
+            mSentTxWithAmount.insert(std::make_pair(txid, nTotalBurn));
+        }
+        // create outputs
+        UniValue valResult(UniValue::VOBJ);
+        // wrong txouts
+        UniValue valWrongTxOuts(UniValue::VARR);
+        for (auto const& txout_val : vWrongTxOuts) {
+            valWrongTxOuts.push_back(txout_val);
+        }
+        valResult.pushKV("wrongTxOuts", valWrongTxOuts);
+        // committed transactions
+        UniValue valSentTxIDWithAmount(UniValue::VOBJ);
+        for (auto const& pairTxIDAmount : mSentTxWithAmount) {
+            UniValue obj(UniValue::VOBJ);
+            obj.pushKV("txid", pairTxIDAmount.first.GetHex());
+            obj.pushKV("value", pairTxIDAmount.second);
+            valSentTxIDWithAmount.push_back(obj);
+        }
+        valResult.pushKV("commitTx", valSentTxIDWithAmount);
+        return valResult;
+    }
+
     uint256 txid = ParseHashV(request.params[0], "txid");
     int32_t n;
     if (!ParseInt32(request.params[1].get_str(), &n)) {
         throw std::runtime_error("cannot convert argument 2 into integer value");
     }
-    COutPoint outpoint(txid, n);
+    uint256 retTxid;
+    CAmount nTotalBurn;
+    std::tie(retTxid, nTotalBurn) = create_and_broadcast_burn_tx(nSpendHeight, { {txid, static_cast<uint32_t>(n)} }, nMaxFee);
 
-    // TODO: Check the tx and ensure it is ready to be burn without making signature
-
-    // TODO: get the amount of the tx-input
-    CCoinsViewDB const& coinsView = ::ChainstateActive().CoinsDB();
-    Coin coin;
-    if (!coinsView.GetCoin(outpoint, coin)) {
-        throw std::runtime_error("cannot find the coin");
-    }
-    if (coin.IsSpent()) {
-        throw std::runtime_error("the coin has already been spent");
-    }
-
-    // Make transaction to burn the txout
-    CMutableTransaction mtx;
-    std::vector<std::string> errors;
-    CAmount txfee { 0 };
-    auto result = CreateTxToBurnUnspendTxOut(nSpendHeight, outpoint, errors, txfee, mtx, coin.out.nValue);
-    if (!result) {
-        throw JSONRPCError(RPC_WALLET_ERROR, strprintf("Create transaction error(%d): %s", (uint32_t)result, errors.empty() ? "Unknown" : errors[0]));
-    }
-
-    // NOTE: We do not sign the transaction, and the tx should be passed
-    uint256 ret_txid = mtx.GetHash();
-
-    std::string err_str;
-    auto ptx = std::make_shared<CTransaction>(mtx);
-    auto trans_err = BroadcastTransaction(ptx, err_str, txfee, true, false);
-    if (trans_err != TransactionError::OK) {
-        std::string err_str = TransactionErrorString(trans_err);
-        throw std::runtime_error(err_str);
-    }
-
-    return ret_txid.GetHex();
+    return retTxid.GetHex();
 }
 
 static CRPCCommand const commands[] = {
