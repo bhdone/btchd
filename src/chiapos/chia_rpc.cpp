@@ -1077,7 +1077,7 @@ std::tuple<uint256, CAmount> create_and_broadcast_burn_tx(int nSpendHeight, std:
     if (txError != TransactionError::OK) {
         std::stringstream strs;
         std::string strBroadcastError = TransactionErrorString(txError);
-        strs << "err: " << strBroadcastError << ", reason: " << strErrorReason << ", txid: " << tx.GetHash().GetHex();
+        strs << "err: " << strBroadcastError << ", reason: " << (strErrorReason.empty() ? "no reason" : strErrorReason) << ", txid: " << tx.GetHash().GetHex();
         throw std::runtime_error(strs.str());
     }
     return std::make_tuple(ptx->GetHash(), value);
