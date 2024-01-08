@@ -1039,7 +1039,7 @@ static UniValue queryChainPledgeInfo(JSONRPCRequest const& request) {
 CTransaction create_burn_txouts_transaction(std::vector<COutPoint> const& outpoints, int nSpendHeight, CAmount& nOutValue)
 {
     CMutableTransaction mtx;
-    CCoinsViewDB const& coinsView = ::ChainstateActive().CoinsDB();
+    auto const& coinsView = ::ChainstateActive().CoinsTip();
 
     CAmount nTotalAmount { 0 };
     for (auto const& outpoint : outpoints) {
