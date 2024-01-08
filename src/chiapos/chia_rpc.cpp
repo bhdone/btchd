@@ -1045,10 +1045,10 @@ CTransaction create_burn_txouts_transaction(std::vector<COutPoint> const& outpoi
     for (auto const& outpoint : outpoints) {
         Coin coin;
         if (!coinsView.GetCoin(outpoint, coin)) {
-            throw std::runtime_error("cannot find the coin");
+            throw std::runtime_error(tinyformat::format("cannot find the coin (%s, %d)", outpoint.hash.GetHex(), outpoint.n));
         }
         if (coin.IsSpent()) {
-            throw std::runtime_error("the coin is invalid to create a new tx");
+            throw std::runtime_error(tinyformat::format("the coin (%s, %d) has already spent", outpoint.hash.GetHex(), outpoint.n));
         }
         mtx.vin.push_back(CTxIn{ outpoint, CScript(), CTxIn::SEQUENCE_FINAL });
         nTotalAmount += coin.out.nValue;
