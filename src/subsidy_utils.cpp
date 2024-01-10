@@ -41,6 +41,8 @@ CAmount GetBlockSubsidy(int nHeight, Consensus::Params const& consensusParams) {
         return nSubsidy * consensusParams.BHDIP009TotalAmountUpgradeMultiply;
     }
 
+    // TODO: after BHDIP010 the total subsidy of the block should be increased
+
     return nSubsidy;
 }
 

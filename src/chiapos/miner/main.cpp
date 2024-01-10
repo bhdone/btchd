@@ -539,7 +539,7 @@ int HandleCommand_TimingTest() {
         // calculate
         uint64_t new_diff =
                 sim.AdjustDifficulty(curr_diff, proof.pos, duration, params.BHDIP008TargetSpacing,
-                                     params.BHDIP009DifficultyChangeMaxFactor, params.BHDIP009TargetSpacingMulFactor);
+                                     params.BHDIP009DifficultyChangeMaxFactor, params.BHDIP010TargetSpacingMulFactor);
         if (new_diff > max_diff) {
             max_diff = new_diff;
         }

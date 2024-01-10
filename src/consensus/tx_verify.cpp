@@ -173,7 +173,7 @@ bool Consensus::CheckTxInputs(CTransaction const& tx, CValidationState& state, C
         Coin const& previous_coin = inputs.AccessCoin(prevout); // The coin is the previous output
         assert(!previous_coin.IsSpent());
 
-        if (nSpendHeight >= params.BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight) {
+        if (nSpendHeight >= params.BHDIP010DisableCoinsBeforeBHDIP009EnableAtHeight) {
             // need to check the height of the txin, only the txin after the BHDIP009 fork-height is allowed
             if (previous_coin.nHeight < params.BHDIP009Height) {
                 fLimitTxOutToBurn = true;

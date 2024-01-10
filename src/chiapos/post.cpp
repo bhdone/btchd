@@ -188,8 +188,8 @@ bool CheckBlockFields(CBlockFields const& fields, uint64_t nTimeOfTheBlock, CBlo
                              "the value of previous difficulty is zero");
     }
     double targetMulFactor = 1.0;
-    if (nTargetHeight >= params.BHDIP009TargetSpacingMulFactorEnableAtHeight) {
-        targetMulFactor = params.BHDIP009TargetSpacingMulFactor;
+    if (nTargetHeight >= params.BHDIP010TargetSpacingMulFactorEnableAtHeight) {
+        targetMulFactor = params.BHDIP010TargetSpacingMulFactor;
     }
     uint64_t nDifficulty = AdjustDifficulty(nDifficultyPrev, fields.GetTotalDuration(), params.BHDIP008TargetSpacing,
                                             QueryDurationFix(nTargetHeight, params.BHDIP009TargetDurationFixes),

@@ -24,7 +24,7 @@
 #include <chiapos/post.h>
 #include <chiapos/kernel/calc_diff.h>
 
-const uint32_t SECONDS_OF_A_DAY = 60 * 60 * 24;
+const int32_t SECONDS_OF_A_DAY = 60 * 60 * 24;
 const int AVERAGE_VDF_SPEED = 200 * 1000; // 200k ips we assume
 const int AVERAGE_VDF_SPEED_TESTNET = 70 * 1000; // 70k ips we assume
 
@@ -166,14 +166,15 @@ public:
         consensus.BHDIP009PledgeRetargetMinHeights = (SECONDS_OF_A_DAY / consensus.BHDIP008TargetSpacing) * 7; // minimal number to retarget a pledge is 7 days
         consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
 
-        // Change the number of height to apply the duration fix.
-        const int BLOCK_DURATION_FIX_ON_HEIGHT = 99999999;
-        consensus.BHDIP009BaseItersVec.push_back(std::make_pair(BLOCK_DURATION_FIX_ON_HEIGHT, AVERAGE_VDF_SPEED * 3));
-        consensus.BHDIP009TargetSpacingMulFactor = 0.433333;
-        consensus.BHDIP009TargetSpacingMulFactorEnableAtHeight = BLOCK_DURATION_FIX_ON_HEIGHT;
+        // BHDIP010
+        const int INFINITY_HEIGHT = 99999999;
+        constexpr int HEIGHTS_DAY = 60 / 3 * 24;
 
-        // The height to disable txouts before hard-fork
-        consensus.BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight = 99999999;
+        consensus.BHDIP010Height = INFINITY_HEIGHT;
+        consensus.BHDIP010DisableCoinsBeforeBHDIP009EnableAtHeight = consensus.BHDIP010Height + HEIGHTS_DAY * 30 * 6; // 6 months
+
+        consensus.BHDIP010TargetSpacingMulFactor = 0.433333;
+        consensus.BHDIP010TargetSpacingMulFactorEnableAtHeight = consensus.BHDIP010Height;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
@@ -698,7 +699,7 @@ public:
 
         consensus.BHDIP007Height = 168300;
         consensus.BHDIP007SmoothEndHeight = 172332; // 240 -> 300, About 2 weeks
-        consensus.BHDIP007MiningRatioStage = 1250 * 1024; // 1250 PB
+        consensus.BHDIP007MiningRatioStage = static_cast<int64_t>(1250) * 1024; // 1250 PB
 
         consensus.BHDIP008Height = 197568; // About active on Fri, 09 Aug 2019 10:01:58 GMT
         consensus.BHDIP008TargetSpacing = 180;
@@ -716,7 +717,7 @@ public:
         consensus.BHDIP009OldPledgesDisableOnHeight = consensus.BHDIP009Height + nHeightsOfADay * 14;
         consensus.BHDIP009FundAddresses = {"2N7mAbSHzAeCiY2WJzREPJYKTEJbKo7tYke"};
         consensus.BHDIP009FundRoyaltyForLowMortgage = 150;
-        consensus.BHDIP009StartBlockIters = AVERAGE_VDF_SPEED_TESTNET * consensus.BHDIP008TargetSpacing;
+        consensus.BHDIP009StartBlockIters = static_cast<int64_t>(AVERAGE_VDF_SPEED_TESTNET) * consensus.BHDIP008TargetSpacing;
         consensus.BHDIP009DifficultyConstantFactorBits = chiapos::DIFFICULTY_CONSTANT_FACTOR_BITS;
         consensus.BHDIP009DifficultyEvalWindow = 100;
         consensus.BHDIP009PlotIdBitsOfFilter = 0;
@@ -733,11 +734,13 @@ public:
         consensus.BHDIP009CalculateDistributedAmountEveryHeights = 20; // every 1 hour the distributed amount will be changed
         consensus.BHDIP009PledgeRetargetMinHeights = 10; // minimal number to retarget a pledge is 10 blocks in testnet3
         consensus.BHDIP009DifficultyChangeMaxFactor = chiapos::DIFFICULTY_CHANGE_MAX_FACTOR;
-        consensus.BHDIP009TargetSpacingMulFactor = 0.433333;
-        consensus.BHDIP009TargetSpacingMulFactorEnableAtHeight = 200000;
 
-        // The height to disable txouts before hard-fork
-        consensus.BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight = 218000;
+        // BHDIP010
+        constexpr int ONE_HOUR_HEIGHTS = 60 / 3;
+        consensus.BHDIP010Height = consensus.BHDIP009Height + ONE_HOUR_HEIGHTS;
+        consensus.BHDIP010DisableCoinsBeforeBHDIP009EnableAtHeight = consensus.BHDIP010Height + ONE_HOUR_HEIGHTS;
+        consensus.BHDIP010TargetSpacingMulFactor = 0.433333;
+        consensus.BHDIP010TargetSpacingMulFactorEnableAtHeight = consensus.BHDIP010Height;
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;

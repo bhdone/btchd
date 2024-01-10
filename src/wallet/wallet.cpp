@@ -2928,7 +2928,7 @@ void CWallet::AvailableCoins(interfaces::Chain::Lock& locked_chain, std::vector<
             }
             // Check the height and do not select the coin under hard-fork
             auto params = Params().GetConsensus();
-            if (nSpendHeight >= params.BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight && nTxHeight < params.BHDIP009Height) {
+            if (nSpendHeight >= params.BHDIP010DisableCoinsBeforeBHDIP009EnableAtHeight && nTxHeight < params.BHDIP009Height) {
                 // the tx should not be added
                 continue;
             }

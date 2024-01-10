@@ -365,8 +365,8 @@ static UniValue submitProof(JSONRPCRequest const& request) {
         }
         double targetMulFactor = 1.0;
         int nTargetHeight = pindexPrev->nHeight + 1;
-        if (nTargetHeight >= params.BHDIP009TargetSpacingMulFactorEnableAtHeight) {
-            targetMulFactor = params.BHDIP009TargetSpacingMulFactor;
+        if (nTargetHeight >= params.BHDIP010TargetSpacingMulFactorEnableAtHeight) {
+            targetMulFactor = params.BHDIP010TargetSpacingMulFactor;
         }
         nDifficulty = AdjustDifficulty(GetChiaBlockDifficulty(pindexPrev, params), nTotalDuration,
                                        params.BHDIP008TargetSpacing, QueryDurationFix(nTargetHeight, params.BHDIP009TargetDurationFixes),

@@ -1777,7 +1777,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
         assert(!coin.IsSpent());
 
         // do not verify the signature when tx is burning txout of unspend-before-bip009
-        if (nSpendHeight >= params.BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight && coin.nHeight < params.BHDIP009Height) {
+        if (nSpendHeight >= params.BHDIP010DisableCoinsBeforeBHDIP009EnableAtHeight && coin.nHeight < params.BHDIP009Height) {
             // this is a burn tx, we do not check the signature cause it cannot be verified
             // also we need to ensure all the outputs are pointed to burn-account-id
             fBurnTx = true;

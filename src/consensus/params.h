@@ -128,9 +128,11 @@ struct Params {
     int BHDIP009PledgeRetargetMinHeights;
     double BHDIP009DifficultyChangeMaxFactor;
     std::vector<std::pair<int, double>> BHDIP009DifficultyChangeMaxFactors;
-    double BHDIP009TargetSpacingMulFactor;
-    int BHDIP009TargetSpacingMulFactorEnableAtHeight;
-    int BHDIP009DisableTXOutsBeforeHardForkEnableAtHeight;
+
+    int BHDIP010Height;
+    double BHDIP010TargetSpacingMulFactor;
+    int BHDIP010TargetSpacingMulFactorEnableAtHeight;
+    int BHDIP010DisableCoinsBeforeBHDIP009EnableAtHeight;
 
     std::array<PledgeTerm, 4> BHDIP009PledgeTerms;
 
