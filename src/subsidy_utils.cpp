@@ -38,10 +38,13 @@ CAmount GetBlockSubsidy(int nHeight, Consensus::Params const& consensusParams) {
 
     // Force to double the outcome on BHDIP009
     if (nHeight >= consensusParams.BHDIP009Height) {
-        return nSubsidy * consensusParams.BHDIP009TotalAmountUpgradeMultiply;
+        nSubsidy = nSubsidy * consensusParams.BHDIP009TotalAmountUpgradeMultiply;
     }
 
-    // TODO: after BHDIP010 the total subsidy of the block should be increased
+    // Increase the outcome on BHDIP010
+    if (nHeight >= consensusParams.BHDIP010Height) {
+        nSubsidy = nSubsidy * consensusParams.BHDIP010TotalAmountUpgradeMultiply;
+    }
 
     return nSubsidy;
 }

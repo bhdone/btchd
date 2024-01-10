@@ -130,6 +130,7 @@ struct Params {
     std::vector<std::pair<int, double>> BHDIP009DifficultyChangeMaxFactors;
 
     int BHDIP010Height;
+    int BHDIP010TotalAmountUpgradeMultiply;
     double BHDIP010TargetSpacingMulFactor;
     int BHDIP010TargetSpacingMulFactorEnableAtHeight;
     int BHDIP010DisableCoinsBeforeBHDIP009EnableAtHeight;

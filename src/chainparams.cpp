@@ -171,6 +171,7 @@ public:
         constexpr int HEIGHTS_DAY = 60 / 3 * 24;
 
         consensus.BHDIP010Height = INFINITY_HEIGHT;
+        consensus.BHDIP010TotalAmountUpgradeMultiply = 3;
         consensus.BHDIP010DisableCoinsBeforeBHDIP009EnableAtHeight = consensus.BHDIP010Height + HEIGHTS_DAY * 30 * 6; // 6 months
 
         consensus.BHDIP010TargetSpacingMulFactor = 0.433333;
@@ -738,6 +739,7 @@ public:
         // BHDIP010
         constexpr int ONE_HOUR_HEIGHTS = 60 / 3;
         consensus.BHDIP010Height = consensus.BHDIP009Height + ONE_HOUR_HEIGHTS;
+        consensus.BHDIP010TotalAmountUpgradeMultiply = 3;
         consensus.BHDIP010DisableCoinsBeforeBHDIP009EnableAtHeight = consensus.BHDIP010Height + ONE_HOUR_HEIGHTS;
         consensus.BHDIP010TargetSpacingMulFactor = 0.433333;
         consensus.BHDIP010TargetSpacingMulFactorEnableAtHeight = consensus.BHDIP010Height;
