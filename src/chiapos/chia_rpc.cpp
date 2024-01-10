@@ -1036,10 +1036,9 @@ static UniValue queryChainPledgeInfo(JSONRPCRequest const& request) {
     return resVal;
 }
 
-CTransaction create_burn_txouts_transaction(std::vector<COutPoint> const& outpoints, int nSpendHeight, CAmount& nOutValue)
+optional<CTransaction> create_burn_txouts_transaction(CCoinsViewCache const& coinsView, int nSpendHeight, std::vector<COutPoint> const& outpoints, CAmount& nOutValue)
 {
     CMutableTransaction mtx;
-    auto const& coinsView = ::ChainstateActive().CoinsTip();
 
     CAmount nTotalAmount { 0 };
     for (auto const& outpoint : outpoints) {
@@ -1054,9 +1053,14 @@ CTransaction create_burn_txouts_transaction(std::vector<COutPoint> const& outpoi
         nTotalAmount += coin.out.nValue;
     }
 
+    CAmount nTxFee { static_cast<CAmount>(0.01 * COIN) };
+    if (mtx.vin.empty() || nTotalAmount < nTxFee) {
+        // empty txins or the number of amount isn't enough, no transaction can be created
+        return {};
+    }
+
     // Make transaction to burn the txout
     std::vector<std::string> errors;
-    CAmount nTxFee { static_cast<CAmount>(0.01 * COIN) };
 
     auto destBurn = GetBurnToDestination();
     auto scriptBurn = GetScriptForDestination(destBurn);
@@ -1067,11 +1071,33 @@ CTransaction create_burn_txouts_transaction(std::vector<COutPoint> const& outpoi
     return CTransaction(mtx);
 }
 
-std::tuple<uint256, CAmount> create_and_broadcast_burn_tx(int nSpendHeight, std::vector<COutPoint> const& outpoints, CAmount nMaxFee)
+bool is_valid_txout(CCoinsView const& coinsView, int nSpendHeight, COutPoint const& outpoint, std::string& strOutReason)
+{
+    Coin coin;
+    if (!coinsView.GetCoin(outpoint, coin)) {
+        strOutReason = "coin cannot be found";
+        return false;
+    }
+    if (coin.IsSpent()) {
+        strOutReason = "coin is spent";
+        return false;
+    }
+    if (coin.out.nValue == 0) {
+        strOutReason = "coin amount is zero";
+        return false;
+    }
+    return true;
+}
+
+std::tuple<uint256, CAmount> create_and_broadcast_burn_tx(CCoinsViewCache const& coinsView, int nSpendHeight, std::vector<COutPoint> const& outpoints, CAmount nMaxFee)
 {
     std::string strErrorReason;
     CAmount value;
-    auto tx = create_burn_txouts_transaction(outpoints, nSpendHeight, value);
+    auto tx_opt = create_burn_txouts_transaction(coinsView, nSpendHeight, outpoints, value);
+    if (!tx_opt.has_value()) {
+        return std::make_tuple(uint256(), 0);
+    }
+    auto tx = *tx_opt;
     auto ptx = std::make_shared<CTransaction>(tx);
     auto txError = BroadcastTransaction(ptx, strErrorReason, nMaxFee, true, false);
     if (txError != TransactionError::OK) {
@@ -1083,11 +1109,17 @@ std::tuple<uint256, CAmount> create_and_broadcast_burn_tx(int nSpendHeight, std:
     return std::make_tuple(ptx->GetHash(), value);
 }
 
+struct WrongTxOut {
+    UniValue valSource;
+    std::string strError;
+};
+
 UniValue burntxout(JSONRPCRequest const& request)
 {
     constexpr auto nMaxFee = static_cast<CAmount>(0.01 * COIN);
 
     LOCK(cs_main);
+    auto const& coinsView = ::ChainstateActive().CoinsTip();
     int nSpendHeight = ::ChainActive().Height();
 
     // txout: txid, n
@@ -1110,75 +1142,93 @@ UniValue burntxout(JSONRPCRequest const& request)
         std::copy(std::istream_iterator<char>(inf), std::istream_iterator<char>(), std::back_inserter(strContent));
         UniValue valTxOutsFromFile;
         valTxOutsFromFile.read(strContent);
-        std::vector<UniValue> vWrongTxOuts;
+        std::vector<WrongTxOut> vWrongTxOuts;
         std::map<uint256, CAmount> mSentTxWithAmount;
         std::vector<COutPoint> outpoints;
         // parsed txouts, now read each of the txouts and put them to transaction
+        uint32_t nTotalTxOuts { 0 };
         for (auto const& valTxOutFromFile : valTxOutsFromFile.getValues()) {
+            ++nTotalTxOuts;
             if (!valTxOutFromFile.exists("txid")) {
-                vWrongTxOuts.push_back(valTxOutFromFile);
+                vWrongTxOuts.emplace_back(WrongTxOut{valTxOutFromFile, "json string is missing `txid`"});
                 continue;
             }
             if (!valTxOutFromFile.exists("n")) {
-                vWrongTxOuts.push_back(valTxOutFromFile);
+                vWrongTxOuts.emplace_back(WrongTxOut{valTxOutFromFile,  "json string is missing `n`"});
                 continue;
             }
             if (!valTxOutFromFile.exists("value")) {
-                vWrongTxOuts.push_back(valTxOutFromFile);
+                vWrongTxOuts.emplace_back(WrongTxOut{valTxOutFromFile,  "json string is missing `value`"});
                 continue;
             }
             uint256 txid;
             try {
                 txid = ParseHashV(valTxOutFromFile["txid"], "txid");
             } catch (std::exception const&) {
-                vWrongTxOuts.push_back(valTxOutFromFile);
+                vWrongTxOuts.emplace_back(WrongTxOut{valTxOutFromFile,  "`txid` is invalid from json string"});
                 continue;
             }
             int32_t n;
-            if (!ParseInt32(valTxOutFromFile["n"].get_str(), &n)) {
-                vWrongTxOuts.push_back(valTxOutFromFile);
+            if (!ParseInt32(valTxOutFromFile["n"].getValStr(), &n)) {
+                vWrongTxOuts.emplace_back(WrongTxOut{valTxOutFromFile, "`n` cannot be parsed into integer from json string"});
                 continue;
             }
             CAmount nValueFromTxOut;
-            if (!ParseInt64(valTxOutFromFile["value"].get_str(), &nValueFromTxOut)) {
-                vWrongTxOuts.push_back(valTxOutFromFile);
+            if (!ParseInt64(valTxOutFromFile["value"].getValStr(), &nValueFromTxOut)) {
+                vWrongTxOuts.emplace_back(WrongTxOut{valTxOutFromFile, "`value` cannot be parsed into integer from json string"});
                 continue;
             }
             if (nValueFromTxOut > 0) {
+                std::string strReason;
+                if (!is_valid_txout(coinsView, nSpendHeight, COutPoint(txid, n), strReason)) {
+                    vWrongTxOuts.emplace_back(WrongTxOut{valTxOutFromFile, strReason});
+                    continue;
+                }
                 outpoints.emplace_back(txid, n);
                 if (outpoints.size() >= nMaxTxIns) {
                     // create transaction and broadcast it to P2P network
                     uint256 txid;
                     CAmount nTotalBurn;
-                    std::tie(txid, nTotalBurn) = create_and_broadcast_burn_tx(nSpendHeight, outpoints, nMaxFee);
-                    mSentTxWithAmount.insert(std::make_pair(txid, nTotalBurn));
+                    std::tie(txid, nTotalBurn) = create_and_broadcast_burn_tx(coinsView, nSpendHeight, outpoints, nMaxFee);
+                    if (!txid.IsNull()) {
+                        mSentTxWithAmount.insert(std::make_pair(txid, nTotalBurn));
+                    }
                     outpoints.clear();
                 }
+            } else {
+                vWrongTxOuts.emplace_back(WrongTxOut{valTxOutFromFile, "value of the coin is zero"});
+                continue;
             }
         }
         if (!outpoints.empty()) {
             uint256 txid;
             CAmount nTotalBurn;
-            std::tie(txid, nTotalBurn) = create_and_broadcast_burn_tx(nSpendHeight, outpoints, nMaxFee);
-            mSentTxWithAmount.insert(std::make_pair(txid, nTotalBurn));
+            std::tie(txid, nTotalBurn) = create_and_broadcast_burn_tx(coinsView, nSpendHeight, outpoints, nMaxFee);
+            if (!txid.IsNull()) {
+                mSentTxWithAmount.insert(std::make_pair(txid, nTotalBurn));
+            }
         }
         // create outputs
         UniValue valResult(UniValue::VOBJ);
+        valResult.pushKV("total", static_cast<int32_t>(nTotalTxOuts));
         // wrong txouts
         UniValue valWrongTxOuts(UniValue::VARR);
-        for (auto const& txout_val : vWrongTxOuts) {
-            valWrongTxOuts.push_back(txout_val);
+        for (auto const& valTxOut : vWrongTxOuts) {
+            UniValue valCoin(UniValue::VOBJ);
+            valCoin.pushKV("coin", valTxOut.valSource);
+            valCoin.pushKV("error", valTxOut.strError);
+            valWrongTxOuts.push_back(valCoin);
         }
         valResult.pushKV("wrongTxOuts", valWrongTxOuts);
         // committed transactions
-        UniValue valSentTxIDWithAmount(UniValue::VOBJ);
+        UniValue valSentTxIDWithAmount(UniValue::VARR);
         for (auto const& pairTxIDAmount : mSentTxWithAmount) {
-            UniValue obj(UniValue::VOBJ);
-            obj.pushKV("txid", pairTxIDAmount.first.GetHex());
-            obj.pushKV("value", pairTxIDAmount.second);
-            valSentTxIDWithAmount.push_back(obj);
+            UniValue valTxIDAmount(UniValue::VOBJ);
+            valTxIDAmount.pushKV("txid", pairTxIDAmount.first.GetHex());
+            valTxIDAmount.pushKV("value", pairTxIDAmount.second);
+            valSentTxIDWithAmount.push_back(valTxIDAmount);
         }
-        valResult.pushKV("commitTx", valSentTxIDWithAmount);
+        valResult.pushKV("commitTxs", valSentTxIDWithAmount);
         return valResult;
     }
 
@@ -1187,9 +1237,14 @@ UniValue burntxout(JSONRPCRequest const& request)
     if (!ParseInt32(request.params[1].get_str(), &n)) {
         throw std::runtime_error("cannot convert argument 2 into integer value");
     }
+
+    std::string strReason;
+    if (!is_valid_txout(coinsView, nSpendHeight, COutPoint(txid, n), strReason)) {
+        throw std::runtime_error(strReason);
+    }
     uint256 retTxid;
     CAmount nTotalBurn;
-    std::tie(retTxid, nTotalBurn) = create_and_broadcast_burn_tx(nSpendHeight, { {txid, static_cast<uint32_t>(n)} }, nMaxFee);
+    std::tie(retTxid, nTotalBurn) = create_and_broadcast_burn_tx(coinsView, nSpendHeight, { {txid, static_cast<uint32_t>(n)} }, nMaxFee);
 
     return retTxid.GetHex();
 }
