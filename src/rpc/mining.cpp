@@ -1877,9 +1877,10 @@ static UniValue getplottermininginfo(const JSONRPCRequest& request)
     return result;
 }
 
-static void ListPoint(CCoinsViewCursorRef pcursor, UniValue& outVal) {
+static int ListPoint(CCoinsViewCursorRef pcursor, UniValue& outVal, CAmount& nOutTotalAmount) {
     assert(pcursor != nullptr);
-    // UniValue ret(UniValue::VARR);
+    nOutTotalAmount = 0;
+    int nCount { 0 };
     for (; pcursor->Valid(); pcursor->Next()) {
         COutPoint key;
         Coin coin;
@@ -1889,6 +1890,7 @@ static void ListPoint(CCoinsViewCursorRef pcursor, UniValue& outVal) {
             assert(coin.IsPoint());
 
             UniValue item(UniValue::VOBJ);
+            item.pushKV("type", DatacarrierTypeToString(coin.GetExtraDataType()));
             item.pushKV("from", EncodeDestination(ExtractDestination(coin.out.scriptPubKey)));
             item.pushKV("to", EncodeDestination(ScriptHash(PointPayload::As(coin.extraData)->GetReceiverID())));
             item.pushKV("amount", ValueFromAmount(coin.out.nValue));
@@ -1896,10 +1898,26 @@ static void ListPoint(CCoinsViewCursorRef pcursor, UniValue& outVal) {
             item.pushKV("blockhash", ::ChainActive()[(int)coin.nHeight]->GetBlockHash().GetHex());
             item.pushKV("blocktime", ::ChainActive()[(int)coin.nHeight]->GetBlockTime());
             item.pushKV("blockheight", (int)coin.nHeight);
+
             outVal.push_back(item);
+            nOutTotalAmount += coin.out.nValue;
+            ++nCount;
         } else
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
     }
+    return nCount;
+}
+
+void add_listpoint_entry_to_univalue(UniValue& valResult, CCoinsViewCursorRef cursor, std::string const& strTitle)
+{
+    UniValue valPointEntries(UniValue::VARR);
+    CAmount nTotalAmount { 0 };
+    int nCount = ListPoint(cursor, valPointEntries, nTotalAmount);
+    UniValue valEntryResult(UniValue::VOBJ);
+    valEntryResult.pushKV(strTitle + "TotalAmount", static_cast<double>(nTotalAmount) / COIN);
+    valEntryResult.pushKV(strTitle + "Count", nCount);
+    valEntryResult.pushKV(strTitle, valPointEntries);
+    valResult.pushKV(strTitle, valEntryResult);
 }
 
 static UniValue listpledgeloanofaddress(const JSONRPCRequest& request)
@@ -1942,13 +1960,14 @@ static UniValue listpledgeloanofaddress(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Unable to flush state to disk (%s)\n", FormatStateMessage(state)));
     }
 
-    UniValue res(UniValue::VARR);
-    ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::Burst), res);
-    ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::Chia), res);
-    ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::ChiaT1), res);
-    ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::ChiaT2), res);
-    ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::ChiaT3), res);
-    ListPoint(::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::ChiaRT), res);
+    UniValue res(UniValue::VOBJ);
+
+    add_listpoint_entry_to_univalue(res, ::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::Burst), "Burst");
+    add_listpoint_entry_to_univalue(res, ::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::Chia), "Chia");
+    add_listpoint_entry_to_univalue(res, ::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::ChiaT1), "ChiaT1");
+    add_listpoint_entry_to_univalue(res, ::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::ChiaT2), "ChiaT2");
+    add_listpoint_entry_to_univalue(res, ::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::ChiaT3), "ChiaT3");
+    add_listpoint_entry_to_univalue(res, ::ChainstateActive().CoinsDB().PointSendCursor(accountID, PointType::ChiaRT), "ChiaRT");
 
     return res;
 }
@@ -1992,14 +2011,15 @@ static UniValue listpledgedebitofaddress(const JSONRPCRequest& request)
     if (!::ChainstateActive().FlushStateToDisk(Params(), state, FlushStateMode::ALWAYS)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, strprintf("Unable to flush state to disk (%s)\n", FormatStateMessage(state)));
     }
-    UniValue res(UniValue::VARR);
 
-    ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::Burst), res);
-    ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::Chia), res);
-    ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::ChiaT1), res);
-    ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::ChiaT2), res);
-    ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::ChiaT3), res);
-    ListPoint(::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::ChiaRT), res);
+    UniValue res(UniValue::VOBJ);
+
+    add_listpoint_entry_to_univalue(res, ::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::Burst), "Burst");
+    add_listpoint_entry_to_univalue(res, ::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::Chia), "Chia");
+    add_listpoint_entry_to_univalue(res, ::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::ChiaT1), "ChiaT1");
+    add_listpoint_entry_to_univalue(res, ::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::ChiaT2), "ChiaT2");
+    add_listpoint_entry_to_univalue(res, ::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::ChiaT3), "ChiaT3");
+    add_listpoint_entry_to_univalue(res, ::ChainstateActive().CoinsDB().PointReceiveCursor(accountID, PointType::ChiaRT), "ChiaRT");
 
     return res;
 }
