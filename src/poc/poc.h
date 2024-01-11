@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The BitcoinHD1 Core developers
+// Copyright (c) 2017-2020 The DePINC Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,9 +32,9 @@ namespace poc {
 static const arith_uint256 TWO64 = arith_uint256(std::numeric_limits<uint64_t>::max()) + 1;
 
 /**
- * BHD1 base target when target spacing is 1 seconds
+ * DePC base target when target spacing is 1 seconds
  *
- * See https://bhd.one/wiki/The_Proof_of_Capacity#Base_Target
+ * See https://depinc.org/wiki/The_Proof_of_Capacity#Base_Target
  *
  * net capacity(t) = 4398046511104 / t / baseTarget(t)
  *
@@ -194,7 +194,7 @@ CAmount GetCapacityRequireBalance(int64_t nCapacityTB, CAmount miningRatio);
  * @param nMiningHeight             The height of mining
  * @param view                      The coin view
  * @param pMinerCapacityTB          Miner capacity by estimate
- * @param pOldMiningRequireBalance  Only in BHDIP004. See https://bhd.one/wiki/BHDIP/004#getminingrequire
+ * @param pOldMiningRequireBalance  Only in BHDIP004. See https://depinc.org/wiki/BHDIP/004#getminingrequire
  * @param nBurned                   The amount of coins are burned, need fix the total supplied amount
  * @param params                    Consensus params
  *

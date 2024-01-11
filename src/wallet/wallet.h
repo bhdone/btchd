@@ -117,9 +117,9 @@ enum WalletFeature
 
     FEATURE_NO_DEFAULT_KEY = 159900, // Wallet without a default key written
 
-    FEATURE_BitcoinHD1_BASE = FEATURE_NO_DEFAULT_KEY, // BitcoionHD base feature
+    FEATURE_DePINC_BASE = FEATURE_NO_DEFAULT_KEY, // BitcoionHD base feature
 
-    FEATURE_LATEST = FEATURE_BitcoinHD1_BASE
+    FEATURE_LATEST = FEATURE_DePINC_BASE
 };
 
 //! Default for -addresstype
@@ -594,7 +594,7 @@ public:
     CAmount GetImmatureWatchOnlyCredit(interfaces::Chain::Lock& locked_chain, const bool fUseCache=true) const;
     CAmount GetChange() const;
 
-    //! for BitcoinHD1
+    //! for DePINC
     CAmount GetFreezeCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
     CAmount GetPointSendCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;
     CAmount GetPointReceiveCredit(interfaces::Chain::Lock& locked_chain, bool fUseCache=true, const isminefilter& filterr=ISMINE_SPENDABLE) const NO_THREAD_SAFETY_ANALYSIS;

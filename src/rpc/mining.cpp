@@ -947,7 +947,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
                 "\nMine up to nblocks blocks immediately (before the RPC call returns) to an address in the wallet.\n",
                 {
                     {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
-                    {"address", RPCArg::Type::STR, /* default */ "", "The address to send the newly generated BHD1 to. Default use wallet primary address. Require address private key from wallet. "},
+                    {"address", RPCArg::Type::STR, /* default */ "", "The address to send the newly generated DePC to. Default use wallet primary address. Require address private key from wallet. "},
                 },
                 RPCResult{
             "[ blockhashes ]     (array) hashes of blocks generated\n"
@@ -968,7 +968,7 @@ static UniValue generatetoaddress(const JSONRPCRequest& request)
         dest = pwallet->GetPrimaryDestination();
     }
     if (!boost::get<ScriptHash>(&dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD1 address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid DePINC address");
     }
     auto keyid = GetKeyForDestination(*pwallet, dest);
     if (keyid.IsNull()) {
@@ -990,7 +990,7 @@ static UniValue generatetoprivkey(const JSONRPCRequest& request)
                 "\nMine blocks immediately to a specified private key P2WPKH address (before the RPC call returns)\n",
                 {
                     {"nblocks", RPCArg::Type::NUM, RPCArg::Optional::NO, "How many blocks are generated immediately."},
-                    {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The address (private key P2WPKH) to send the newly generated BHD1 to."},
+                    {"privkey", RPCArg::Type::STR, RPCArg::Optional::NO, "The address (private key P2WPKH) to send the newly generated DePC to."},
                 },
                 RPCResult{
             "[ blockhashes ]     (array) hashes of blocks generated\n"
@@ -1009,7 +1009,7 @@ static UniValue generatetoprivkey(const JSONRPCRequest& request)
     CTxDestination segwit = WitnessV0KeyHash(keyid);
     CTxDestination dest = ScriptHash(GetScriptForDestination(segwit));
     if (!boost::get<ScriptHash>(&dest)) {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD1 address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid DePINC address");
     }
 
     CScript coinbase_script = GetScriptForDestination(dest);
@@ -1025,7 +1025,7 @@ static UniValue getactivebindplotteraddress(const JSONRPCRequest& request)
             "\nArguments:\n"
             "1. plotterId           (string, required) The plotter ID\n"
             "\nResult:\n"
-            "\"address\"    (string) The active binded BitcoinHD1 address\n"
+            "\"address\"    (string) The active binded DePINC address\n"
             "\nExamples:\n"
             + HelpExampleCli("getactivebindplotteraddress", "\"12345678900000000000\"")
             + HelpExampleRpc("getactivebindplotteraddress", "\"12345678900000000000\"")
@@ -1055,7 +1055,7 @@ static UniValue getactivebindplotter(const JSONRPCRequest& request)
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"address\":\"address\",           (string) The BitcoinHD1 address of the binded.\n"
+            "    \"address\":\"address\",           (string) The DePINC address of the binded.\n"
             "    \"txid\":\"txid\",                 (string) The last binded transaction id.\n"
             "    \"blockhash\":\"blockhash\",       (string) The binded transaction included block hash.\n"
             "    \"blocktime\": xxx,              (numeric) The block time in seconds since epoch (1 Jan 1970 GMT).\n"
@@ -1138,14 +1138,14 @@ static UniValue listbindplotterofaddress(const JSONRPCRequest& request)
             "listbindplotterofaddress \"address\" (plotterId count verbose)\n"
             "\nReturns up to binded plotter of address.\n"
             "\nArguments:\n"
-            "1. address             (string, required) The BitcoinHD1 address\n"
+            "1. address             (string, required) The DePINC address\n"
             "2. plotterId(farmerPk) (string, optional) The filter plotter ID. If 0 or not set then output all binded plotter ID\n"
             "3. count               (numeric, optional) The result of count binded to list. If not set then output all binded plotter ID\n"
             "4. verbose             (bool, optional, default=false) If true, return bindheightlimit, unbindheightlimit and active\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"address\":\"address\",               (string) The BitcoinHD1 address of the binded.\n"
+            "    \"address\":\"address\",               (string) The DePINC address of the binded.\n"
             "    \"plotterId\": \"plotterId\",          (string) The binded plotter ID.\n"
             "    \"txid\": \"transactionid\",           (string) The transaction id.\n"
             "    \"blockhash\": \"hashvalue\",          (string) The block hash containing the transaction.\n"
@@ -1277,7 +1277,7 @@ static UniValue createbindplotterdata(const JSONRPCRequest& request)
             "createbindplotterdata \"address\" \"passphrase\" (lastActiveHeight)\n"
             "\nCreate bind plotter hex data.\n"
             "\nArguments:\n"
-            "1. address             (string, required) The BitcoinHD1 address\n"
+            "1. address             (string, required) The DePINC address\n"
             "2. passphrase          (string, required) The passphrase for bind\n"
             "3. lastActiveHeight    (numeric, optional) The last active height for bind data. Max large then tip 12 blocks\n"
             ""
@@ -1361,7 +1361,7 @@ static UniValue verifybindplotterdata(const JSONRPCRequest& request)
             "verifybindplotterdata \"address\" \"hexdata\"\n"
             "\nVerify plotter hex data.\n"
             "\nArguments:\n"
-            "1. address             (string, required) The BitcoinHD1 address\n"
+            "1. address             (string, required) The DePINC address\n"
             "2. hexdata             (string, required) The bind hex data\n"
             "\nResult:\n"
             "[\n"
@@ -1369,7 +1369,7 @@ static UniValue verifybindplotterdata(const JSONRPCRequest& request)
             "    \"result\":\"result\",                     (string) Verify result. 1.success; 2.reject: can't verify signature; 3.invalid: The data not bind plotter hex data\n"
             "    \"plotterId\":\"plotterId\",               (string) The binded plotter ID.\n"
             "    \"lastActiveHeight\":lastActiveHeight,   (numeric) The bind last active height for tx package.\n"
-            "    \"address\":\"address\",                   (string) The BitcoinHD1 address of the binded.\n"
+            "    \"address\":\"address\",                   (string) The DePINC address of the binded.\n"
             "  }\n"
             "]\n"
 
@@ -1487,7 +1487,7 @@ static UniValue getpledgeofaddress(const std::string &address, CPlotterBindData 
     LOCK(cs_main);
     const CAccountID accountID = ExtractAccountID(DecodeDestination(address));
     if (accountID.IsNull()) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address, must from BitcoinHD1 wallet (P2SH address)");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address, must from DePINC wallet (P2SH address)");
     }
     const Consensus::Params &params = Params().GetConsensus();
     int nChainHeight = ::ChainActive().Height();
@@ -1684,7 +1684,7 @@ static UniValue getpledgeofaddress(const JSONRPCRequest& request)
             "getpledgeofaddress address (plotterId)\n"
             "Get pledge information of address.\n"
             "\nArguments:\n"
-            "1. address         (string, required) The BitcoinHD1 address.\n"
+            "1. address         (string, required) The DePINC address.\n"
             "2. plotterId       (string, optional) DEPRECTED after BHDIP006. Plotter ID\n"
             "3. verbose         (bool, optional, default=false) If true, return detail pledge\n"
             "\nResult:\n"
@@ -1927,12 +1927,12 @@ static UniValue listpledgeloanofaddress(const JSONRPCRequest& request)
             "listpledgeloanofaddress \"address\"\n"
             "\nReturns up to point sent coins.\n"
             "\nArguments:\n"
-            "1. address             (string, required) The BitcoinHD1 address\n"
+            "1. address             (string, required) The DePINC address\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"from\":\"address\",                  (string) The BitcoinHD1 address of the point sender.\n"
-            "    \"to\":\"address\",                    (string) The BitcoinHD1 address of the point receiver\n"
+            "    \"from\":\"address\",                  (string) The DePINC address of the point sender.\n"
+            "    \"to\":\"address\",                    (string) The DePINC address of the point receiver\n"
             "    \"amount\": x.xxx,                   (numeric) The amount in " + CURRENCY_UNIT + ".\n"
             "    \"txid\": \"transactionid\",           (string) The transaction id.\n"
             "    \"blockhash\": \"hashvalue\",          (string) The block hash containing the transaction.\n"
@@ -1979,12 +1979,12 @@ static UniValue listpledgedebitofaddress(const JSONRPCRequest& request)
             "listpledgedebitofaddress \"address\"\n"
             "\nReturns up to point receive coins.\n"
             "\nArguments:\n"
-            "1. address             (string, required) The BitcoinHD1 address\n"
+            "1. address             (string, required) The DePINC address\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"from\":\"address\",                  (string) The BitcoinHD1 address of the point sender.\n"
-            "    \"to\":\"address\",                    (string) The BitcoinHD1 address of the point receiver\n"
+            "    \"from\":\"address\",                  (string) The DePINC address of the point sender.\n"
+            "    \"to\":\"address\",                    (string) The DePINC address of the point receiver\n"
             "    \"amount\": x.xxx,                   (numeric) The amount in " + CURRENCY_UNIT + ".\n"
             "    \"txid\": \"transactionid\",           (string) The transaction id.\n"
             "    \"blockhash\": \"hashvalue\",          (string) The block hash containing the transaction.\n"
@@ -2030,7 +2030,7 @@ static UniValue getbalanceofheight(const JSONRPCRequest& request)
         throw std::runtime_error(
             "DEPRECATED.getbalanceofheight \"address\" (\"height\")\n"
             "\nArguments:\n"
-            "1. address           (string,optional) The BitcoinHD1 address\n"
+            "1. address           (string,optional) The DePINC address\n"
             "2. height            (numeric,optional) DEPRECATED.The height of blockchain\n"
             "\nResult:\n"
             "Balance\n"
@@ -2047,7 +2047,7 @@ static UniValue getbalanceofheight(const JSONRPCRequest& request)
 
     const CAccountID accountID = ExtractAccountID(DecodeDestination(request.params[0].get_str()));
     if (accountID.IsNull()) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address, BitcoinHD1 address of P2SH");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address, DePINC address of P2SH");
     }
 
     int nChainHeight = ::ChainActive().Height();
@@ -2070,7 +2070,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "estimaterawfee",               &estimaterawfee,                {"conf_target", "threshold"} },
     { "hidden",             "getbalanceofheight",           &getbalanceofheight,            {"address", "height"} },
 
-    // for BitcoinHD1
+    // for DePINC
 #ifdef ENABLE_WALLET
     // TODO move to rpcwalet.cpp
     { "wallet",             "generatetoaddress",            &generatetoaddress,             {"nblocks","address"} },

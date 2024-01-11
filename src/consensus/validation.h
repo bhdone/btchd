@@ -69,7 +69,7 @@ enum class ValidationInvalidReason {
     TX_CONFLICT,
     TX_MEMPOOL_POLICY,        //!< violated mempool's fee/size/descendant/RBF/etc limits
     /**
-     * For BitcoinHD1
+     * For DePINC
      * TODO process this case
      */
     TX_INVALID_BIND,          //!< invalid bind or unbind transaction

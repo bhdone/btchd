@@ -66,8 +66,8 @@
         <translation>Mga address na tatanggap</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD1 addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Ito ang iyong mga BitcoinHD1 address para sa pagpapadala ng bayad. Laging suriin ang halaga at ang address na tatanggap bago magpadala ng coins.</translation>
+        <source>These are your DePINC addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Ito ang iyong mga DePINC address para sa pagpapadala ng bayad. Laging suriin ang halaga at ang address na tatanggap bago magpadala ng coins.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -160,8 +160,8 @@
         <translation>Kumpirmahin ang pag-encrypt ng walet.</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHD1s&lt;/b&gt;!</source>
-        <translation>Babala: Kung na-encrypt mo ang iyong walet at nawala ang iyong passphrase, &lt;b&gt;MAWAWALA MO ANG LAHAT NG IYONG MGA BHD1s!&lt;/b&gt;</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DePCs&lt;/b&gt;!</source>
+        <translation>Babala: Kung na-encrypt mo ang iyong walet at nawala ang iyong passphrase, &lt;b&gt;MAWAWALA MO ANG LAHAT NG IYONG MGA DePCs!&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -322,8 +322,8 @@
         <translation>Ang proxy ay &lt;b&gt;pinagana&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD1 address</source>
-        <translation>Magpadala ng coins sa BitcoinHD1 address</translation>
+        <source>Send coins to a DePINC address</source>
+        <translation>Magpadala ng coins sa DePINC address</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -366,12 +366,12 @@
         <translation>I-encrypt ang private keys na kabilang sa iyong walet</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD1 addresses to prove you own them</source>
-        <translation>Pumirma ng mga mensahe gamit ang iyong mga BitcoinHD1 address upang mapatunayan na pagmamay-ari mo ang mga ito</translation>
+        <source>Sign messages with your DePINC addresses to prove you own them</source>
+        <translation>Pumirma ng mga mensahe gamit ang iyong mga DePINC address upang mapatunayan na pagmamay-ari mo ang mga ito</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD1 addresses</source>
-        <translation>I-verify ang mga mensahe upang matiyak na sila ay napirmahan ng tinukoy na mga BitcoinHD1 address.</translation>
+        <source>Verify messages to ensure they were signed with specified DePINC addresses</source>
+        <translation>I-verify ang mga mensahe upang matiyak na sila ay napirmahan ng tinukoy na mga DePINC address.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -470,8 +470,8 @@
         <translation>Isara ang walet</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible BitcoinHD1 command-line options</source>
-        <translation>Ipakita sa %1 ang tulong na mensahe upang makuha ang talaan ng mga posibleng opsyon ng BitcoinHD1 command-line</translation>
+        <source>Show the %1 help message to get a list with possible DePINC command-line options</source>
+        <translation>Ipakita sa %1 ang tulong na mensahe upang makuha ang talaan ng mga posibleng opsyon ng DePINC command-line</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -578,8 +578,8 @@
         <translation>Walet ay na-encrypt at kasalukuyang naka-lock.</translation>
     </message>
     <message>
-        <source>A fatal error occurred. BitcoinHD1 can no longer continue safely and will quit.</source>
-        <translation>May nangyaring malubhang kamalian. Hindi na kayang magpatuloy ng ligtas ang BitcoinHD1 at ito ay hihinto na.</translation>
+        <source>A fatal error occurred. DePINC can no longer continue safely and will quit.</source>
+        <translation>May nangyaring malubhang kamalian. Hindi na kayang magpatuloy ng ligtas ang DePINC at ito ay hihinto na.</translation>
     </message>
 </context>
 <context>
@@ -774,8 +774,8 @@
         <translation>Baguhin ang address para sa pagpapadala</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid BitcoinHD1 address.</source>
-        <translation>Ang address na in-enter "%1" ay hindi isang wastong BitcoinHD1 address.</translation>
+        <source>The entered address "%1" is not a valid DePINC address.</source>
+        <translation>Ang address na in-enter "%1" ay hindi isang wastong DePINC address.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -871,8 +871,8 @@
         <translation>Gamitin ang pasadyang data directory:</translation>
     </message>
     <message>
-        <source>BitcoinHD1</source>
-        <translation>BitcoinHD1</translation>
+        <source>DePINC</source>
+        <translation>DePINC</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -883,8 +883,8 @@
         <translation>Humigit-kumulang na %1 GB na data ay maiimbak sa direktoryong ito.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the BitcoinHD1 block chain.</source>
-        <translation>%1 ay mag-do-download at magiimbak ng kopya ng BitcoinHD1 blockchain.</translation>
+        <source>%1 will download and store a copy of the DePINC block chain.</source>
+        <translation>%1 ay mag-do-download at magiimbak ng kopya ng DePINC blockchain.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -910,11 +910,11 @@
         <translation>Anyo</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD1 network, as detailed below.</source>
-        <translation>Ang mga bagong transaksyon ay hindi pa makikita kaya ang balanse ng iyong walet ay maaaring hindi tama. Ang impormasyong ito ay maiitama pagkatapos ma-synchronize ng iyong walet sa BitcoinHD1 network, ayon sa ibaba.</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the DePINC network, as detailed below.</source>
+        <translation>Ang mga bagong transaksyon ay hindi pa makikita kaya ang balanse ng iyong walet ay maaaring hindi tama. Ang impormasyong ito ay maiitama pagkatapos ma-synchronize ng iyong walet sa DePINC network, ayon sa ibaba.</translation>
     </message>
     <message>
-        <source>Attempting to spend BHD1s that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Attempting to spend DePCs that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
         <translation>Ang pagtangkang gastusin ang mga bitcoin na apektado ng mga transaksyon na hindi pa naipapakita ay hindi tatanggapin ng network.</translation>
     </message>
     <message>
@@ -1103,8 +1103,8 @@
         <translation>Gastusin ang sukli na hindi pa nakumpirma</translation>
     </message>
     <message>
-        <source>Automatically open the BitcoinHD1 client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Kusang buksan ang BitcoinHD1 client port sa router. Gumagana lamang ito kapag ang iyong router ay sumusuporta ng UPnP at ito ay pinagana.</translation>
+        <source>Automatically open the DePINC client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Kusang buksan ang DePINC client port sa router. Gumagana lamang ito kapag ang iyong router ay sumusuporta ng UPnP at ito ay pinagana.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1119,8 +1119,8 @@
         <translation>Ipahintulot ang mga papasok na koneksyon</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD1 network through a SOCKS5 proxy.</source>
-        <translation>Kumunekta sa BitcoinHD1 network sa pamamagitan ng SOCKS5 proxy.</translation>
+        <source>Connect to the DePINC network through a SOCKS5 proxy.</source>
+        <translation>Kumunekta sa DePINC network sa pamamagitan ng SOCKS5 proxy.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1155,8 +1155,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD1 network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Kumunekta sa BitcoinHD1 network sa pamamagitan ng hiwalay na SOCKS5 proxy para sa mga tagong serbisyo ng Tor.</translation>
+        <source>Connect to the DePINC network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Kumunekta sa DePINC network sa pamamagitan ng hiwalay na SOCKS5 proxy para sa mga tagong serbisyo ng Tor.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1266,8 +1266,8 @@
         <translation>Anyo</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD1 network after a connection is established, but this process has not completed yet.</source>
-        <translation>Ang ipinapakitang impormasyon ay maaaring luma na. Kusang mag-sy-synchronize ang iyong walet sa BitcoinHD1 network pagkatapos maitatag ang koneksyon, ngunit hindi pa nakukumpleto ang prosesong ito.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the DePINC network after a connection is established, but this process has not completed yet.</source>
+        <translation>Ang ipinapakitang impormasyon ay maaaring luma na. Kusang mag-sy-synchronize ang iyong walet sa DePINC network pagkatapos maitatag ang koneksyon, ngunit hindi pa nakukumpleto ang prosesong ito.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1369,8 +1369,8 @@
         <translation>Hindi wasto and address ng bayad %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid BitcoinHD1 address or malformed URI parameters.</source>
-        <translation>Hindi ma-parse ang URI! Marahil ito ay dahil sa hindi wastong BitcoinHD1 address o maling URI parameters</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid DePINC address or malformed URI parameters.</source>
+        <translation>Hindi ma-parse ang URI! Marahil ito ay dahil sa hindi wastong DePINC address o maling URI parameters</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1471,8 +1471,8 @@
         <translation>Halaga</translation>
     </message>
     <message>
-        <source>Enter a BitcoinHD1 address (e.g. %1)</source>
-        <translation>I-enter ang BitcoinHD1 address (e.g. %1)</translation>
+        <source>Enter a DePINC address (e.g. %1)</source>
+        <translation>I-enter ang DePINC address (e.g. %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1928,8 +1928,8 @@
         <translation>Mensahe:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD1 network.</source>
-        <translation>Opsyonal na mensahe na ilakip sa hiling ng bayad, na ipapakita pagbukas ng hiling. Tandaan: Ang mensahe ay hindi ipapadala kasama ng bayad sa BitcoinHD1 network.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the DePINC network.</source>
+        <translation>Opsyonal na mensahe na ilakip sa hiling ng bayad, na ipapakita pagbukas ng hiling. Tandaan: Ang mensahe ay hindi ipapadala kasama ng bayad sa DePINC network.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2197,7 +2197,7 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
         <translation>Dust:</translation>
     </message>
     <message>
-        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for BitcoinHD1 transactions than the network can process.</source>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for DePINC transactions than the network can process.</source>
         <translation>Kapag mas kaunti ang dami ng transaksyon kaysa sa puwang sa mga blocks, ang mga minero pati na rin ang mga relaying node ay maaaring magpatupad ng minimum na bayad. Ang pagbabayad lamang ng minimum na bayad na ito ay maayos, ngunit malaman na maaari itong magresulta sa hindi kailanmang nagkukumpirmang transaksyon sa sandaling magkaroon ng higit na pangangailangan para sa mga transaksyon ng bitcoin kaysa sa kayang i-proseso ng network.</translation>
     </message>
     <message>
@@ -2341,8 +2341,8 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
         <translation><numerusform>Tinatayang magsimula ng kumpirmasyon sa loob ng %n na mga block.</numerusform><numerusform>Tinatayang magsimula ng kumpirmasyon sa loob ng %n na mga block.</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid BitcoinHD1 address</source>
-        <translation>Babala: Hindi wastong BitcoinHD1 address</translation>
+        <source>Warning: Invalid DePINC address</source>
+        <translation>Babala: Hindi wastong DePINC address</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2384,8 +2384,8 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
         <translation>Ito ay normal na pagbabayad.</translation>
     </message>
     <message>
-        <source>The BitcoinHD1 address to send the payment to</source>
-        <translation>Ang BitcoinHD1 address kung saan ipapadala and bayad</translation>
+        <source>The DePINC address to send the payment to</source>
+        <translation>Ang DePINC address kung saan ipapadala and bayad</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2404,7 +2404,7 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
         <translation>Alisin ang entry na ito</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less BHD1s than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less DePCs than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation>Ibabawas ang bayad mula sa halagang ipapadala. Ang tatanggap ay makakatanggap ng mas kaunting mga bitcoin kaysa sa pinasok mo sa patlang ng halaga. Kung napili ang maraming tatanggap, ang bayad ay paghihiwalayin.</translation>
     </message>
     <message>
@@ -2432,8 +2432,8 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
         <translation>Mag-enter ng label para sa address na ito upang idagdag ito sa listahan ng mga gamit na address.</translation>
     </message>
     <message>
-        <source>A message that was attached to the btchd: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BitcoinHD1 network.</source>
-        <translation>Mensahe na nakalakip sa btchd: URI na kung saan maiimbak kasama ang transaksyon para sa iyong sanggunian. Tandaan: Ang mensaheng ito ay hindi ipapadala sa network ng BitcoinHD1.</translation>
+        <source>A message that was attached to the btchd: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the DePINC network.</source>
+        <translation>Mensahe na nakalakip sa btchd: URI na kung saan maiimbak kasama ang transaksyon para sa iyong sanggunian. Tandaan: Ang mensaheng ito ay hindi ipapadala sa network ng DePINC.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2477,12 +2477,12 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
         <translation>Pirmahan ang Mensahe</translation>
     </message>
     <message>
-        <source>You can sign messages/agreements with your addresses to prove you can receive BHD1s sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
+        <source>You can sign messages/agreements with your addresses to prove you can receive DePCs sent to them. Be careful not to sign anything vague or random, as phishing attacks may try to trick you into signing your identity over to them. Only sign fully-detailed statements you agree to.</source>
         <translation>Maaari kang pumirma ng mga mensahe/kasunduan sa iyong mga address upang mapatunayan na maaari kang makatanggap ng mga bitcoin na ipinadala sa kanila. Mag-ingat na huwag pumirma ng anumang bagay na hindi malinaw o random, dahil ang mga phishing attack ay maaaring subukan na linlangin ka sa pagpirma ng iyong pagkakakilanlan sa kanila. Pumirma lamang ng kumpletong mga pahayag na sumasang-ayon ka.</translation>
     </message>
     <message>
-        <source>The BitcoinHD1 address to sign the message with</source>
-        <translation>Ang BitcoinHD1 address kung anong ipipirma sa mensahe</translation>
+        <source>The DePINC address to sign the message with</source>
+        <translation>Ang DePINC address kung anong ipipirma sa mensahe</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2513,8 +2513,8 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
         <translation>Kopyahin ang kasalukuyang address sa system clipboard</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this BitcoinHD1 address</source>
-        <translation>Pirmahan ang mensahe upang mapatunayan na pagmamay-ari mo ang BitcoinHD1 address na ito</translation>
+        <source>Sign the message to prove you own this DePINC address</source>
+        <translation>Pirmahan ang mensahe upang mapatunayan na pagmamay-ari mo ang DePINC address na ito</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -2537,12 +2537,12 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
         <translation>Ipasok ang address ng tatanggap, mensahe (tiyakin na kopyahin mo ang mga break ng linya, puwang, mga tab, atbp.) at pirma sa ibaba upang i-verify ang mensahe. Mag-ingat na huwag magbasa ng higit pa sa pirma kaysa sa kung ano ang nasa nakapirmang mensahe mismo, upang maiwasan na maloko ng man-in-the-middle attack. Tandaan na pinapatunayan lamang nito na nakakatanggap sa address na ito ang partido na pumirma, hindi nito napapatunayan ang pagpapadala ng anumang transaksyon!</translation>
     </message>
     <message>
-        <source>The BitcoinHD1 address the message was signed with</source>
-        <translation>Ang BitcoinHD1 address na pumirma sa mensahe</translation>
+        <source>The DePINC address the message was signed with</source>
+        <translation>Ang DePINC address na pumirma sa mensahe</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified BitcoinHD1 address</source>
-        <translation>Tiyakin ang katotohanan ng mensahe upang siguruhin na ito'y napirmahan ng tinukoy na BitcoinHD1 address</translation>
+        <source>Verify the message to ensure it was signed with the specified DePINC address</source>
+        <translation>Tiyakin ang katotohanan ng mensahe upang siguruhin na ito'y napirmahan ng tinukoy na DePINC address</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

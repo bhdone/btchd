@@ -87,7 +87,7 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
     widget->setFont(fixedPitchFont());
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
-    widget->setPlaceholderText(QObject::tr("Enter a BitcoinHD1 address (e.g. %1)").arg(
+    widget->setPlaceholderText(QObject::tr("Enter a DePINC address (e.g. %1)").arg(
         QString::fromStdString(Params().GetConsensus().BHDFundAddress)));
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
@@ -534,15 +534,15 @@ fs::path static StartupShortcutPath()
 {
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "BitcoinHD1.lnk";
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "DePINC.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "BitcoinHD1 (testnet).lnk";
-    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("BitcoinHD1 (%s).lnk", chain);
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "DePINC (testnet).lnk";
+    return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("DePINC (%s).lnk", chain);
 }
 
 bool GetStartOnSystemStartup()
 {
-    // check for BitcoinHD1*.lnk
+    // check for DePINC*.lnk
     return fs::exists(StartupShortcutPath());
 }
 
@@ -662,9 +662,9 @@ bool SetStartOnSystemStartup(bool fAutoStart)
         optionFile << "[Desktop Entry]\n";
         optionFile << "Type=Application\n";
         if (chain == CBaseChainParams::MAIN)
-            optionFile << "Name=BitcoinHD1\n";
+            optionFile << "Name=DePINC\n";
         else
-            optionFile << strprintf("Name=BitcoinHD1 (%s)\n", chain);
+            optionFile << strprintf("Name=DePINC (%s)\n", chain);
         optionFile << "Exec=" << pszExePath << strprintf(" -min -chain=%s\n", chain);
         optionFile << "Terminal=false\n";
         optionFile << "Hidden=false\n";

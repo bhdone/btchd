@@ -63,7 +63,7 @@ WalletTx MakeWalletTx(interfaces::Chain::Lock& locked_chain, CWallet& wallet, co
     result.value_map = wtx.mapValue;
     result.is_coinbase = wtx.IsCoinBase();
 
-    //! for BitcoinHD1 point/withdraw tx
+    //! for DePINC point/withdraw tx
     if (wtx.IsPointTx()) {
         result.tx_point_address = DecodeDestination(result.value_map["to"]);
         result.tx_point_address_is_mine = ::IsMine(wallet, result.tx_point_address);
@@ -92,7 +92,7 @@ WalletTxStatus MakeWalletTxStatus(CWallet& wallet, interfaces::Chain::Lock& lock
     result.is_coinbase = wtx.IsCoinBase();
     result.is_in_main_chain = wtx.IsInMainChain(locked_chain);
 
-    //! for BitcoinHD1
+    //! for DePINC
     result.is_unfrozen = wtx.IsUnfrozen(locked_chain);
     result.is_bindplotter_inactived = false; // TODO fill this
 
@@ -440,7 +440,7 @@ public:
             result.unconfirmed_watch_only_balance = bal.m_watchonly_untrusted_pending;
             result.immature_watch_only_balance = bal.m_watchonly_immature;
         }
-        // for BitcoinHD1
+        // for DePINC
         result.frozen_balance = bal.m_mine_frozen;
         result.point_sent_balance = bal.m_mine_point_sent;
         result.point_received_balance = bal.m_mine_point_received;

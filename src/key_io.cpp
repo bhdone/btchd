@@ -72,7 +72,7 @@ public:
 
 CTxDestination DecodeDestination(const std::string& str, const CChainParams& params)
 {
-    // BitcoinHD1 only support P2SH
+    // DePINC only support P2SH
     std::vector<unsigned char> data;
     uint160 hash;
     if (DecodeBase58Check(str, data)) {

@@ -570,7 +570,7 @@ void SetupServerArgs()
     gArgs.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::RPC);
     gArgs.AddArg("-server", "Accept command line and JSON-RPC commands", ArgsManager::ALLOW_ANY, OptionsCategory::RPC);
 
-    // BitcoinHD1
+    // DePINC
     gArgs.AddArg("-forcecheckdeadline", strprintf("Force check every block work (default: %u)", DEFAULT_CHECKWORK_ENABLED), ArgsManager::ALLOW_ANY, OptionsCategory::POC);
     gArgs.AddArg("-signprivkey", "Import private key for block signature", ArgsManager::ALLOW_ANY, OptionsCategory::POC);
     gArgs.AddArg("-skip-ibd", "Skip the checking procedure for `Initial block download`", ArgsManager::ALLOW_BOOL, OptionsCategory::POC);
@@ -622,7 +622,7 @@ void SetupServerArgs()
 std::string LicenseInfo()
 {
     const std::string URL_SOURCE_CODE = "<https://github.com/bhdone/btchd>";
-    const std::string URL_WEBSITE = "<https://bhd.one>";
+    const std::string URL_WEBSITE = "<https://depinc.org>";
 
     return CopyrightHolders(_("Copyright (C) %s").translated) + "\n" +
            "\n" +

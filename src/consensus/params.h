@@ -57,7 +57,7 @@ struct BHDIP009PledgeRewardPercentForLockPeriod {
  * Parameters that influence chain consensus.
  */
 struct Params {
-    /** BitcoinHD1 Fund address */
+    /** DePINC Fund address */
     std::string BHDFundAddress;
     std::set<std::string> BHDFundAddressPool;
 
@@ -66,21 +66,21 @@ struct Params {
     int nSubsidyHalvingInterval;
     int nCapacityEvalWindow;
 
-    /** BHDIP = BitcoinHD1 Improvement Proposals, like BIP */
-    /** BitcoinHD1 target spacing */
+    /** BHDIP = DePINC Improvement Proposals, like BIP */
+    /** DePINC target spacing */
     int BHDIP001TargetSpacing;
-    /** BitcoinHD1 fund pre-mining height */
+    /** DePINC fund pre-mining height */
     int BHDIP001PreMiningEndHeight;
-    /** BitcoinHD1 fund zero height */
+    /** DePINC fund zero height */
     int BHDIP001FundZeroLastHeight;
-    /** BitcoinHD1 fund royalty for full pledge. 1000% */
+    /** DePINC fund royalty for full pledge. 1000% */
     int BHDIP001FundRoyaltyForFullMortgage;
-    /** BitcoinHD1 fund royalty for low pledge. 1000% */
+    /** DePINC fund royalty for low pledge. 1000% */
     int BHDIP001FundRoyaltyForLowMortgage;
-    /** BitcoinHD1 miner mining ratio per TB */
+    /** DePINC miner mining ratio per TB */
     CAmount BHDIP001MiningRatio;
 
-    /** View all BHDIP document on https://bhd.one/wiki/BHDIP */
+    /** View all BHDIP document on https://depinc.org/wiki/BHDIP */
     /** Block height at which BHDIP004 becomes active */
     int BHDIP004Height;
     /** Block height at which BHDIP004 becomes inactive */

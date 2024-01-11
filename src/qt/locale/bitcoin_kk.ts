@@ -167,7 +167,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>BitcoinHD1</source>
+        <source>DePINC</source>
         <translation>Биткоин</translation>
     </message>
     <message>

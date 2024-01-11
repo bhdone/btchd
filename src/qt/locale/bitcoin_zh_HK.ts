@@ -62,7 +62,7 @@
         <translation>收款地址</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD1 addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <source>These are your DePINC addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>這些是你要付款過去的比特硬幣位址。在付款之前，務必要檢查金額和收款位址是否正確。</translation>
     </message>
     <message>
@@ -160,8 +160,8 @@
         <translation>確認錢包加密</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHD1s&lt;/b&gt;!</source>
-        <translation>警告: 如果你將錢包加密後又忘記密碼，你就會&lt;b&gt;失去所有 BitcoinHD1 了&lt;/b&gt;！</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DePCs&lt;/b&gt;!</source>
+        <translation>警告: 如果你將錢包加密後又忘記密碼，你就會&lt;b&gt;失去所有 DePINC 了&lt;/b&gt;！</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -298,7 +298,7 @@
         <translation>正在為磁碟區塊重建索引...</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD1 address</source>
+        <source>Send coins to a DePINC address</source>
         <translation>付款至一個比特硬幣位址</translation>
     </message>
     <message>
@@ -405,8 +405,8 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>BitcoinHD1</source>
-        <translation>BitcoinHD1</translation>
+        <source>DePINC</source>
+        <translation>DePINC</translation>
     </message>
     <message>
         <source>Error</source>
@@ -449,7 +449,7 @@
 <context>
     <name>QObject</name>
     <message>
-        <source>Enter a BitcoinHD1 address (e.g. %1)</source>
+        <source>Enter a DePINC address (e.g. %1)</source>
         <translation>輸入一個比特硬幣位址 (例如 %1)</translation>
     </message>
     <message>

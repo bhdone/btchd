@@ -131,7 +131,7 @@ struct Arguments {
     int amount;        // set the amount to deposit
     int index;         // the index for seed
     int height;        // custom height for bind-tx
-    DepositTerm term;  // The term those BHD1 should be locked on chain
+    DepositTerm term;  // The term those DePC should be locked on chain
     chiapos::Bytes tx_id;
     std::string address;
     // Network related
@@ -284,10 +284,10 @@ int HandleCommand_Deposit() {
             std::cout << std::setw(7) << (entry.valid ? std::to_string(entry.height) : "--  ")
                       << (entry.retarget ? " [ retarget ] " : " [   point  ] ") << chiapos::BytesToHex(entry.tx_id)
                       << " --> " << entry.to << std::setw(10)
-                      << chiapos::FormatNumberStr(std::to_string(static_cast<int>(entry.amount))) << " BHD1 [ "
+                      << chiapos::FormatNumberStr(std::to_string(static_cast<int>(entry.amount))) << " DePC [ "
                       << std::setw(6) << miner::DepositTermToString(entry.term) << " ] " << std::setw(10)
-                      << chiapos::FormatNumberStr(std::to_string(actual_amount)) << " BHD1 (actual) " << std::setw(10)
-                      << chiapos::FormatNumberStr(std::to_string(withdraw_amount)) << " BHD1 (withdraw) "
+                      << chiapos::FormatNumberStr(std::to_string(actual_amount)) << " DePC (actual) " << std::setw(10)
+                      << chiapos::FormatNumberStr(std::to_string(withdraw_amount)) << " DePC (withdraw) "
                       << ((entry.height != 0 && expired) ? "expired" : "") << std::endl;
         }
         return 0;
@@ -314,13 +314,13 @@ int HandleCommand_MiningRequirement() {
     std::cout << std::setw(PREFIX_WIDTH) << "mined: " << std::setw(15)
               << tinyformat::format("%d/%d", req.mined_count, req.total_count) << " BLK" << std::endl;
     std::cout << std::setw(PREFIX_WIDTH) << "supplied: " << std::setw(15) << chiapos::MakeNumberStr(req.supplied / COIN)
-              << " BHD1" << std::endl;
+              << " DePC" << std::endl;
     std::cout << std::setw(PREFIX_WIDTH) << "burned: " << std::setw(15) << chiapos::MakeNumberStr(req.burned / COIN)
-              << " BHD1" << std::endl;
+              << " DePC" << std::endl;
     std::cout << std::setw(PREFIX_WIDTH) << "accumulate: " << std::setw(15)
-              << chiapos::MakeNumberStr(req.accumulate / COIN) << " BHD1" << std::endl;
+              << chiapos::MakeNumberStr(req.accumulate / COIN) << " DePC" << std::endl;
     std::cout << std::setw(PREFIX_WIDTH) << "require: " << std::setw(15) << chiapos::MakeNumberStr(req.req / COIN)
-              << " BHD1" << std::endl;
+              << " DePC" << std::endl;
     return 0;
 }
 
@@ -400,7 +400,7 @@ int HandleCommand_BlockSubsidy() {
         CAmount pledge_amount_70 = static_cast<double>(total_amount) * 0.7 / COIN;
         std::cout << TimeToDate(year_rec.start_time) << std::setfill(' ') << " (" << std::setw(8)
                   << year_rec.first_height << ", " << std::setw(8) << year_rec.last_height << "): " << std::setw(10)
-                  << chiapos::FormatNumberStr(std::to_string(year_rec.total / COIN)) << " (BHD1) - " << std::fixed
+                  << chiapos::FormatNumberStr(std::to_string(year_rec.total / COIN)) << " (DePC) - " << std::fixed
                   << std::setw(4) << std::setprecision(2) << static_cast<double>(year_pledge_amount) / pledge_amount_10
                   << ": 10%, " << std::setw(4) << std::setprecision(2)
                   << static_cast<double>(year_pledge_amount) / pledge_amount_30 << ": 30%, " << std::setw(4)
@@ -428,7 +428,7 @@ int HandleCommand_Supplied() {
         total += block_amount;
     }
     PLOG_INFO << ">>> current height: " << height
-              << ", total supplied: " << chiapos::FormatNumberStr(std::to_string(total / COIN)) << " BHD1";
+              << ", total supplied: " << chiapos::FormatNumberStr(std::to_string(total / COIN)) << " DePC";
     PLOG_INFO << ">>> current netspace " << chiapos::FormatNumberStr(std::to_string(netspace.netCapacityTB))
               << " TB calculated on height " << netspace.calculatedOnHeight;
     return 0;
@@ -445,7 +445,7 @@ int HandleCommand_SupplyTest() {
     LOCK(cs_main);
     Consensus::Params const& params = miner::GetChainParams().GetConsensus();
     CAmount total_supply = GetTotalSupplyBeforeBHDIP009(params);
-    PLOG_INFO << "Total supply (before BHDIP009): " << total_supply << "=" << total_supply / COIN << "(BHD1)";
+    PLOG_INFO << "Total supply (before BHDIP009): " << total_supply << "=" << total_supply / COIN << "(DePC)";
     return 0;
 }
 
@@ -597,7 +597,7 @@ uint256 MakeRandomUint256() {
 int main(int argc, char** argv) {
     plog::ConsoleAppender<plog::TxtFormatter> console_appender;
 
-    cxxopts::Options opts("btchd-miner", "BitcoinHD1 miner - A mining program for BitcoinHD1, chia PoC consensus.");
+    cxxopts::Options opts("btchd-miner", "DePINC miner - A mining program for DePINC, chia PoC consensus.");
     opts.add_options()                            // All options
             ("h,help", "Show help document")      // --help
             ("v,verbose", "Show debug logs")      // --verbose
@@ -612,7 +612,7 @@ int main(int argc, char** argv) {
              cxxopts::value<std::string>()->default_value("./config.json"))  // --config
             ("no-proxy", "Do not use proxy")                                 // --no-proxy
             ("check", "Check the account status")                            // --check
-            ("term", "The term of those BHD1 will be locked on chain (noterm, term1, term2, term3)",
+            ("term", "The term of those DePC will be locked on chain (noterm, term1, term2, term3)",
              cxxopts::value<std::string>()->default_value("noterm"))  // --term
             ("txid", "The transaction id, it should be provided with command: withdraw, retarget",
              cxxopts::value<std::string>()->default_value(""))                                 // --txid

@@ -89,7 +89,7 @@ public:
         consensus.SegwitHeight = 0;
 
         consensus.BHDFundAddress = "32B86ghqRTJkh2jvyhRWFugX7YWoqHPqVE";
-        // See https://bhd.one/wiki/fund-address-pool
+        // See https://depinc.org/wiki/fund-address-pool
         consensus.BHDFundAddressPool = {
             "3F26JRhiGjc8z8pRKJvLXBEkdE6nLDAA3y", //!< 0x20000000, Deprecated!. Last use on v1.1.0.1-30849da
             "32B86ghqRTJkh2jvyhRWFugX7YWoqHPqVE", //!< 0x20000004, 0x20000000
@@ -116,8 +116,8 @@ public:
         consensus.BHDIP001FundRoyaltyForLowMortgage = 700; // 700‰ to fund
         consensus.BHDIP001MiningRatio = 3 * COIN;
 
-        // It's fuck mind BitcoinHD1 Improvement Proposals
-        consensus.BHDIP004Height = 96264; // BitcoinHD1 new consensus upgrade bug. 96264 is first invalid block
+        // It's fuck mind DePINC Improvement Proposals
+        consensus.BHDIP004Height = 96264; // DePINC new consensus upgrade bug. 96264 is first invalid block
         consensus.BHDIP004AbandonHeight = 99000;
 
         consensus.BHDIP006Height = 129100; // Actived on Wed, 02 Jan 2019 02:17:19 GMT
@@ -212,10 +212,10 @@ public:
         // This is fine at runtime as we'll fall back to using them as a oneshot if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.push_back("seed0-chain.bhd.one");
-        vSeeds.push_back("seed1-chain.bhd.one");
-        vSeeds.push_back("seed2-chain.bhd.one");
-        vSeeds.push_back("seed3-chain.bhd.one");
+        vSeeds.push_back("seed0-chain.depinc.org");
+        vSeeds.push_back("seed1-chain.depinc.org");
+        vSeeds.push_back("seed2-chain.depinc.org");
+        vSeeds.push_back("seed3-chain.depinc.org");
         vSeeds.push_back("seed-bhd.hpool.com");
         vSeeds.push_back("seed-bhd.hdpool.com");
         vSeeds.push_back("seed-bhd.awpool.com");
@@ -690,7 +690,7 @@ public:
         consensus.BHDIP001FundRoyaltyForLowMortgage = 700; // 700‰
         consensus.BHDIP001MiningRatio = 3 * COIN;
 
-        consensus.BHDIP004Height = 96264; // BHDIP004. BitcoinHD1 new consensus upgrade bug.
+        consensus.BHDIP004Height = 96264; // BHDIP004. DePINC new consensus upgrade bug.
         consensus.BHDIP004AbandonHeight = 99000;
 
         consensus.BHDIP006Height = 129100;
@@ -771,7 +771,7 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.push_back("testnet-seed0-chain.bhd.one");
+        vSeeds.push_back("testnet-seed0-chain.depinc.org");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);

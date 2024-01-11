@@ -1224,7 +1224,7 @@ int GetNumCores()
 std::string CopyrightHolders(const std::string& strTemplate)
 {
     std::string strCopyrightHolders;
-    // BitcoinHD1 Core
+    // DePINC Core
     strCopyrightHolders += strprintf(strTemplate, strprintf("2017-%i ", COPYRIGHT_YEAR) + strprintf(_(COPYRIGHT_HOLDERS).translated, _(COPYRIGHT_HOLDERS_SUBSTITUTION).translated));
 #ifdef ENABLE_OMNICORE
     // Omni Core

@@ -1,5 +1,5 @@
-Building BitcoinHD1
+Building DePINC
 ================
 
 See doc/build-*.md for instructions on building the various
-elements of the BitcoinHD1 Core reference implementation of BitcoinHD1.
+elements of the DePINC Core reference implementation of DePINC.

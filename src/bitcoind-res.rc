@@ -16,8 +16,8 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "BitcoinHD1"
-            VALUE "FileDescription",    "bitcoind (BitcoinHD1 node with a JSON-RPC server)"
+            VALUE "CompanyName",        "DePINC"
+            VALUE "FileDescription",    "bitcoind (DePINC node with a JSON-RPC server)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "bitcoind"
             VALUE "LegalCopyright",     COPYRIGHT_STR

@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The BitcoinHD1 Core developers
+// Copyright (c) 2017-2020 The DePINC Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -545,13 +545,13 @@ uint64_t AddNonce(uint64_t& bestDeadline, const CBlockIndex& miningBlockIndex,
             }
         }
         if (!boost::get<ScriptHash>(&dest))
-            throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid BitcoinHD1 address");
+            throw JSONRPCError(RPC_INVALID_REQUEST, "Invalid DePINC address");
 
         // Check bind
         if (miningBlockIndex.nHeight + 1 >= params.BHDIP006Height) {
             const CAccountID accountID = ExtractAccountID(dest);
             if (accountID.IsNull())
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD1 address");
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid DePINC address");
             if (!::ChainstateActive().CoinsTip().HaveActiveBindPlotter(accountID, CPlotterBindData(nPlotterId)))
                 throw JSONRPCError(RPC_INVALID_REQUEST,
                     strprintf("%" PRIu64 " with %s not active bind", nPlotterId, EncodeDestination(dest)));
@@ -928,7 +928,7 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
         CBlockIndex* pindex = ::ChainActive().Tip();
         CAmount nTotalSupplied = GetTotalSupplyBeforeHeight(nHeightForCalculatingTotalSupply, params) - nBurned + GetTotalSupplyBeforeBHDIP009(params) * (params.BHDIP009TotalAmountUpgradeMultiply - 1);
         auto netspace = poc::CalculateAverageNetworkSpace(pindex, params);
-        LogPrint(BCLog::POC, "%s: Average network space %1.6f(Tib), total supplied: %s BHD1 (burned: %s BHD1), params(difficulty=%ld, iters=%ld, DCF(bits)=%ld, Filter(bits)=%ld)\n", __func__,
+        LogPrint(BCLog::POC, "%s: Average network space %1.6f(Tib), total supplied: %s DePC (burned: %s DePC), params(difficulty=%ld, iters=%ld, DCF(bits)=%ld, Filter(bits)=%ld)\n", __func__,
                 chiapos::FormatNumberStr(std::to_string(netspace.GetLow64())),
                 chiapos::FormatNumberStr(std::to_string(nTotalSupplied / COIN)),
                 chiapos::FormatNumberStr(std::to_string(nBurned / COIN)),
@@ -952,7 +952,7 @@ CAmount GetMiningRequireBalance(const CAccountID& generatorAccountID, const CPlo
         auto reqBalance = arith_uint256(nTotalSupplied) * nMinedCount / nBlockCount;
         assert(reqBalance <= std::numeric_limits<int64_t>::max());
         CAmount nMiningRequireBalance = reqBalance.GetLow64();
-        LogPrint(BCLog::POC, "%s: mining require balance=%ld (%s BHD1), miner capacity=%s TB, mined=%ld/%ld, isFoundationAddr=%s\n", __func__, nMiningRequireBalance, chiapos::FormatNumberStr(std::to_string(nMiningRequireBalance / COIN)), chiapos::FormatNumberStr(std::to_string(nMinerCapacityTB)), nMinedCount, nBlockCount, (isFoundationAddr ? "yes" : "no"));
+        LogPrint(BCLog::POC, "%s: mining require balance=%ld (%s DePC), miner capacity=%s TB, mined=%ld/%ld, isFoundationAddr=%s\n", __func__, nMiningRequireBalance, chiapos::FormatNumberStr(std::to_string(nMiningRequireBalance / COIN)), chiapos::FormatNumberStr(std::to_string(nMinerCapacityTB)), nMinedCount, nBlockCount, (isFoundationAddr ? "yes" : "no"));
         return nMiningRequireBalance;
     } else {
         int64_t nMinerCapacityTB = std::max((nNetCapacityTB * nMinedCount) / nBlockCount, (int64_t) 1);

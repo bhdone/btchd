@@ -42,7 +42,7 @@
 编译完成后，可以在`src/`目录中找到可执行文件`btchd-miner`，使用命令`btchd-miner --help`可以查看基本的参数介绍。
 
 ```
-BitcoinHD1 miner (chiapos)
+DePINC miner (chiapos)
 usage:
   ./btchd-miner <command> [arguments]...
   -h [ --help ]                      show help document
@@ -72,7 +72,7 @@ generate-config`来产生一个空的配置文件，然后将基本信息保存�
         "xxxxx",
         "xxxxx"
     ], // Chia plot文件的保存路径
-    "reward" : "", // BHD1的账号地址，奖励将会发送至该地址中
+    "reward" : "", // DePC的账号地址，奖励将会发送至该地址中
     "rpc" : // rpc相关
     {
         "host" : "", // RPC地址
@@ -85,11 +85,11 @@ generate-config`来产生一个空的配置文件，然后将基本信息保存�
 
 ## 绑定plotter与chia farmer的关系
 
-当配置文件填写完成后，请使用命令`src/btchd-miner account --bind`来尝试绑定Farmer信息到BHD1链上。
+当配置文件填写完成后，请使用命令`src/btchd-miner account --bind`来尝试绑定Farmer信息到DePC链上。
 
 ## 启动挖矿程序
 
-1. 先确保已经启动了BHD1的节点，并打开RPC消息模式。可以使用命令`src/btchdd -server`，或是测试网络则添加参数`-testnet`。
+1. 先确保已经启动了DePC的节点，并打开RPC消息模式。可以使用命令`src/btchdd -server`，或是测试网络则添加参数`-testnet`。
 2. 确认`config.json`中已经包含了正确的矿工信息。
 3. 使用`src/btchd-miner mining`来启动挖矿客户端。注：若使用测试网络，请使用`--cookie`参数指定对应的`.cookie`文件。
 

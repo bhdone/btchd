@@ -16,8 +16,8 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
-            VALUE "CompanyName",        "BitcoinHD1"
-            VALUE "FileDescription",    "btchd-tx (CLI BitcoinHD1 transaction editor utility)"
+            VALUE "CompanyName",        "DePINC"
+            VALUE "FileDescription",    "btchd-tx (CLI DePINC transaction editor utility)"
             VALUE "FileVersion",        VER_FILEVERSION_STR
             VALUE "InternalName",       "btchd-tx"
             VALUE "LegalCopyright",     COPYRIGHT_STR

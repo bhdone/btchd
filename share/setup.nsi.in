@@ -4,7 +4,7 @@ RequestExecutionLevel highest
 SetCompressor /SOLID lzma
 
 # For legacy
-!define LegacyPackageName "BitcoinHD1 Chain"
+!define LegacyPackageName "DePINC Chain"
 !define LegacyName "${LegacyPackageName} (@WINDOWS_BITS@-bit)"
 
 # General Symbol Definitions
@@ -54,9 +54,9 @@ Var StartMenuGroup
 # Installer attributes
 OutFile @abs_top_srcdir@/@PACKAGE_TARNAME@-@PACKAGE_VERSION@-win@WINDOWS_BITS@-setup.exe
 !if "@WINDOWS_BITS@" == "64"
-InstallDir $PROGRAMFILES64\BitcoinHD1
+InstallDir $PROGRAMFILES64\DePINC
 !else
-InstallDir $PROGRAMFILES\BitcoinHD1
+InstallDir $PROGRAMFILES\DePINC
 !endif
 CRCCheck on
 XPStyle on
@@ -115,7 +115,7 @@ Section -post SEC0001
     WriteRegStr HKCR "@PACKAGE_TARNAME@" "" "URL:BTCHD"
     WriteRegStr HKCR "@PACKAGE_TARNAME@\DefaultIcon" "" $INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@
     WriteRegStr HKCR "@PACKAGE_TARNAME@\shell\open\command" "" '"$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" "%1"'
-    # Clear "BitcoinHD1 Chain"
+    # Clear "DePINC Chain"
     Delete "$SMPROGRAMS\${LegacyPackageName}\Uninstall ${LegacyName}.lnk"
     Delete "$SMPROGRAMS\${LegacyPackageName}\${LegacyName}.lnk"
     Delete "$SMPROGRAMS\${LegacyPackageName}\${LegacyPackageName} (mining, @WINDOWS_BITS@-bit).lnk"
@@ -152,7 +152,7 @@ Section -un.post UNSEC0001
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (mining, @WINDOWS_BITS@-bit).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, @WINDOWS_BITS@-bit).lnk"
-    Delete /REBOOTOK "$SMSTARTUP\BitcoinHD1.lnk"
+    Delete /REBOOTOK "$SMSTARTUP\DePINC.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
     Delete /REBOOTOK $INSTDIR\debug.log
     Delete /REBOOTOK $INSTDIR\db.log

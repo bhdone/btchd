@@ -138,8 +138,8 @@
         <translation>Дискдаги блоклар қайта индексланмоқда...</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD1 address</source>
-        <translation>Тангаларни BitcoinHD1 манзилига жўнатиш</translation>
+        <source>Send coins to a DePINC address</source>
+        <translation>Тангаларни DePINC манзилига жўнатиш</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -182,12 +182,12 @@
         <translation>Ҳамёнингизга тегишли махфий калитларни кодлаш</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD1 addresses to prove you own them</source>
-        <translation>BitcoinHD1 манзилидан унинг эгаси эканлигингизни исботлаш учун хабарлар ёзинг</translation>
+        <source>Sign messages with your DePINC addresses to prove you own them</source>
+        <translation>DePINC манзилидан унинг эгаси эканлигингизни исботлаш учун хабарлар ёзинг</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD1 addresses</source>
-        <translation>Хабарларни махсус BitcoinHD1 манзилларингиз билан ёзилганлигига ишонч ҳосил қилиш учун уларни тасдиқланг</translation>
+        <source>Verify messages to ensure they were signed with specified DePINC addresses</source>
+        <translation>Хабарларни махсус DePINC манзилларингиз билан ёзилганлигига ишонч ҳосил қилиш учун уларни тасдиқланг</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -219,15 +219,15 @@
     </message>
     <message>
         <source>Open a btchd: URI or payment request</source>
-        <translation>BitcoinHD1’ни очиш: URI ёки тўлов сўрови</translation>
+        <translation>DePINC’ни очиш: URI ёки тўлов сўрови</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Буйруқлар сатри мосламалари</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to BitcoinHD1 network</source>
-        <translation><numerusform>%n та BitcoinHD1 тармоғига фаол уланиш мавжуд</numerusform></translation>
+        <source>%n active connection(s) to DePINC network</source>
+        <translation><numerusform>%n та DePINC тармоғига фаол уланиш мавжуд</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -427,8 +427,8 @@
         <translation>Бошқа маълумотлар директориясида фойдаланинг:</translation>
     </message>
     <message>
-        <source>BitcoinHD1</source>
-        <translation>BitcoinHD1</translation>
+        <source>DePINC</source>
+        <translation>DePINC</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
@@ -586,8 +586,8 @@
         <translation>Шакл</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD1 network after a connection is established, but this process has not completed yet.</source>
-        <translation>Кўрсатилган маълумот эскирган бўлиши мумкин. Ҳамёнингиз алоқа ўрнатилгандан сўнг BitcoinHD1 тармоқ билан автоматик тарзда синхронланади, аммо жараён ҳалигача тугалланмади.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the DePINC network after a connection is established, but this process has not completed yet.</source>
+        <translation>Кўрсатилган маълумот эскирган бўлиши мумкин. Ҳамёнингиз алоқа ўрнатилгандан сўнг DePINC тармоқ билан автоматик тарзда синхронланади, аммо жараён ҳалигача тугалланмади.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -667,8 +667,8 @@
         <translation>Миқдори</translation>
     </message>
     <message>
-        <source>Enter a BitcoinHD1 address (e.g. %1)</source>
-        <translation>BitcoinHD1 манзилини киритинг (масалан.  %1)</translation>
+        <source>Enter a DePINC address (e.g. %1)</source>
+        <translation>DePINC манзилини киритинг (масалан.  %1)</translation>
     </message>
     <message>
         <source>%1 m</source>

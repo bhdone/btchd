@@ -70,7 +70,7 @@
 #include "updatetip_log_helper.hpp"
 
 #if defined(NDEBUG)
-# error "BitcoinHD1 cannot be compiled without assertions."
+# error "DePINC cannot be compiled without assertions."
 #endif
 
 #define MICRO 0.000001
@@ -1306,7 +1306,7 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
         // N[30%->miner, 70%->fund]  =>    N[30%->miner, 70%->fund] pass
         // N[30%->miner, 70%->fund]  =>    Y[25%->miner[0], 70%->miner[1](fundOld), 5%->fund] (-_-!)
         //
-        // See https://bhd.one/wiki/developer/BHD004-soft-fork-for-multimining
+        // See https://depinc.org/wiki/developer/BHD004-soft-fork-for-multimining
         //
         CAmount miningRequireBalanceAtOldConsensus;
         CAmount miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, &miningRequireBalanceAtOldConsensus, 0, consensusParams);
@@ -1361,7 +1361,7 @@ BlockReward GetBlockReward(const CBlockIndex* pindexPrev, const CAmount& nFees, 
         } else {
             miningRequireBalance = poc::GetMiningRequireBalance(generatorAccountID, bindData, nHeight, view, nullptr, nullptr, nBurned, consensusParams); // Netspace fixed
         }
-        LogPrint(BCLog::POC, "%s: address %s, miningRequireBalance=%s BHD1, accountBalance=%s BHD1, balancePointSent=%s BHD1, balancePointReceived=%s BHD1\n", __func__, strGeneratorAddr,
+        LogPrint(BCLog::POC, "%s: address %s, miningRequireBalance=%s DePC, accountBalance=%s DePC, balancePointSent=%s DePC, balancePointReceived=%s DePC\n", __func__, strGeneratorAddr,
                 chiapos::FormatNumberStr(std::to_string(miningRequireBalance / COIN)),
                 chiapos::FormatNumberStr(std::to_string(accountBalance / COIN)),
                 chiapos::FormatNumberStr(std::to_string(balancePointSent / COIN)),
@@ -2171,12 +2171,12 @@ static int64_t nBlocksTotal = 0;
 bool CheckWithdrawTx(CTransaction const& tx, int nLockHeight, CAmount nPointValue, int nPointHeight, int nHeight, CScript const& burnToScriptPubKey, CValidationState& state)
 {
     CAmount nWithdrawAmount = GetWithdrawAmount(nLockHeight, nPointHeight, nHeight, nPointValue);
-    LogPrintf("%s: withdraw tx, tx.vout[0].nValue=%ld (%s BHD1), withdraw=%ld (%s BHD1), point=%ld (%s BHD1), calculated on height: %ld, point height: %ld, should be locked %ld blocks\n", __func__, tx.vout[0].nValue, chiapos::FormatNumberStr(std::to_string(tx.vout[0].nValue / COIN)), nWithdrawAmount, chiapos::FormatNumberStr(std::to_string(nWithdrawAmount / COIN)), nPointValue, chiapos::FormatNumberStr(std::to_string(nPointValue / COIN)), nHeight, nPointHeight, nLockHeight);
+    LogPrintf("%s: withdraw tx, tx.vout[0].nValue=%ld (%s DePC), withdraw=%ld (%s DePC), point=%ld (%s DePC), calculated on height: %ld, point height: %ld, should be locked %ld blocks\n", __func__, tx.vout[0].nValue, chiapos::FormatNumberStr(std::to_string(tx.vout[0].nValue / COIN)), nWithdrawAmount, chiapos::FormatNumberStr(std::to_string(nWithdrawAmount / COIN)), nPointValue, chiapos::FormatNumberStr(std::to_string(nPointValue / COIN)), nHeight, nPointHeight, nLockHeight);
     if (tx.vout[0].nValue > nWithdrawAmount) {
         return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-wrong-withdraw-value", "the amount is invalid to be withdrawal");
     }
     CAmount nBurnAmount = nPointValue - nWithdrawAmount;
-    LogPrintf("%s: coins are burned total %s (%s BHD1) from withdraw tx: %s\n", __func__, chiapos::FormatNumberStr(std::to_string(nBurnAmount)), chiapos::FormatNumberStr(std::to_string(nBurnAmount / COIN)), tx.GetHash().GetHex());
+    LogPrintf("%s: coins are burned total %s (%s DePC) from withdraw tx: %s\n", __func__, chiapos::FormatNumberStr(std::to_string(nBurnAmount)), chiapos::FormatNumberStr(std::to_string(nBurnAmount / COIN)), tx.GetHash().GetHex());
     if (nBurnAmount > 0) {
         if (tx.vout.size() != 2) {
             return state.Invalid(ValidationInvalidReason::CONSENSUS, false, REJECT_INVALID, "tx-wrong-vout", "tx vout size should be 2");
@@ -2657,7 +2657,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                 // Check output amount
                 if (block.vtx[0]->vout[1].nValue < fund) {
                     if (pindex->nHeight >= chainparams.GetConsensus().BHDIP004Height) {
-                        // Bug, accept corruption pay for fund. See https://bhd.one/wiki/BHDIP/004#bad-blocks
+                        // Bug, accept corruption pay for fund. See https://depinc.org/wiki/BHDIP/004#bad-blocks
                         LogPrint(BCLog::POC, "ConnectBlock(): Block hash=%s height=%d bad pay for fund, but accepted!\n", pindex->GetBlockHash().ToString(), pindex->nHeight);
                     } else {
                         return state.Invalid(ValidationInvalidReason::CONSENSUS,

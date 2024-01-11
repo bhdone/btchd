@@ -249,7 +249,7 @@ int DEx_offerCreate(const std::string& addressSeller, uint32_t propertyId, int64
         amountOffered = balanceReallyAvailable;
         if (nAmended) *nAmended = amountOffered;
 
-        PrintToLog("%s: adjusting order: updated amount for sale: %s %s, offered for: %s BHD1\n", __func__,
+        PrintToLog("%s: adjusting order: updated amount for sale: %s %s, offered for: %s DePC\n", __func__,
                         FormatDivisibleMP(amountOffered), strMPProperty(propertyId), FormatDivisibleMP(amountDesired));
     }
     // -------------------------------------------------------------------------
@@ -582,7 +582,7 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
     const int64_t amountRemaining = p_accept->getAcceptAmountRemaining(); // actual amount desired, in the Accept
 
     if (msc_debug_dex) PrintToLog(
-            "%s: BHD1 desired: %s, offered amount: %s, amount to purchase: %s, amount remaining: %s\n", __func__,
+            "%s: DePC desired: %s, offered amount: %s, amount to purchase: %s, amount remaining: %s\n", __func__,
             FormatDivisibleMP(amountDesired), FormatDivisibleMP(amountOffered),
             FormatDivisibleMP(amountPurchased), FormatDivisibleMP(amountRemaining));
 
@@ -594,9 +594,9 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
     }
 
     if (amountPurchased > 0) {
-        PrintToLog("%s: seller %s offered %s %s for %s BHD1\n", __func__,
+        PrintToLog("%s: seller %s offered %s %s for %s DePC\n", __func__,
                 addressSeller, FormatDivisibleMP(amountOffered), strMPProperty(propertyId), FormatDivisibleMP(amountDesired));
-        PrintToLog("%s: buyer %s pays %s BHD1 to purchase %s %s\n", __func__,
+        PrintToLog("%s: buyer %s pays %s DePC to purchase %s %s\n", __func__,
                 addressBuyer, FormatDivisibleMP(amountPaid), FormatDivisibleMP(amountPurchased), strMPProperty(propertyId));
 
         assert(update_tally_map(addressSeller, propertyId, -amountPurchased, ACCEPT_RESERVE));

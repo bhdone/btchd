@@ -280,7 +280,7 @@ void GenerateChiaBlock(uint256 const& hashPrevBlock, int nHeightOfPrevBlock, CTx
         // Check bind
         const CAccountID accountID = ExtractAccountID(rewardDest);
         if (accountID.IsNull()) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid BitcoinHD1 address");
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid DePINC address");
         }
         bool fFundAccount { false };
         for (auto const& fundAddr : params.GetConsensus().BHDIP009FundAddresses) {
@@ -404,7 +404,7 @@ static UniValue queryNetspace(JSONRPCRequest const& request) {
     UniValue res(UniValue::VOBJ);
     res.pushKV("supplied", nTotalSupplied);
     res.pushKV("supplied(Human)", chiapos::FormatNumberStr(std::to_string(nTotalSupplied)));
-    res.pushKV("supplied(BHD1)", MakeNumberStr(nTotalSupplied / COIN));
+    res.pushKV("supplied(DePC)", MakeNumberStr(nTotalSupplied / COIN));
     res.pushKV("netspace_tib", MakeNumberTiB(netspace).GetLow64());
     res.pushKV("netspace_tib(Human)", chiapos::FormatNumberStr(std::to_string(MakeNumberTiB(netspace).GetLow64())));
     res.pushKV("netspace_avg_tib", MakeNumberTiB(netspace_avg).GetLow64());

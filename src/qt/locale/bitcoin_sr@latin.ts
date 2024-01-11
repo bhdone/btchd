@@ -62,8 +62,8 @@
         <translation>Adresa na koju se prima</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD1 addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Ovo su Vaše BitcoinHD1 adrese na koju se vrše uplate. Uvek proverite iznos i prijemnu adresu pre slanja novčića.</translation>
+        <source>These are your DePINC addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Ovo su Vaše DePINC adrese na koju se vrše uplate. Uvek proverite iznos i prijemnu adresu pre slanja novčića.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -156,7 +156,7 @@
         <translation>Potvrdite šifrovanje novčanika</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHD1s&lt;/b&gt;!</source>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DePCs&lt;/b&gt;!</source>
         <translation>Upozorenje: Ako šifrujete svoj novčanik, i potom izgubite svoju pristupnu frazu &lt;b&gt;IZGUBIĆETE SVE SVOJE BITKOINE&lt;/b&gt;!</translation>
     </message>
     <message>
@@ -310,8 +310,8 @@
         <translation>Ponovo obeležavam blokove na disku...</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD1 address</source>
-        <translation>Pošalji novčiće na BitcoinHD1 adresu</translation>
+        <source>Send coins to a DePINC address</source>
+        <translation>Pošalji novčiće na DePINC adresu</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -354,12 +354,12 @@
         <translation>Enkriptuj privatne ključeve novčanika</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD1 addresses to prove you own them</source>
-        <translation>Potpišite poruke sa svojim BitcoinHD1 adresama da biste dokazali njihovo vlasništvo</translation>
+        <source>Sign messages with your DePINC addresses to prove you own them</source>
+        <translation>Potpišite poruke sa svojim DePINC adresama da biste dokazali njihovo vlasništvo</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD1 addresses</source>
-        <translation>Proverite poruke da biste utvrdili sa kojim BitcoinHD1 adresama su potpisane</translation>
+        <source>Verify messages to ensure they were signed with specified DePINC addresses</source>
+        <translation>Proverite poruke da biste utvrdili sa kojim DePINC adresama su potpisane</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -489,8 +489,8 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>BitcoinHD1</source>
-        <translation>BitcoinHD1</translation>
+        <source>DePINC</source>
+        <translation>DePINC</translation>
     </message>
     <message>
         <source>Error</source>

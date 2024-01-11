@@ -126,7 +126,7 @@
         <translation>Повторно индексирање на блокови од дискот...</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD1 address</source>
+        <source>Send coins to a DePINC address</source>
         <translation>Испрати биткоини на Биткоин адреса</translation>
     </message>
     <message>
@@ -289,7 +289,7 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>BitcoinHD1</source>
+        <source>DePINC</source>
         <translation>Биткоин</translation>
     </message>
     <message>

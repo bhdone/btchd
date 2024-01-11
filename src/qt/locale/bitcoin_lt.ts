@@ -66,8 +66,8 @@
         <translation>Gavimo adresai</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD1 addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Tai yra jūsų BitcoinHD1 adresai išeinantiems mokėjimams. Visada pasitikrinkite sumą ir gavėjo adresą prieš siunčiant lėšas.</translation>
+        <source>These are your DePINC addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Tai yra jūsų DePINC adresai išeinantiems mokėjimams. Visada pasitikrinkite sumą ir gavėjo adresą prieš siunčiant lėšas.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -164,8 +164,8 @@
         <translation>Patvirtinkite piniginės užšifravimą</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHD1s&lt;/b&gt;!</source>
-        <translation>Dėmesio: jei užšifruosite savo piniginę ir pamesite slaptafrazę, jūs&lt;b&gt;PRARASITE VISUS SAVO BHD1US&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DePCs&lt;/b&gt;!</source>
+        <translation>Dėmesio: jei užšifruosite savo piniginę ir pamesite slaptafrazę, jūs&lt;b&gt;PRARASITE VISUS SAVO DePCUS&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -326,8 +326,8 @@
         <translation>Tarpinis serveris yra &lt;b&gt;įgalintas&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD1 address</source>
-        <translation>Siųsti monetas BitcoinHD1 adresui</translation>
+        <source>Send coins to a DePINC address</source>
+        <translation>Siųsti monetas DePINC adresui</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -370,12 +370,12 @@
         <translation>Užšifruoti privačius raktus, kurie priklauso jūsų piniginei</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD1 addresses to prove you own them</source>
-        <translation>Pasirašydami žinutes su savo BitcoinHD1 adresais įrodysite jog esate jų savininkas</translation>
+        <source>Sign messages with your DePINC addresses to prove you own them</source>
+        <translation>Pasirašydami žinutes su savo DePINC adresais įrodysite jog esate jų savininkas</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD1 addresses</source>
-        <translation>Patikrinkite žinutę, jog įsitikintumėte, kad ją pasirašė nurodytas BitcoinHD1 adresas</translation>
+        <source>Verify messages to ensure they were signed with specified DePINC addresses</source>
+        <translation>Patikrinkite žinutę, jog įsitikintumėte, kad ją pasirašė nurodytas DePINC adresas</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -414,8 +414,8 @@
         <translation>Komandinės eilutės parametrai</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to BitcoinHD1 network</source>
-        <translation><numerusform>%n BitcoinHD1 tinklo aktyvus ryšys</numerusform><numerusform>%n BitcoinHD1 tinklo aktyvūs ryšiai</numerusform><numerusform>%n BitcoinHD1 tinklo aktyvūs ryšiai</numerusform><numerusform>%n BitcoinHD1 tinklo aktyvūs ryšiai</numerusform></translation>
+        <source>%n active connection(s) to DePINC network</source>
+        <translation><numerusform>%n DePINC tinklo aktyvus ryšys</numerusform><numerusform>%n DePINC tinklo aktyvūs ryšiai</numerusform><numerusform>%n DePINC tinklo aktyvūs ryšiai</numerusform><numerusform>%n DePINC tinklo aktyvūs ryšiai</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -482,8 +482,8 @@
         <translation>Uždaryti Piniginę</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible BitcoinHD1 command-line options</source>
-        <translation>Rodyti %1 pagalbos žinutę su BitcoinHD1 pasirinkimo komandomis</translation>
+        <source>Show the %1 help message to get a list with possible DePINC command-line options</source>
+        <translation>Rodyti %1 pagalbos žinutę su DePINC pasirinkimo komandomis</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -586,8 +586,8 @@
         <translation>Piniginė &lt;b&gt;užšifruota&lt;/b&gt; ir šiuo metu &lt;b&gt;užrakinta&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. BitcoinHD1 can no longer continue safely and will quit.</source>
-        <translation>Kritinė klaida. BitcoinHD1 nebegali tęsti saugiai ir bus išjungtas.</translation>
+        <source>A fatal error occurred. DePINC can no longer continue safely and will quit.</source>
+        <translation>Kritinė klaida. DePINC nebegali tęsti saugiai ir bus išjungtas.</translation>
     </message>
 </context>
 <context>
@@ -782,8 +782,8 @@
         <translation>Keisti siuntimo adresą</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid BitcoinHD1 address.</source>
-        <translation>Įvestas adresas „%1“ nėra galiojantis BitcoinHD1 adresas.</translation>
+        <source>The entered address "%1" is not a valid DePINC address.</source>
+        <translation>Įvestas adresas „%1“ nėra galiojantis DePINC adresas.</translation>
     </message>
     <message>
         <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
@@ -879,8 +879,8 @@
         <translation>Naudoti kitą duomenų katalogą:</translation>
     </message>
     <message>
-        <source>BitcoinHD1</source>
-        <translation>BitcoinHD1</translation>
+        <source>DePINC</source>
+        <translation>DePINC</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -891,8 +891,8 @@
         <translation>Šiame kataloge bus saugoma maždaug apie %1 GB duomenų.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the BitcoinHD1 block chain.</source>
-        <translation>%1 bus atsisiųsta ir išsaugota BitcoinHD1 blokų grandinės kopiją.</translation>
+        <source>%1 will download and store a copy of the DePINC block chain.</source>
+        <translation>%1 bus atsisiųsta ir išsaugota DePINC blokų grandinės kopiją.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -922,11 +922,11 @@
         <translation>Forma</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD1 network, as detailed below.</source>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the DePINC network, as detailed below.</source>
         <translation>Naujausi sandoriai gali būti dar nematomi, todėl jūsų piniginės likutis gali būti neteisingas. Ši informacija bus teisinga, kai jūsų piniginė bus baigta sinchronizuoti su bitcoin tinklu, kaip nurodyta žemiau.</translation>
     </message>
     <message>
-        <source>Attempting to spend BHD1s that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Attempting to spend DePCs that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
         <translation>Tinklas nepriims bandymų išleisti bitcoinus, kurie yra vis dar nematomi.</translation>
     </message>
     <message>
@@ -1119,8 +1119,8 @@
         <translation>&amp;Išleiskite nepatvirtintus pakeitimus</translation>
     </message>
     <message>
-        <source>Automatically open the BitcoinHD1 client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Automatiškai atidaryti BitcoinHD1 kliento prievadą maršrutizatoriuje. Tai veikia tik tada, kai jūsų maršrutizatorius palaiko UPnP ir ji įjungta.</translation>
+        <source>Automatically open the DePINC client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Automatiškai atidaryti DePINC kliento prievadą maršrutizatoriuje. Tai veikia tik tada, kai jūsų maršrutizatorius palaiko UPnP ir ji įjungta.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1135,8 +1135,8 @@
         <translation>Leisti gaunamu&amp;s ryšius</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD1 network through a SOCKS5 proxy.</source>
-        <translation>Prisijunkite prie „BitcoinHD1“ tinklo per SOCKS5 proxy.</translation>
+        <source>Connect to the DePINC network through a SOCKS5 proxy.</source>
+        <translation>Prisijunkite prie „DePINC“ tinklo per SOCKS5 proxy.</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1171,8 +1171,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD1 network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Prisijunkite prie „BitcoinHD1“ tinklo per atskirą „SOCKS5“ proxy „Tor“ paslėptas paslaugas.</translation>
+        <source>Connect to the DePINC network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Prisijunkite prie „DePINC“ tinklo per atskirą „SOCKS5“ proxy „Tor“ paslėptas paslaugas.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1282,8 +1282,8 @@
         <translation>Forma</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD1 network after a connection is established, but this process has not completed yet.</source>
-        <translation>Rodoma informacija gali būti pasenusi. Piniginė automatiškai sinchronizuojasi su „BitcoinHD1“ tinklu po ryšio užmezgimo, tačiau šis procesas dar nebaigtas.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the DePINC network after a connection is established, but this process has not completed yet.</source>
+        <translation>Rodoma informacija gali būti pasenusi. Piniginė automatiškai sinchronizuojasi su „DePINC“ tinklu po ryšio užmezgimo, tačiau šis procesas dar nebaigtas.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1385,8 +1385,8 @@
         <translation>Neteisingas mokėjimo adresas %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid BitcoinHD1 address or malformed URI parameters.</source>
-        <translation>URI negalima perskaityti! Tai gali sukelti negaliojantys „BitcoinHD1“ adresas arba netinkami URI parametrai.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid DePINC address or malformed URI parameters.</source>
+        <translation>URI negalima perskaityti! Tai gali sukelti negaliojantys „DePINC“ adresas arba netinkami URI parametrai.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1487,8 +1487,8 @@
         <translation>Suma</translation>
     </message>
     <message>
-        <source>Enter a BitcoinHD1 address (e.g. %1)</source>
-        <translation>Įveskite BitcoinHD1 adresą (pvz., %1)</translation>
+        <source>Enter a DePINC address (e.g. %1)</source>
+        <translation>Įveskite DePINC adresą (pvz., %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1944,8 +1944,8 @@
         <translation>Žinutė:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD1 network.</source>
-        <translation>Neprivalomas pranešimas, pridedamas prie mokėjimo prašymo, kuris bus rodomas atidarius užklausą. Pastaba: pranešimas nebus išsiųstas su mokėjimu per „BitcoinHD1“ tinklą.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the DePINC network.</source>
+        <translation>Neprivalomas pranešimas, pridedamas prie mokėjimo prašymo, kuris bus rodomas atidarius užklausą. Pastaba: pranešimas nebus išsiųstas su mokėjimu per „DePINC“ tinklą.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2213,7 +2213,7 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
         <translation>Dulkės:</translation>
     </message>
     <message>
-        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for BitcoinHD1 transactions than the network can process.</source>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for DePINC transactions than the network can process.</source>
         <translation>Kai sandorių apimtis yra mažesnė nei erdvės blokuose, kasėjai ir perduodantys mazgai gali užtikrinti minimalų mokestį. Mokėti tik šį minimalų mokestį yra galima, tačiau atkreipkite dėmesį, kad dėl to gali atsirasti niekada nepatvirtinamas sandoris, kai bus daugiau paklausos bitcoin operacijoms, nei tinklas gali apdoroti.</translation>
     </message>
     <message>
@@ -2353,8 +2353,8 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
         <translation><numerusform>Apskaičiuota, kad bus pradėtas patvirtinimas per %n bloką.</numerusform><numerusform>Apskaičiuota, kad bus pradėtas patvirtinimas per %n blokus.</numerusform><numerusform>Apskaičiuota, kad bus pradėtas patvirtinimas per %n blokus.</numerusform><numerusform>Apskaičiuota, kad bus pradėtas patvirtinimas per %n blokus.</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Invalid BitcoinHD1 address</source>
-        <translation>Įspėjimas: neteisingas BitcoinHD1 adresas</translation>
+        <source>Warning: Invalid DePINC address</source>
+        <translation>Įspėjimas: neteisingas DePINC adresas</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2396,8 +2396,8 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
         <translation>Tai įprastas mokėjimas.</translation>
     </message>
     <message>
-        <source>The BitcoinHD1 address to send the payment to</source>
-        <translation>BitcoinHD1 adresas, į kurį siunčiamas mokėjimas</translation>
+        <source>The DePINC address to send the payment to</source>
+        <translation>DePINC adresas, į kurį siunčiamas mokėjimas</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2416,7 +2416,7 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
         <translation>Pašalinti šį įrašą</translation>
     </message>
     <message>
-        <source>The fee will be deducted from the amount being sent. The recipient will receive less BHD1s than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
+        <source>The fee will be deducted from the amount being sent. The recipient will receive less DePCs than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
         <translation>Mokestis bus atimamas iš siunčiamos sumos. Gavėjas gaus mažiau bitcoinų nei įvesite sumos lauke. Jei pasirenkami keli gavėjai, mokestis padalijamas lygiai.</translation>
     </message>
     <message>
@@ -2444,8 +2444,8 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
         <translation>Įveskite šio adreso etiketę, kad ją pridėtumėte prie naudojamų adresų sąrašo</translation>
     </message>
     <message>
-        <source>A message that was attached to the btchd: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the BitcoinHD1 network.</source>
-        <translation>Pranešimas, kuris buvo pridėtas prie btchd: URI, kuris bus saugomas kartu su sandoriu jūsų nuoroda. Pastaba: šis pranešimas nebus išsiųstas per „BitcoinHD1“ tinklą.</translation>
+        <source>A message that was attached to the btchd: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the DePINC network.</source>
+        <translation>Pranešimas, kuris buvo pridėtas prie btchd: URI, kuris bus saugomas kartu su sandoriu jūsų nuoroda. Pastaba: šis pranešimas nebus išsiųstas per „DePINC“ tinklą.</translation>
     </message>
     <message>
         <source>Pay To:</source>
@@ -2489,8 +2489,8 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
         <translation>&amp;Pasirašyti žinutę</translation>
     </message>
     <message>
-        <source>The BitcoinHD1 address to sign the message with</source>
-        <translation>BitcoinHD1 adresas, kuriuo bus pasirašytas pranešimas su</translation>
+        <source>The DePINC address to sign the message with</source>
+        <translation>DePINC adresas, kuriuo bus pasirašytas pranešimas su</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2521,7 +2521,7 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
         <translation>Nukopijuokite dabartinį parašą į sistemos iškarpinę</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this BitcoinHD1 address</source>
+        <source>Sign the message to prove you own this DePINC address</source>
         <translation>Registruotis žinute įrodymuii, kad turite šį adresą</translation>
     </message>
     <message>
@@ -2541,12 +2541,12 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
         <translation>&amp;Patikrinti žinutę</translation>
     </message>
     <message>
-        <source>The BitcoinHD1 address the message was signed with</source>
-        <translation>BitcoinHD1 adresas, kuriuo buvo pasirašytas pranešimas</translation>
+        <source>The DePINC address the message was signed with</source>
+        <translation>DePINC adresas, kuriuo buvo pasirašytas pranešimas</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified BitcoinHD1 address</source>
-        <translation>Patikrinkite žinutę, jog įsitikintumėte, kad ją pasirašė nurodytas BitcoinHD1 adresas</translation>
+        <source>Verify the message to ensure it was signed with the specified DePINC address</source>
+        <translation>Patikrinkite žinutę, jog įsitikintumėte, kad ją pasirašė nurodytas DePINC adresas</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

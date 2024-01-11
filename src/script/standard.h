@@ -215,7 +215,7 @@ CAccountID ExtractAccountID(const CPubKey& pubkey);
 CAccountID ExtractAccountID(const CScript& scriptPubKey);
 CAccountID ExtractAccountID(const CTxDestination& dest);
 
-/** opreturn type. See https://bhd.one/wiki/datacarrier */
+/** opreturn type. See https://depinc.org/wiki/datacarrier */
 enum DatacarrierType : unsigned int {
     // Range
     DATACARRIER_TYPE_MIN = 0x0000000f,
@@ -225,13 +225,13 @@ enum DatacarrierType : unsigned int {
     DATACARRIER_TYPE_UNKNOWN = DATACARRIER_TYPE_MIN,
 
     // Type of consensus relevant
-    //! See https://bhd.one/wiki/datacarrier/bind-plotter
+    //! See https://depinc.org/wiki/datacarrier/bind-plotter
     DATACARRIER_TYPE_BINDPLOTTER            = 0x00000010,
-    //! See https://bhd.one/wiki/datacarrier/point
+    //! See https://depinc.org/wiki/datacarrier/point
     DATACARRIER_TYPE_POINT                  = 0x00000011,
-    //! See https://bhd.one/wiki/datacarrier/contract
+    //! See https://depinc.org/wiki/datacarrier/contract
     DATACARRIER_TYPE_CONTRACT               = 0x00000012,
-    //! See https://bhd.one/wiki/datacarrier/text
+    //! See https://depinc.org/wiki/datacarrier/text
     DATACARRIER_TYPE_TEXT                   = 0x00000013,
     //! Chia farmer-pk 48-byte data
     DATACARRIER_TYPE_BINDCHIAFARMER         = 0x00000014,

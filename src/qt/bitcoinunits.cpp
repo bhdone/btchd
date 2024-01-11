@@ -40,9 +40,9 @@ QString BitcoinUnits::longName(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("BHD1");
-    case mBTC: return QString("mBHD1");
-    case uBTC: return QString::fromUtf8("µBHD1 (bits)");
+    case BTC: return QString("DePC");
+    case mBTC: return QString("mDePC");
+    case uBTC: return QString::fromUtf8("µDePC (bits)");
     case SAT: return QString("Satoshi (sat)");
     default: return QString("???");
     }
@@ -61,10 +61,10 @@ QString BitcoinUnits::description(int unit)
 {
     switch(unit)
     {
-    case BTC: return QString("BHD1s");
-    case mBTC: return QString("Milli-BHD1s (1 / 1" THIN_SP_UTF8 "000)");
-    case uBTC: return QString("Micro-BHD1s (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    case SAT: return QString("Satoshi-BHD1 (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case BTC: return QString("DePCs");
+    case mBTC: return QString("Milli-DePCs (1 / 1" THIN_SP_UTF8 "000)");
+    case uBTC: return QString("Micro-DePCs (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+    case SAT: return QString("Satoshi-DePC (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     default: return QString("???");
     }
 }

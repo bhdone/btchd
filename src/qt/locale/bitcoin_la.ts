@@ -118,8 +118,8 @@
         <translation>Recreans indicem frustorum in disco...</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD1 address</source>
-        <translation>Mitte nummos ad inscriptionem BitcoinHD1</translation>
+        <source>Send coins to a DePINC address</source>
+        <translation>Mitte nummos ad inscriptionem DePINC</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -162,12 +162,12 @@
         <translation>Cifra claves privatas quae cassidili tui sunt</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD1 addresses to prove you own them</source>
-        <translation>Signa nuntios cum tuis inscriptionibus BitcoinHD1 ut demonstres te eas possidere</translation>
+        <source>Sign messages with your DePINC addresses to prove you own them</source>
+        <translation>Signa nuntios cum tuis inscriptionibus DePINC ut demonstres te eas possidere</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD1 addresses</source>
-        <translation>Verifica nuntios ut certus sis eos signatos esse cum specificatis inscriptionibus BitcoinHD1</translation>
+        <source>Verify messages to ensure they were signed with specified DePINC addresses</source>
+        <translation>Verifica nuntios ut certus sis eos signatos esse cum specificatis inscriptionibus DePINC</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -299,8 +299,8 @@
 <context>
     <name>Intro</name>
     <message>
-        <source>BitcoinHD1</source>
-        <translation>BitcoinHD1</translation>
+        <source>DePINC</source>
+        <translation>DePINC</translation>
     </message>
     <message>
         <source>Error</source>
@@ -351,8 +351,8 @@
         <translation>Cassidile</translation>
     </message>
     <message>
-        <source>Automatically open the BitcoinHD1 client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Aperi per se portam clientis BitcoinHD1 in itineratore.  Hoc tantum effectivum est si itineratrum tuum supportat UPnP et id activum est.</translation>
+        <source>Automatically open the DePINC client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Aperi per se portam clientis DePINC in itineratore.  Hoc tantum effectivum est si itineratrum tuum supportat UPnP et id activum est.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -434,8 +434,8 @@
         <translation>Schema</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD1 network after a connection is established, but this process has not completed yet.</source>
-        <translation>Monstrata informatio fortasse non recentissima est.  Tuum cassidile per se synchronizat cum rete BitcoinHD1 postquam conexio constabilita est, sed hoc actio nondum perfecta est.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the DePINC network after a connection is established, but this process has not completed yet.</source>
+        <translation>Monstrata informatio fortasse non recentissima est.  Tuum cassidile per se synchronizat cum rete DePINC postquam conexio constabilita est, sed hoc actio nondum perfecta est.</translation>
     </message>
     <message>
         <source>Immature:</source>
@@ -697,8 +697,8 @@
         <translation>Copia signationem in latibulum systematis</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this BitcoinHD1 address</source>
-        <translation>Signa nuntium ut demonstres hanc inscriptionem BitcoinHD1 a te possessa esse</translation>
+        <source>Sign the message to prove you own this DePINC address</source>
+        <translation>Signa nuntium ut demonstres hanc inscriptionem DePINC a te possessa esse</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -717,8 +717,8 @@
         <translation>&amp;Verifica Nuntium</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified BitcoinHD1 address</source>
-        <translation>Verifica nuntium ut cures signatum esse cum specifica inscriptione BitcoinHD1</translation>
+        <source>Verify the message to ensure it was signed with the specified DePINC address</source>
+        <translation>Verifica nuntium ut cures signatum esse cum specifica inscriptione DePINC</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>

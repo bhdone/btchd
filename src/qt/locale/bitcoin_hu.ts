@@ -66,8 +66,8 @@
         <translation>Fogadási cím</translation>
     </message>
     <message>
-        <source>These are your BitcoinHD1 addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Ezek a BitcoinHD1 címeid kifizetések küldéséhez. Mindíg ellenőrizd az összeget és a fogadó címet mielőtt coinokat küldenél.</translation>
+        <source>These are your DePINC addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>Ezek a DePINC címeid kifizetések küldéséhez. Mindíg ellenőrizd az összeget és a fogadó címet mielőtt coinokat küldenél.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -164,8 +164,8 @@
         <translation>Tárca titkosításának megerősítése</translation>
     </message>
     <message>
-        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BHD1s&lt;/b&gt;!</source>
-        <translation>Figyelem: Ha titkosítja a tárcáját és elveszíti a jelszavát, akkor &lt;b&gt;AZ ÖSSZES BHD1JA ELVESZIK&lt;/b&gt;!</translation>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR DePCs&lt;/b&gt;!</source>
+        <translation>Figyelem: Ha titkosítja a tárcáját és elveszíti a jelszavát, akkor &lt;b&gt;AZ ÖSSZES DePCJA ELVESZIK&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -184,7 +184,7 @@
         <translation>Írja be a tárca régi és új jelszavát.</translation>
     </message>
     <message>
-        <source>Remember that encrypting your wallet cannot fully protect your BHD1s from being stolen by malware infecting your computer.</source>
+        <source>Remember that encrypting your wallet cannot fully protect your DePCs from being stolen by malware infecting your computer.</source>
         <translation>Ne feledd, hogy a tárca titkosítása nem nyújt teljes védelmet az adathalász programok fertőzésével szemben.</translation>
     </message>
     <message>
@@ -358,8 +358,8 @@
         <translation>Proxy  &lt;b&gt;aktív&lt;/b&gt;: %1</translation>
     </message>
     <message>
-        <source>Send coins to a BitcoinHD1 address</source>
-        <translation>BitcoinHD1 küldése megadott címre</translation>
+        <source>Send coins to a DePINC address</source>
+        <translation>DePINC küldése megadott címre</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -402,12 +402,12 @@
         <translation>A tárcádhoz tartozó privát kulcsok titkosítása</translation>
     </message>
     <message>
-        <source>Sign messages with your BitcoinHD1 addresses to prove you own them</source>
-        <translation>Üzenetek aláírása a BitcoinHD1-címmeiddel, amivel bizonyítod, hogy a cím a sajátod</translation>
+        <source>Sign messages with your DePINC addresses to prove you own them</source>
+        <translation>Üzenetek aláírása a DePINC-címmeiddel, amivel bizonyítod, hogy a cím a sajátod</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified BitcoinHD1 addresses</source>
-        <translation>Üzenetek ellenőrzése, hogy valóban a megjelölt BitcoinHD1-címekkel vannak-e aláírva</translation>
+        <source>Verify messages to ensure they were signed with specified DePINC addresses</source>
+        <translation>Üzenetek ellenőrzése, hogy valóban a megjelölt DePINC-címekkel vannak-e aláírva</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -446,8 +446,8 @@
         <translation>Paran&amp;cssor kapcsolók</translation>
     </message>
     <message numerus="yes">
-        <source>%n active connection(s) to BitcoinHD1 network</source>
-        <translation><numerusform>%n aktív kapcsolat a BitcoinHD1 hálózathoz</numerusform><numerusform>%n aktív kapcsolat a BitcoinHD1 hálózathoz</numerusform></translation>
+        <source>%n active connection(s) to DePINC network</source>
+        <translation><numerusform>%n aktív kapcsolat a DePINC hálózathoz</numerusform><numerusform>%n aktív kapcsolat a DePINC hálózathoz</numerusform></translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -514,8 +514,8 @@
         <translation>Tárca bezárása</translation>
     </message>
     <message>
-        <source>Show the %1 help message to get a list with possible BitcoinHD1 command-line options</source>
-        <translation>A %1 súgó megjelenítése a BitcoinHD1 lehetséges parancssori kapcsolóinak listájával</translation>
+        <source>Show the %1 help message to get a list with possible DePINC command-line options</source>
+        <translation>A %1 súgó megjelenítése a DePINC lehetséges parancssori kapcsolóinak listájával</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -621,8 +621,8 @@
         <translation>A tárca &lt;b&gt;titkosítva&lt;/b&gt; és jelenleg &lt;b&gt;bezárva&lt;/b&gt;.</translation>
     </message>
     <message>
-        <source>A fatal error occurred. BitcoinHD1 can no longer continue safely and will quit.</source>
-        <translation>Végzetes hiba történt. A BitcoinHD1 működése nem biztonságos és hamarosan leáll.</translation>
+        <source>A fatal error occurred. DePINC can no longer continue safely and will quit.</source>
+        <translation>Végzetes hiba történt. A DePINC működése nem biztonságos és hamarosan leáll.</translation>
     </message>
 </context>
 <context>
@@ -857,8 +857,8 @@
         <translation>Küldő cím szerkesztése</translation>
     </message>
     <message>
-        <source>The entered address "%1" is not a valid BitcoinHD1 address.</source>
-        <translation>A megadott "%1" cím nem egy érvényes BitcoinHD1-cím.</translation>
+        <source>The entered address "%1" is not a valid DePINC address.</source>
+        <translation>A megadott "%1" cím nem egy érvényes DePINC-cím.</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -950,8 +950,8 @@
         <translation>Saját adatkönyvtár használata:</translation>
     </message>
     <message>
-        <source>BitcoinHD1</source>
-        <translation>BitcoinHD1</translation>
+        <source>DePINC</source>
+        <translation>DePINC</translation>
     </message>
     <message>
         <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
@@ -966,8 +966,8 @@
         <translation>Hozzávetőlegesen %1 GB adatot fogunk ebben a könyvtárban tárolni.</translation>
     </message>
     <message>
-        <source>%1 will download and store a copy of the BitcoinHD1 block chain.</source>
-        <translation>%1 le fog töltődni és a BitcoinHD1 blokk lánc egy másolatát fogja tárolni.</translation>
+        <source>%1 will download and store a copy of the DePINC block chain.</source>
+        <translation>%1 le fog töltődni és a DePINC blokk lánc egy másolatát fogja tárolni.</translation>
     </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
@@ -993,11 +993,11 @@
         <translation>Űrlap</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the BitcoinHD1 network, as detailed below.</source>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the DePINC network, as detailed below.</source>
         <translation>A legutóbbi tranzakciók még lehet, hogy nem láthatók, és így előfordulhat, hogy a tárca egyenlege helytelen. A tárca azon nyomban az aktuális egyenleget fogja mutatni, amint befejezte a bitcoin hálózattal történő szinkronizációt, amely alább van részletezve.</translation>
     </message>
     <message>
-        <source>Attempting to spend BHD1s that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Attempting to spend DePCs that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
         <translation>A hálózat nem fogadja el azoknak a bitcoinoknak az elköltését, amelyek érintettek a még nem látszódó tranzakciókban.</translation>
     </message>
     <message>
@@ -1190,8 +1190,8 @@
         <translation>&amp;Költése a a jóváhagyatlan visszajárónak</translation>
     </message>
     <message>
-        <source>Automatically open the BitcoinHD1 client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>A BitcoinHD1-kliens portjának automatikus megnyitása a routeren. Ez csak akkor működik, ha a routered támogatja az UPnP-t és az engedélyezve is van rajta.</translation>
+        <source>Automatically open the DePINC client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>A DePINC-kliens portjának automatikus megnyitása a routeren. Ez csak akkor működik, ha a routered támogatja az UPnP-t és az engedélyezve is van rajta.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -1206,8 +1206,8 @@
         <translation>Bejövő kapcsolatok engedélyezése.</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD1 network through a SOCKS5 proxy.</source>
-        <translation>Csatlakozás a BitcoinHD1 hálózatához SOCKS5 proxyn keresztül</translation>
+        <source>Connect to the DePINC network through a SOCKS5 proxy.</source>
+        <translation>Csatlakozás a DePINC hálózatához SOCKS5 proxyn keresztül</translation>
     </message>
     <message>
         <source>&amp;Connect through SOCKS5 proxy (default proxy):</source>
@@ -1242,8 +1242,8 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the BitcoinHD1 network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Csatlakozás a BitcoinHD1 hálózathoz külön SOCKS5 proxy használatával a Tor rejtett szolgáltatásainak eléréséhez.</translation>
+        <source>Connect to the DePINC network through a separate SOCKS5 proxy for Tor hidden services.</source>
+        <translation>Csatlakozás a DePINC hálózathoz külön SOCKS5 proxy használatával a Tor rejtett szolgáltatásainak eléréséhez.</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1349,8 +1349,8 @@
         <translation>Űrlap</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the BitcoinHD1 network after a connection is established, but this process has not completed yet.</source>
-        <translation>A kijelzett információ lehet, hogy elavult. A kapcsolat létrehozatalát követően tárcája automatikusan szinkronba kerül a BitcoinHD1 hálózattal, de ez a folyamat még nem fejeződött be.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the DePINC network after a connection is established, but this process has not completed yet.</source>
+        <translation>A kijelzett információ lehet, hogy elavult. A kapcsolat létrehozatalát követően tárcája automatikusan szinkronba kerül a DePINC hálózattal, de ez a folyamat még nem fejeződött be.</translation>
     </message>
     <message>
         <source>Watch-only:</source>
@@ -1440,8 +1440,8 @@
         <translation>Érvénytelen fizetési cím %1</translation>
     </message>
     <message>
-        <source>URI cannot be parsed! This can be caused by an invalid BitcoinHD1 address or malformed URI parameters.</source>
-        <translation>Nem sikerült az URI elemzése! Ezt okozhatja érvénytelen BitcoinHD1 cím, vagy rossz URI paraméterezés.</translation>
+        <source>URI cannot be parsed! This can be caused by an invalid DePINC address or malformed URI parameters.</source>
+        <translation>Nem sikerült az URI elemzése! Ezt okozhatja érvénytelen DePINC cím, vagy rossz URI paraméterezés.</translation>
     </message>
     <message>
         <source>Payment request file handling</source>
@@ -1538,8 +1538,8 @@
         <translation>Összeg</translation>
     </message>
     <message>
-        <source>Enter a BitcoinHD1 address (e.g. %1)</source>
-        <translation>Ad meg egy BitcoinHD1 címet (pl: %1)</translation>
+        <source>Enter a DePINC address (e.g. %1)</source>
+        <translation>Ad meg egy DePINC címet (pl: %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1975,8 +1975,8 @@
         <translation>&amp;Üzenet:</translation>
     </message>
     <message>
-        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the BitcoinHD1 network.</source>
-        <translation>Egy opcionális üzenet csatolása a fizetési kérelemhez, amely megjelenik a kérelem megnyitásakor. Megjegyzés: Az üzenet nem lesz elküldve a fizetséggel a BitcoinHD1 hálózaton keresztül.</translation>
+        <source>An optional message to attach to the payment request, which will be displayed when the request is opened. Note: The message will not be sent with the payment over the DePINC network.</source>
+        <translation>Egy opcionális üzenet csatolása a fizetési kérelemhez, amely megjelenik a kérelem megnyitásakor. Megjegyzés: Az üzenet nem lesz elküldve a fizetséggel a DePINC hálózaton keresztül.</translation>
     </message>
     <message>
         <source>An optional label to associate with the new receiving address.</source>
@@ -2344,8 +2344,8 @@
         <translation>A fizetési kérelem lejárt.</translation>
     </message>
     <message>
-        <source>Warning: Invalid BitcoinHD1 address</source>
-        <translation>Figyelmeztetés: Érvénytelen BitcoinHD1 cím</translation>
+        <source>Warning: Invalid DePINC address</source>
+        <translation>Figyelmeztetés: Érvénytelen DePINC cím</translation>
     </message>
     <message>
         <source>Warning: Unknown change address</source>
@@ -2387,8 +2387,8 @@
         <translation>Ez normál fizetés.</translation>
     </message>
     <message>
-        <source>The BitcoinHD1 address to send the payment to</source>
-        <translation>Erre a BitcoinHD1 címre küldje az összeget</translation>
+        <source>The DePINC address to send the payment to</source>
+        <translation>Erre a DePINC címre küldje az összeget</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2472,8 +2472,8 @@
         <translation>Üzenet aláírása...</translation>
     </message>
     <message>
-        <source>The BitcoinHD1 address to sign the message with</source>
-        <translation>BitcoinHD1 cím, amivel alá kívánja írni az üzenetet</translation>
+        <source>The DePINC address to sign the message with</source>
+        <translation>DePINC cím, amivel alá kívánja írni az üzenetet</translation>
     </message>
     <message>
         <source>Choose previously used address</source>
@@ -2504,7 +2504,7 @@
         <translation>A jelenleg kiválasztott aláírás másolása a rendszer-vágólapra</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this BitcoinHD1 address</source>
+        <source>Sign the message to prove you own this DePINC address</source>
         <translation>Üzenet</translation>
     </message>
     <message>
@@ -2520,12 +2520,12 @@
         <translation>Üzenet ellenőrzése</translation>
     </message>
     <message>
-        <source>The BitcoinHD1 address the message was signed with</source>
-        <translation>BitcoinHD1 cím, amivel aláírta az üzenetet</translation>
+        <source>The DePINC address the message was signed with</source>
+        <translation>DePINC cím, amivel aláírta az üzenetet</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified BitcoinHD1 address</source>
-        <translation>Ellenőrizze az üzenetet, hogy valóban a megjelölt BitcoinHD1 címmel van-e aláírva</translation>
+        <source>Verify the message to ensure it was signed with the specified DePINC address</source>
+        <translation>Ellenőrizze az üzenetet, hogy valóban a megjelölt DePINC címmel van-e aláírva</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
