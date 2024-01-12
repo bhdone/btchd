@@ -45,11 +45,17 @@
 
 #include <univalue.h>
 
+#include <algorithm>
 #include <functional>
+#include <iterator>
+#include <memory>
+#include <stdexcept>
+#include <vector>
 #include "chainparams.h"
+#include "primitives/transaction.h"
 #include "script/standard.h"
 #include "sync.h"
-#include "txmempool.h"
+#include "tinyformat.h"
 
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
 
@@ -374,6 +380,96 @@ static CTransactionRef SendMoney(interfaces::Chain::Lock& locked_chain, CWallet 
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
     }
     return tx;
+}
+
+/**
+ * @brief Send individual coin to address, for test purpose, also you need to hold the private key for the coin
+ *
+ * @param hash The transaction hash
+ * @param n The number of `n` from outputs
+ * @param address The target address
+ */
+static UniValue sendcointoaddress(JSONRPCRequest const& request)
+{
+    if (request.params.size() != 3) {
+        std::cout << "params: [tx hash] [n] [address]\n";
+        return 0;
+    }
+
+    // parse arguments
+
+    uint256 hashTxOut;
+    if (!ParseHashStr(request.params[0].getValStr(), hashTxOut)) {
+        throw std::runtime_error("cannot convert param 1 to uint256");
+    }
+
+    int32_t nTxOut;
+    if (!ParseInt32(request.params[1].getValStr(), &nTxOut)) {
+        throw std::runtime_error("cannot convert param 2 to int32_t");
+    }
+
+    CTxDestination destTarget = DecodeDestination(request.params[2].getValStr());
+
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    auto locked_chain = pwallet->chain().lock();
+    LOCK(pwallet->cs_wallet);
+
+    // check the coin and ensure it does exist
+    COutPoint outpoint(hashTxOut, nTxOut);
+    // Coin coin;
+    std::vector<COutput> vCoins;
+    pwallet->AvailableCoins(*locked_chain, vCoins);
+    auto iter = std::find_if(std::cbegin(vCoins), std::cend(vCoins), [&hashTxOut, nTxOut](COutput const& output) {
+        return output.fSpendable && output.tx->GetHash() == hashTxOut && output.i == nTxOut;
+    });
+    if (iter == std::cend(vCoins)) {
+        throw std::runtime_error(tinyformat::format("the coin (%s, %d) cannot be found from current wallet", outpoint.hash.GetHex(), outpoint.n));
+    }
+
+    CTxOut const& txout = iter->tx->tx->vout[iter->i];
+
+    // Transaction fee we initial it to 0.001 BHD
+    CAmount nTxFee = COIN / 1000;
+
+    // create transaction from the address
+    CMutableTransaction tx;
+
+    // input coin
+    CTxIn input;
+    input.prevout = outpoint;
+    tx.vin.push_back(input);
+
+    // output coin
+    CTxOut output;
+    output.scriptPubKey = GetScriptForDestination(destTarget);
+    output.nValue = txout.nValue - nTxFee;
+    if (output.nValue <= 0) {
+        throw std::runtime_error(tinyformat::format("the coin (%s, %d) amount=%ld, txfee=%ld, outpoint is less than zero\n", outpoint.hash.GetHex(), outpoint.n, txout.nValue, nTxFee));
+    }
+    tx.vout.push_back(output);
+
+    // Make signature
+    if (!pwallet->SignTransaction(tx)) {
+        throw std::runtime_error("cannot make signature for the new transaction");
+    }
+
+    mapValue_t mapValue;
+    CValidationState state;
+    if (!pwallet->CommitTransaction(std::make_shared<CTransaction>(tx), mapValue, {}, state)) {
+        throw std::runtime_error(tinyformat::format("cannot commit transaction, reason: %s", state.GetDebugMessage()));
+    }
+
+    return tx.GetHash().GetHex();
 }
 
 static UniValue sendtoaddress(const JSONRPCRequest& request)
@@ -5503,6 +5599,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "removeprunedfunds",                &removeprunedfunds,             {"txid"} },
     { "wallet",             "rescanblockchain",                 &rescanblockchain,              {"start_height", "stop_height"} },
     { "wallet",             "sendmany",                         &sendmany,                      {"dummy","amounts","minconf","comment","subtractfeefrom","replaceable","conf_target","estimate_mode","pay_policy","changeaddress"} },
+    { "wallet",             "sendcointoaddress",                &sendcointoaddress,             {"tx", "n", "address"} },
     { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","replaceable","conf_target","estimate_mode","pay_policy","changeaddress","avoid_reuse"} },
     { "wallet",             "sethdseed",                        &sethdseed,                     {"newkeypool","seed"} },
     { "wallet",             "setlabel",                         &setlabel,                      {"address","label"} },

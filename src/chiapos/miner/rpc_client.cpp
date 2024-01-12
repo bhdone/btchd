@@ -4,7 +4,6 @@
 #include <chiapos/kernel/utils.h>
 
 #include <fstream>
-#include <iostream>
 
 #include <chiapos/bhd_types.h>
 
