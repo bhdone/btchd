@@ -16,10 +16,10 @@ AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 BITCOIN_DAEMON_NAME=depincd
-BITCOIN_GUI_NAME=btchd-qt
+BITCOIN_GUI_NAME=depinc-qt
 BITCOIN_CLI_NAME=depinc-cli
 BITCOIN_MINER_NAME=depinc-miner
-BITCOIN_TEST_NAME=btchd-test
+BITCOIN_TEST_NAME=depinc-test
 BITCOIN_TX_NAME=depinc-tx
 BITCOIN_WALLET_TOOL_NAME=depinc-wallet
 
@@ -1422,7 +1422,7 @@ AC_MSG_CHECKING([whether to build depinc-miner])
 AM_CONDITIONAL([BUILD_BITCOIN_MINER], [test x$build_bitcoin_miner = xyes])
 AC_MSG_RESULT($build_bitcoin_miner)
 
-AC_MSG_CHECKING([whether to build btchd-test])
+AC_MSG_CHECKING([whether to build depinc-test])
 AM_CONDITIONAL([BUILD_BITCOIN_TEST], [test x$build_bitcoin_test = xyes])
 AC_MSG_RESULT($build_bitcoin_test)
 

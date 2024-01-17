@@ -641,35 +641,35 @@ depincd_LDADD = \
 depincd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(GMP_LIBS) $(UTF8PROC_LIBS)
 
 # bitcoin-cli binary #
-btchd_cli_SOURCES = bitcoin-cli.cpp compat/byteswap.cpp
-btchd_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-btchd_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-btchd_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+depinc_cli_SOURCES = bitcoin-cli.cpp compat/byteswap.cpp
+depinc_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+depinc_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+depinc_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-btchd_cli_SOURCES += bitcoin-cli-res.rc
+depinc_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
-btchd_cli_LDADD = \
+depinc_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-btchd_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+depinc_cli_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # bitcoin-tx binary #
-btchd_tx_SOURCES = bitcoin-tx.cpp compat/byteswap.cpp
-btchd_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-btchd_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-btchd_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+depinc_tx_SOURCES = bitcoin-tx.cpp compat/byteswap.cpp
+depinc_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+depinc_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+depinc_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-btchd_tx_SOURCES += bitcoin-tx-res.rc
+depinc_tx_SOURCES += bitcoin-tx-res.rc
 endif
 
-btchd_tx_LDADD = \
+depinc_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -677,20 +677,20 @@ btchd_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-btchd_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(CHIAPOS_LIBS) $(GMP_LIBS) $(UTF8PROC_LIBS)
+depinc_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS) $(CHIAPOS_LIBS) $(GMP_LIBS) $(UTF8PROC_LIBS)
 #
 
 # bitcoin-wallet binary #
-btchd_wallet_SOURCES = bitcoin-wallet.cpp compat/byteswap.cpp
-btchd_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-btchd_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-btchd_wallet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+depinc_wallet_SOURCES = bitcoin-wallet.cpp compat/byteswap.cpp
+depinc_wallet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+depinc_wallet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+depinc_wallet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-btchd_wallet_SOURCES += bitcoin-wallet-res.rc
+depinc_wallet_SOURCES += bitcoin-wallet-res.rc
 endif
 
-btchd_wallet_LDADD = \
+depinc_wallet_LDADD = \
   $(LIBBITCOIN_WALLET_TOOL) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
@@ -704,7 +704,7 @@ btchd_wallet_LDADD = \
   $(LIBSECP256K1) \
   $(LIBUNIVALUE)
 
-btchd_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(GMP_LIBS) $(UTF8PROC_LIBS)
+depinc_wallet_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(GMP_LIBS) $(UTF8PROC_LIBS)
 #
 
 # bitcoin-miner binary #
@@ -730,10 +730,10 @@ CHIAPOS_MINER_CPPS = \
   chiapos/miner/tools.cpp \
   chiapos/timelord_cli/timelord_client.cpp
 
-btchd_miner_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DCURL_STATICLIB
-btchd_miner_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-btchd_miner_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-btchd_miner_SOURCES = \
+depinc_miner_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DCURL_STATICLIB
+depinc_miner_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+depinc_miner_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+depinc_miner_SOURCES = \
   chainparams.cpp \
   chainparamsbase.cpp \
   consensus/merkle.cpp \
@@ -768,7 +768,7 @@ btchd_miner_SOURCES = \
 
 CURL_LIBS = -lcurl
 
-btchd_miner_LDADD = \
+depinc_miner_LDADD = \
   $(BOOST_LIBS) \
   $(CRYPTO_LIBS) \
   $(EVENT_PTHREADS_LIBS) \
