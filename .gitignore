@@ -6,13 +6,13 @@ configure~
 
 *.exe
 *.pdb
-src/btchd
-src/btchdd
-src/btchd-cli
-src/btchd-tx
-src/btchd-wallet
-src/btchd-miner
-src/btchd-test
+src/depinc
+src/depincd
+src/depinc-cli
+src/depinc-tx
+src/depinc-wallet
+src/depinc-miner
+src/depinc-test
 src/test/test_bitcoin
 src/test/test_bitcoin_fuzzy
 src/qt/test/test_bitcoin-qt
@@ -94,8 +94,8 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 !depends/Makefile
-btchd-qt
-BitcoinHD1-Qt.app
+depinc-qt
+DePINC-Qt.app
 background.tiff*
 
 # Qt Creator
