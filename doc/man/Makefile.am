@@ -5,7 +5,7 @@ if BUILD_BITCOIND
 endif
 
 if ENABLE_QT
-  dist_man1_MANS+=btchd-qt.1
+  dist_man1_MANS+=depinc-qt.1
 endif
 
 if BUILD_BITCOIN_CLI
