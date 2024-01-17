@@ -119,7 +119,7 @@ static plog::ConsoleAppender<plog::TxtFormatter> g_consoleAppender;
 /**
  * The PID file facilities.
  */
-static const char* BITCOIN_PID_FILENAME = "btchdd.pid";
+static const char* BITCOIN_PID_FILENAME = "depincd.pid";
 
 static fs::path GetPidFile()
 {

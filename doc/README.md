@@ -16,7 +16,7 @@ The following are some helpful notes on how to run DePINC Core on your native pl
 Unpack the files into a directory and run:
 
 - `bin/btchd-qt` (GUI) or
-- `bin/btchdd` (headless)
+- `bin/depincd` (headless)
 
 ### Windows
 

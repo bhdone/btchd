@@ -597,7 +597,7 @@ uint256 MakeRandomUint256() {
 int main(int argc, char** argv) {
     plog::ConsoleAppender<plog::TxtFormatter> console_appender;
 
-    cxxopts::Options opts("btchd-miner", "DePINC miner - A mining program for DePINC, chia PoC consensus.");
+    cxxopts::Options opts("depinc-miner", "DePINC miner - A mining program for DePINC, chia PoC consensus.");
     opts.add_options()                            // All options
             ("h,help", "Show help document")      // --help
             ("v,verbose", "Show debug logs")      // --verbose

@@ -15,13 +15,13 @@ AC_CONFIG_HEADERS([src/config/bitcoin-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
-BITCOIN_DAEMON_NAME=btchdd
+BITCOIN_DAEMON_NAME=depincd
 BITCOIN_GUI_NAME=btchd-qt
-BITCOIN_CLI_NAME=btchd-cli
-BITCOIN_MINER_NAME=btchd-miner
+BITCOIN_CLI_NAME=depinc-cli
+BITCOIN_MINER_NAME=depinc-miner
 BITCOIN_TEST_NAME=btchd-test
-BITCOIN_TX_NAME=btchd-tx
-BITCOIN_WALLET_TOOL_NAME=btchd-wallet
+BITCOIN_TX_NAME=depinc-tx
+BITCOIN_WALLET_TOOL_NAME=depinc-wallet
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 AC_ARG_VAR(ARFLAGS, [Flags for the archiver, defaults to <cr> if not set])
@@ -450,31 +450,31 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS -DUSE_VDF_COMPUTER"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build btchd-cli btchd-tx btchd-wallet btchd-miner (default=yes)])],
+  [build depinc-cli depinc-tx depinc-wallet depinc-miner (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
 AC_ARG_ENABLE([util-cli],
   [AS_HELP_STRING([--enable-util-cli],
-  [build btchd-cli])],
+  [build depinc-cli])],
   [build_bitcoin_cli=$enableval],
   [build_bitcoin_cli=$build_bitcoin_utils])
 
 AC_ARG_ENABLE([util-tx],
   [AS_HELP_STRING([--enable-util-tx],
-  [build btchd-tx])],
+  [build depinc-tx])],
   [build_bitcoin_tx=$enableval],
   [build_bitcoin_tx=$build_bitcoin_utils])
 
 AC_ARG_ENABLE([util-miner],
   [AS_HELP_STRING([--enable-util-miner],
-  [build btchd-miner])],
+  [build depinc-miner])],
   [build_bitcoin_miner=$enableval],
   [build_bitcoin_miner=$build_bitcoin_utils])
 
 AC_ARG_ENABLE([util-wallet],
   [AS_HELP_STRING([--enable-util-wallet],
-  [build btchd-wallet])],
+  [build depinc-wallet])],
   [build_bitcoin_wallet=$enableval],
   [build_bitcoin_wallet=$build_bitcoin_utils])
 
@@ -486,7 +486,7 @@ AC_ARG_WITH([libs],
 
 AC_ARG_WITH([daemon],
   [AS_HELP_STRING([--with-daemon],
-  [build btchdd daemon (default=yes)])],
+  [build depincd daemon (default=yes)])],
   [build_bitcoind=$withval],
   [build_bitcoind=yes])
 
@@ -1406,19 +1406,19 @@ if test x$have_protobuf != xno &&
   BITCOIN_QT_PATH_PROGS([PROTOC], [protoc],$protoc_bin_path)
 fi
 
-AC_MSG_CHECKING([whether to build btchdd])
+AC_MSG_CHECKING([whether to build depincd])
 AM_CONDITIONAL([BUILD_BITCOIND], [test x$build_bitcoind = xyes])
 AC_MSG_RESULT($build_bitcoind)
 
-AC_MSG_CHECKING([whether to build btchd-cli])
+AC_MSG_CHECKING([whether to build depinc-cli])
 AM_CONDITIONAL([BUILD_BITCOIN_CLI], [test x$build_bitcoin_cli = xyes])
 AC_MSG_RESULT($build_bitcoin_cli)
 
-AC_MSG_CHECKING([whether to build btchd-tx])
+AC_MSG_CHECKING([whether to build depinc-tx])
 AM_CONDITIONAL([BUILD_BITCOIN_TX], [test x$build_bitcoin_tx = xyes])
 AC_MSG_RESULT($build_bitcoin_tx)
 
-AC_MSG_CHECKING([whether to build btchd-miner])
+AC_MSG_CHECKING([whether to build depinc-miner])
 AM_CONDITIONAL([BUILD_BITCOIN_MINER], [test x$build_bitcoin_miner = xyes])
 AC_MSG_RESULT($build_bitcoin_miner)
 
@@ -1426,7 +1426,7 @@ AC_MSG_CHECKING([whether to build btchd-test])
 AM_CONDITIONAL([BUILD_BITCOIN_TEST], [test x$build_bitcoin_test = xyes])
 AC_MSG_RESULT($build_bitcoin_test)
 
-AC_MSG_CHECKING([whether to build btchd-wallet])
+AC_MSG_CHECKING([whether to build depinc-wallet])
 AM_CONDITIONAL([BUILD_BITCOIN_WALLET], [test x$build_bitcoin_wallet = xyes])
 AC_MSG_RESULT($build_bitcoin_wallet)
 

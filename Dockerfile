@@ -9,7 +9,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install build-essen
 # build btchd
 COPY . /btchd
 RUN cd /btchd/depends && make NO_QT=1 -j3 HOST=x86_64-pc-linux-gnu
-RUN cd /btchd && ./autogen.sh && ./configure --prefix=/btchd/depends/x86_64-pc-linux-gnu --with-gui=no && cd /btchd && make -j3 && mkdir -p /bhd && cp /btchd/src/btchdd /bhd && cp /btchd/src/btchd-* /bhd
+RUN cd /btchd && ./autogen.sh && ./configure --prefix=/btchd/depends/x86_64-pc-linux-gnu --with-gui=no && cd /btchd && make -j3 && mkdir -p /bhd && cp /btchd/src/depincd /bhd && cp /btchd/src/btchd-* /bhd
 
 FROM ubuntu:18.04
 

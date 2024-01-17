@@ -1,6 +1,6 @@
 # JSON-RPC Interface
 
-The headless daemon `btchdd` has the JSON-RPC API enabled by default, the GUI
+The headless daemon `depincd` has the JSON-RPC API enabled by default, the GUI
 `btchd-qt` has it disabled by default. This can be changed with the `-server`
 option. In the GUI it is possible to execute RPC methods in the Debug Console
 Dialog.
@@ -62,7 +62,7 @@ RPC interface will be abused.
   withstand arbitrary Internet traffic, so changing the above settings
   to expose it to the Internet (even using something like a Tor hidden
   service) could expose you to unconsidered vulnerabilities.  See
-  `btchdd -help` for more information about these settings and other
+  `depincd -help` for more information about these settings and other
   settings described in this document.
 
     Related, if you use Bitcoin Core inside a Docker container, you may

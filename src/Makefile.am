@@ -124,21 +124,21 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += btchdd
+  bin_PROGRAMS += depincd
 endif
 
 if BUILD_BITCOIN_CLI
-  bin_PROGRAMS += btchd-cli
+  bin_PROGRAMS += depinc-cli
 endif
 if BUILD_BITCOIN_MINER
-  bin_PROGRAMS += btchd-miner
+  bin_PROGRAMS += depinc-miner
 endif
 if BUILD_BITCOIN_TX
-  bin_PROGRAMS += btchd-tx
+  bin_PROGRAMS += depinc-tx
 endif
 if ENABLE_WALLET
 if BUILD_BITCOIN_WALLET
-  bin_PROGRAMS += btchd-wallet
+  bin_PROGRAMS += depinc-wallet
 endif
 endif
 
@@ -612,18 +612,18 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # bitcoind binary #
-btchdd_SOURCES = bitcoind.cpp
-btchdd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-btchdd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-btchdd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+depincd_SOURCES = bitcoind.cpp
+depincd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+depincd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+depincd_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-btchdd_SOURCES += bitcoind-res.rc
+depincd_SOURCES += bitcoind-res.rc
 endif
 
 # Libraries below may be listed more than once to resolve circular dependencies (see
 # https://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking#circular-dependency)
-btchdd_LDADD = \
+depincd_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_SERVER) \
@@ -638,7 +638,7 @@ btchdd_LDADD = \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-btchdd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(GMP_LIBS) $(UTF8PROC_LIBS)
+depincd_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(CHIAPOS_LIBS) $(GMP_LIBS) $(UTF8PROC_LIBS)
 
 # bitcoin-cli binary #
 btchd_cli_SOURCES = bitcoin-cli.cpp compat/byteswap.cpp
