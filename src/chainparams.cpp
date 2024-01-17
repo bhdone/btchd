@@ -738,11 +738,11 @@ public:
 
         // BHDIP010
         constexpr int ONE_HOUR_HEIGHTS = 60 / 3;
-        consensus.BHDIP010Height = consensus.BHDIP009Height + ONE_HOUR_HEIGHTS;
+        consensus.BHDIP010Height = consensus.BHDIP009Height + ONE_HOUR_HEIGHTS * 24 * 2; // two days before BHDIP010
         consensus.BHDIP010TotalAmountUpgradeMultiply = 3;
-        consensus.BHDIP010DisableCoinsBeforeBHDIP009EnableAtHeight = consensus.BHDIP010Height + ONE_HOUR_HEIGHTS;
+        consensus.BHDIP010DisableCoinsBeforeBHDIP009EnableAtHeight = consensus.BHDIP010Height + ONE_HOUR_HEIGHTS * 24 * 2; // two days before disabling coins before BHDIP009
         consensus.BHDIP010TargetSpacingMulFactor = 0.433333;
-        consensus.BHDIP010TargetSpacingMulFactorEnableAtHeight = consensus.BHDIP010Height;
+        consensus.BHDIP010TargetSpacingMulFactorEnableAtHeight = consensus.BHDIP010Height; // fix the duration as soon as the number of height reaches BHDIP010
 
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
